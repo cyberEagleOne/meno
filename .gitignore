@@ -1,0 +1,60 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files (ignore secrets; allow committed example)
+.env
+.env.*
+!.env.example
+.env*.local
+
+# python bytecode (OpenCode skill scripts)
+__pycache__/
+*.py[cod]
+
+# OpenCode skills excluded from repository scope
+# (keep only meno-workflow and ui-ux-pro-max)
+.opencode/skills/banner-design/
+.opencode/skills/brand/
+.opencode/skills/design/
+.opencode/skills/design-system/
+.opencode/skills/slides/
+.opencode/skills/ui-styling/
+
+# typescript
+*.tsbuildinfo
+
+example
+
+# generated native folders
+/ios
+/android
