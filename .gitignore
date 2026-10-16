@@ -42,13 +42,15 @@ __pycache__/
 *.py[cod]
 
 # OpenCode skills excluded from repository scope
-# (keep only meno-workflow and ui-ux-pro-max)
+# (keep only meno-workflow; ui-ux-pro-max removed 2026-10-15 for
+# third-party licensing review — do not re-add)
 .opencode/skills/banner-design/
 .opencode/skills/brand/
 .opencode/skills/design/
 .opencode/skills/design-system/
 .opencode/skills/slides/
 .opencode/skills/ui-styling/
+.opencode/skills/ui-ux-pro-max/
 
 # typescript
 *.tsbuildinfo
