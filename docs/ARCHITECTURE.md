@@ -3,11 +3,11 @@
 | Field | Value |
 |---|---|
 | Document status | Draft — awaiting student review and approval |
-| Version | 0.2.8 (app foundation) |
-| Last updated | 2026-10-11 |
+| Version | 0.3.3 (implementation and verification sync) |
+| Last updated | 2026-10-22 |
 | Author | AI-assisted draft (opencode); not yet reviewed by the student |
 
-> Evidence policy: through Stage 4 (2026-10-10) no application had been scaffolded and no app dependency installed. In **Stage 5 (2026-10-11)** a minimal Expo SDK 57 app was scaffolded, dependencies were installed, and `expo-doctor` / `tsc` were run — results are recorded in §2.5. No native build was produced and no commit exists. Version/registry checks are labelled with their dates.
+> Evidence policy: §2 records the 2026-10-10/11 toolchain validation and scaffold (Stages 1–5, verbatim logs). This document describes the current working-tree implementation. Current host verification is **7 suites / 73 tests**, with TypeScript, lint, and Android Expo bundle export passing (`docs/TESTING.md`). An Expo Go emulator smoke test observed selected UI flows and completion/progress persistence after force-stop/relaunch; it does not verify native APK behavior, native SQLite rollback, or real storage-failure recovery. Historical stage logs are not rewritten.
 
 ---
 
@@ -18,8 +18,8 @@
 | Language | TypeScript | **Verified** — `typescript 6.0.3` |
 | Framework | React Native via Expo | **Verified** — Expo SDK 57 (`expo 57.0.27`, `react-native 0.86.3`, `react 19.2.3`) |
 | Navigation | Expo Router (file-based) | **Verified** — `expo-router 57.0.25` |
-| Local database | Expo SQLite (`expo-sqlite`) | **Verified compatible / installed** — `expo-sqlite 57.0.4` |
-| Unit testing | Jest + `jest-expo` (domain layer) | Proposed — [Open Question] exact runner |
+| Local database | Expo SQLite (`expo-sqlite`) | **Verified compatible / installed** — `expo-sqlite 57.0.4`; schema + driver seam implemented (see §3.1) |
+| Unit testing | Jest + `jest-expo` | **Verified** — jest 29.7.0; 7 suites / 73 tests passing (2026-10-22, `docs/TESTING.md`) |
 
 ## 2. Compatibility validation (2026-10-10)
 
@@ -37,7 +37,7 @@
 |---|---|---|
 | Node | system v20.19.2; **fnm v22.23.3** | ✅ **[Resolved 2026-10-10]** Node 22 LTS installed via fnm into `~/.local/share/fnm`; satisfies `create-expo@5.0.3` engines (`^22.13.0 …`). System Node left untouched. |
 | npm | 9.2.0 (system) / **10.9.9** (Node 22) | OK; use the Node 22 npm for scaffolding. |
-| Python | 3.13.5 | Satisfies `ui-ux-pro-max` requirement. |
+| Python | 3.13.5 | Originally satisfies `ui-ux-pro-max` requirement (skill removed from the working tree 2026-10-15 for licensing review; Python retained). |
 | Git | 2.47.3 | OK. |
 | Java | system OpenJDK 25; **Temurin JDK 17.0.20.1** | ✅ **[Resolved 2026-10-10]** User-local Temurin 17 at `~/.local/share/jdks/temurin-17` (includes `javac`; system JDK 17 was JRE-only). Use `JAVA_HOME=~/.local/share/jdks/temurin-17` for Android builds. |
 | Android SDK / `adb` / emulator | **not found** | Needed for a local Android build; `/dev/kvm` is already usable (rw via ACL). |
@@ -166,71 +166,104 @@
 | Git | `CI=1` made create-expo skip its own `git init`; repository still has **no commits** |
 | Placement note | create-expo refuses non-empty dirs (`.opencode/` is not on its tolerable list), so the app was scaffolded into a temporary subdir and moved to the repo root |
 
-**Pending stages:** Stage 6 (Bible Reader vertical slice — **not started; requires approval**). AVD `meno_api36` is running on `emulator-5554`. Optional later: persistent env wiring (rc edit — not approved).
+**Stage 6–7 — MVP implementation (working tree, uncommitted).** The Bible Reader vertical slice committed earlier (`c2bb19d`) was extended with the two-tab shell, design system, and persistent-progress feature (Expo SQLite behind a driver seam), plus tests. Current verification is recorded in `docs/TESTING.md`; emulator observations are Expo Go only. Optional later: persistent env wiring (rc edit — not approved).
 
-## 3. Logical architecture (layered)
+## 3. Logical architecture (as implemented)
 
 ```
-┌─────────────────────────────────────────────┐
-│  UI layer (Expo Router screens + components) │
-│  app/ routes, presentation, design tokens    │
-└───────────────▲─────────────────────────────┘
-                │ calls (typed interfaces only)
-┌───────────────┴─────────────────────────────┐
-│  Domain layer (pure TypeScript)              │
-│  entities, business rules (BR-1..BR-6),      │
-│  streak/progress calculations                │
-└───────────────▲─────────────────────────────┘
-                │ repository interfaces
-┌───────────────┴─────────────────────────────┐
-│  Repository layer                            │
-│  BibleRepository, ProgressRepository         │
-└───────────────▲─────────────────────────────┘
-                │ SQL / queries
-┌───────────────┴─────────────────────────────┐
-│  Persistence (expo-sqlite) + bundled content │
-│  MenoDatabase, migrations, seed dataset      │
-└─────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│ UI layer — Expo Router screens + shared components        │
+│ src/app (routes) + src/components/ui + theme tokens        │
+│ (src/theme/colors.ts; no ad-hoc colours)                   │
+└───────────────▲──────────────────────────────────────────┘
+                │ hooks (useProgress) — typed context API
+┌───────────────┴──────────────────────────────────────────┐
+│ State/bootstrap layer — ProgressProvider                   │
+│ src/data/progressContext.tsx: installs the SQLite driver,  │
+│ runs initProgressDb() once, loads progress, exposes        │
+│ openChapter / saveScroll / setCompleted                    │
+└───────────────▲──────────────────────────────────────────┘
+                │ plain function calls (no React imports)
+┌───────────────┴──────────────────────────────────────────┐
+│ Domain layer — pure TypeScript                             │
+│ src/domain/bibleNavigation.ts (prev/next, canon edges)     │
+│ src/domain/progress.ts (BR-1 idempotency, counts,          │
+│ milestones, sanitizeProgress)                              │
+└───────────────▲──────────────────────────────────────────┘
+                │ persistence functions (no SQL in domain)
+┌───────────────┴──────────────────────────────────────────┐
+│ Data layer — src/data/db.ts                                │
+│ initProgressDb / loadProgress / saveLastRead /             │
+│ markCompleted / unmarkCompleted; placeholderBible dataset  │
+└───────────────▲──────────────────────────────────────────┘
+                │ SqlDriver interface (src/data/sqlDriver.ts)
+┌───────────────┴──────────────────────────────────────────┐
+│ Driver implementations                                     │
+│ sqliteDriver.ts → expo-sqlite (production)                 │
+│ __tests__/support/memoryDriver.ts → in-memory fake (tests) │
+└──────────────────────────────────────────────────────────┘
 ```
 
-**Rule:** domain logic must not import React, Expo, or the database. It receives plain data and returns plain data, so it can be unit-tested with no device.
+**Rules (as implemented):**
+- Domain modules import neither React, Expo, nor the database — unit-tested with no device (ADR-004; seven Jest suites currently pass on the host).
+- All SQL is issued through the injected `SqlDriver`; `db.ts` never imports `expo-sqlite` directly, and tests never touch the native module (ADR-010).
+- Streak calculation is **not** part of the domain: streaks are deferred per PRD §8 (BR-3/BR-4) and §10. No `streak.ts` exists.
+- There is **no repository layer**; earlier drafts that named `BibleRepository`/`ProgressRepository` were plans that were not implemented and have been removed from this document.
 
-## 4. Project structure
+### 3.1 Persistence: schema and driver seam
 
-**Scaffolded foundation (Expo SDK 57 default template, 2026-10-11):**
+- **Driver interface** (`src/data/sqlDriver.ts`): `exec` / `getFirst` / `getAll` / `run`, plus `setSqlDriver` / `getSqlDriver` module registry.
+- **Production driver** (`src/data/sqliteDriver.ts`): wraps one lazily-opened `expo-sqlite` database (`meno.db`).
+- **Bootstrap** (`src/data/progressContext.tsx`): on first load, `ProgressProvider` installs the expo-sqlite driver, then awaits `initProgressDb()`, then `loadProgress()`. Retry re-runs the sequence if bootstrap failed (idempotent).
+- **Schema** (created in `initProgressDb`, WAL mode):
+  - `last_read(id INTEGER PRIMARY KEY CHECK (id=1), book_id, chapter, scroll_y, opened_at)` — single-row last-read + scroll position.
+  - `completed(book_id, chapter, completed_at, PRIMARY KEY (book_id, chapter))` — one row per chapter; the primary key enforces BR-1 idempotency (`ON CONFLICT … DO UPDATE` refreshes the timestamp only). *Date caveat:* the overwrite means the table alone cannot answer "which days did this chapter get completed on".
+  - `reading_day(day TEXT PRIMARY KEY)` — append-only history of device-local calendar days (`YYYY-MM-DD`, BR-2) with ≥1 explicit completion (FR-9, AC-2.6). Written with `INSERT OR IGNORE` on every `markCompleted`, so same-day completions collapse to one row while completions on later days keep adding rows — this is what makes the distinct-days count survive the `completed` timestamp overwrite. **Deliberate decisions:** (a) undoing a chapter does **not** delete its day — reading days are historical facts, not a live projection of `completed`; (b) no backfill: rows written before this table existed contribute only their *latest* `completed_at`, and inferring a local day from a stored UTC instant would be timezone-fragile, so pre-existing installs simply start counting from the first completion after the upgrade. This is an **additive** migration (`CREATE TABLE IF NOT EXISTS`); existing tables are untouched.
+- **Validation:** `loadProgress` always passes stored rows through domain `sanitizeProgress`, so stale/corrupt rows never surface in the UI. Reading days are validated as plain `YYYY-MM-DD` strings, deduplicated, and sorted; entries with any other format are dropped.
+- **Test injection:** tests call `setSqlDriver(createMemoryDriver())`; the fake recognises the exact statements `db.ts` issues and throws on any unknown SQL, so query drift fails tests (see `docs/TESTING.md` §2).
+
+## 4. Project structure (as implemented, working tree)
+
 ```
-src/
-  app/                    # Expo Router routes (SDK 57 default location)
-    _layout.tsx           # root Stack navigator
-    index.tsx             # placeholder screen (to be replaced)
-assets/                   # template icons/splash (expo.icon, images/)
-app.json                  # Expo config (name "Meno", slug/scheme "meno")
-package.json              # deps incl. expo-sqlite; main: expo-router/entry
-tsconfig.json             # strict; @/* -> ./src/*, @/assets/* -> ./assets/*
-.gitignore  .vscode/      # template-provided
+src/app/
+  _layout.tsx                 # root Stack; font loading; mounts ProgressProvider
+  (tabs)/
+    _layout.tsx               # Tabs with custom MenoTabBar; library + chapters hidden (href: null)
+    index.tsx                 # Baca home: last-read resume, milestone nudge, continue CTA
+    library.tsx               # book list, search, PL/PB sections, per-book rings
+    chapters/[book].tsx       # chapter grid + legend + done counts
+    progress.tsx              # Kemajuan: totals, distinct reading days, milestones path, per-testament bars, started books
+  reader/[book]/[chapter].tsx # reader (outside tabs): banner, FlatList verses, footer nav
+src/data/
+  db.ts                       # persistence API (schema in §3.1)
+  sqlDriver.ts                # SqlDriver interface + registry
+  sqliteDriver.ts             # expo-sqlite driver
+  progressContext.tsx         # ProgressProvider / useProgress
+  placeholderBible.ts         # synthetic labelled dataset (66 books, 1189 chapters)
+  canon.ts                    # testament helpers, totals, isValidChapter, chapterKey
+  __tests__/                  # db, dbCompletion, canon tests + support/memoryDriver.ts
+src/domain/
+  bibleNavigation.ts          # getBook/getChapter/nextChapter/previousChapter
+  progress.ts                 # withCompletion, localDayKey/reading days, counts, milestones, sanitizeProgress
+  types.ts                    # Bible/Book/Chapter/Verse types
+src/theme/colors.ts           # palette, fonts, radius, space tokens
+src/components/ui/            # Button, Card, ChapterCell, Chip, Icons (react-native-svg),
+                              # Mascot, PlaceholderBanner, ProgressBar, ProgressRing,
+                              # ScreenHeader, StateMessage, VerseRow
+assets/meno/                  # 8 mascot PNGs (Calm, Celebrating, Curious, Encouraging,
+                              # Happy, Proud, ReadyToRead, Welcome)
+metro.config.js               # adds "wasm" to assetExts (expo-sqlite on web)
 ```
 
-**Planned additions (not yet created):**
-```
-src/
-  app/(tabs)/             # Reader entry, Progress/stats
-  app/reader/[book]/[chapter].tsx
-  domain/                 # pure rules: streak.ts, progress.ts, navigation.ts
-  repositories/           # BibleRepository, ProgressRepository interfaces
-  data/                   # expo-sqlite implementation, migrations, seed
-  components/ui/          # shared presentational components
-  theme/                  # design tokens (see DESIGN_SYSTEM.md)
-assets/bible/             # bundled public-domain translation JSON
-docs/                     # this documentation set
-```
+> Note: this layout exists as **uncommitted working-tree changes** as of 2026-10-15; the committed tree (`c2bb19d`) still contains the earlier single-route reader slice.
 
-> **Verified layout note:** the SDK 57 default Expo Router template places routes in `src/app/` (not root `app/` as previously proposed). Expo Router supports this layout; non-route code stays under `src/`.
+## 5. Data flow (as implemented)
 
-## 5. Data flow (examples)
-
-1. **Open chapter:** route param `(book, chapter)` → `BibleRepository.getChapter()` → bundled dataset/SQLite → UI renders verses via a virtualized list.
-2. **Complete chapter:** user action → `ProgressRepository.recordCompletion()` → domain applies BR-1 (idempotent insert) → SQLite upsert → stats recomputed by domain from stored records.
-3. **Restart app:** `ProgressRepository.getProgressState()` → reader restores last-read location (FR-5/AC-1.6).
+1. **Open a chapter (Baca → library → chapters → reader):** Expo Router passes `(book, chapter)` params → reader validates with `isValidChapter` (`src/data/canon.ts`) and reads verses from the bundled `placeholderBible` dataset → renders a virtualized `FlatList` of `VerseRow`s. `useProgress().openChapter(bookId, chapter)` updates **last-read only** (BR-5) via `saveLastRead` → single-row SQL upsert. Opening never completes a chapter.
+2. **Scroll persistence:** the reader debounces scroll callbacks (500 ms) and calls `saveScroll`, which updates `last_read.scroll_y` for the current chapter only (ignored if last-read has since changed).
+3. **Mark a chapter complete:** footer action → `setCompleted(bookId, chapter, true)` → domain `withCompletion` (idempotent map update) + `withReadingDay` (day added once to the in-memory list) + `markCompleted(bookId, chapter, completedAt, day)` → `INSERT … ON CONFLICT(book_id, chapter) DO UPDATE` (one row per chapter, BR-1) followed by `INSERT OR IGNORE INTO reading_day` (one row per local day, AC-2.6). The `day` argument is computed by domain `localDayKey(now)` — device-local calendar date, BR-2 — and passed in explicitly so tests never depend on the real clock or timezone. Explicit unmark deletes the chapter row but leaves the reading day (historical).
+4. **Restart / first launch:** `ProgressProvider` effect → `createExpoSqliteDriver()` → `setSqlDriver` → `initProgressDb()` (WAL + `CREATE TABLE IF NOT EXISTS`) → `loadProgress()` → row mapping + `sanitizeProgress` → context state (`status: loading → ready|error`). Expo Go smoke testing observed completion/progress persistence after force-stop/relaunch; last-read restoration was not separately verified in that walkthrough.
+5. **Kemajuan stats:** computed on each render from the context state — `completedCount` (total), `nextMilestone`, per-testament `doneInBook` vs `TESTAMENT_TOTALS`, started-books list, and **distinct reading days** (`readingDays.length`, PRD FR-9 / AC-2.6), shown in both the filled state ("X hari membaca" pill under the cheer row) and the empty state (explicit "0 hari membaca" line). PRD §10 still defers the daily-goal model; the day count is a pure historical total, not a goal or streak.
 
 ## 6. Bible content pipeline (planned, blocked by licensing)
 
@@ -255,6 +288,12 @@ docs/                     # this documentation set
 | ADR-007 | Resolve Node engine mismatch before scaffolding | **Done** | Node 22.23.3 installed via fnm (Stage 1). See §2.5. |
 | ADR-008 | Target Expo SDK 57 | **Accepted** | Non-breaking upgrade from 56; fixes Hermes V1 regressions. See §2.4. |
 | ADR-009 | Local Android build (Android SDK Platform 36 + JDK 17) | **Accepted** | Enables on-device/emulator evidence; `/dev/kvm` available. EAS remains a fallback. |
+| ADR-010 | Persistence goes through an injectable `SqlDriver` seam | **Accepted (implemented, working tree 2026-10-14/15)** | `db.ts` never imports `expo-sqlite`; production driver in `sqliteDriver.ts`, tests inject `memoryDriver.ts`. Recorded here because the implementation exists and is host-verified (66 tests); not a retroactive claim about earlier stages. |
+| ADR-011 | Ship only a clearly-labelled synthetic placeholder dataset until licensing is resolved | **Accepted (implemented, working tree 2026-10-14/15)** | 66 books / 1189 chapters of canon metadata with synthetic verses; every verse text carries a "not Scripture" marker, guarded by `bibleNavigation.test.ts`. Real translation still blocked by ADR-005. |
+| ADR-012 | Two-tab shell (Baca, Kemajuan); reader pushed outside the tab navigator | **Accepted (implemented, working tree 2026-10-14/15)** | Matches PRD §6 navigation scope; library/chapters routes hidden from the tab bar (`href: null`). |
+| ADR-013 | Adopt the design-handoff token set and mascot artwork as the visual identity | **Accepted (implemented, working tree 2026-10-14/15)** | Tokens in `src/theme/colors.ts`; Plus Jakarta Sans via `@expo-google-fonts`; 8 mascot PNGs in `assets/meno/`. Provenance and superseded earlier proposals recorded in `docs/DESIGN_SYSTEM.md`. |
+
+> ADR-010…ADR-013 document decisions **as they exist in the implemented working tree** (dates 2026-10-14/15). They were not separate historical decision meetings; they are recorded now so the documentation matches the code. All remain **uncommitted** pending student review.
 
 ## 8. Risk register
 
@@ -264,16 +303,17 @@ docs/                     # this documentation set
 | R-2 | Bible translation licence unclear | Cannot ship content | Choose public-domain translation; record attribution. |
 | R-3 | Copyrighted translation used without permission | Legal/academic integrity | Restrict to public-domain set until licence obtained. |
 | R-4 | Long chapters cause list jank | Poor UX | Virtualized list + memoized rows (`ui-ux-pro-max` guidance). |
-| R-5 | Streak timezone bugs | Wrong stats | Document day-boundary rule; unit-test boundaries. |
+| R-5 | Streak timezone bugs | Wrong stats | **[Deferred]** streaks are out of MVP scope (PRD §8 BR-3/BR-4, §10); no streak code exists. Revisit only if the lecturer requires streaks (unresolved RQ-6 conflict — `docs/ASSIGNMENT_TRACEABILITY.md`). |
 | R-6 | Scope creep across 12 meetings | Unfinished MVP | Follow `12_MEETING_PLAN.md`; approve new deps first. |
 | R-7 | Android build/JDK mismatch | Build failure | Validate Gradle/JDK before native build. |
 
-## 9. Testing strategy (planned)
+## 9. Testing strategy (as implemented)
 
-- **Domain unit tests** (Jest) for BR-1..BR-6 — the primary evidence of correctness.
-- **Repository tests** against an in-memory/temp SQLite database for persistence behaviour.
-- **Manual device checks** for reader performance, safe areas, and accessibility.
-- Actual commands and outputs to be recorded in `docs/TESTING.md` when run.
+- **Domain unit tests** (Jest, host): `bibleNavigation.test.ts` (22), `progress.test.ts` (21 — incl. `localDayKey` / reading-day helpers).
+- **Data-layer tests via the `SqlDriver` seam** (Jest, host, no device): `db.test.ts` (7), `dbCompletion.test.ts` (11), `canon.test.ts` (7), and `progressContext.test.tsx` (2). The completion suite uses the injected memory driver; it does not directly verify native SQLite rollback.
+- **Observed Expo Go smoke checks:** Home, chapter open, completion/undo, Progress, and completion/progress after force-stop/relaunch. This is not a native APK test.
+- **Not verified:** native SQLite rollback, real storage-failure recovery, native APK behavior, reader performance, TalkBack, and a complete live acceptance-criteria walkthrough.
+- Commands and verbatim outputs: `docs/TESTING.md`. MVP acceptance-criteria mapping: `checklist_mvp.md` (repo root).
 
 ## 10. Change log
 
@@ -289,3 +329,7 @@ docs/                     # this documentation set
 | 0.2.6 | 2026-10-10 | Stage 3D executed: session-only env verified (`adb` 37.0.1, `emulator` 37.2.12.0, `sdkmanager` 1.0.16500706, no AVDs); no shell startup-file edits. §2.5 updated. |
 | 0.2.7 | 2026-10-10 | Stage 4 executed: AVD `meno_api36` created (pixel_6, google_apis/x86_64, API 36) with KVM accel; emulator launched headless, booted (`sys.boot_completed=1`). Running as `emulator-5554`. No scaffold/deps/rc/commits. §2.5 updated. |
 | 0.2.8 | 2026-10-11 | Stage 5 executed: scaffolded minimal Expo **SDK 57** app (`expo-template-default@57.0.29`) with `create-expo@5.0.3` under fnm Node 22.23.3; installed deps (`expo 57.0.27`, `react-native 0.86.3`, `react 19.2.3`, `typescript 6.0.3`); added `expo-sqlite 57.0.4` via `npx expo install`; ran `reset-project`. Verified: `expo-doctor` 21/21 passed, `tsc --noEmit` exit 0. No commits created. §1, §2.5, §4, §7 updated. |
+| 0.3.0 | 2026-10-15 | Rewrote §3–§5 to describe the **actual implemented** architecture (route tree, ProgressProvider bootstrap, `db.ts` API, `SqlDriver` seam, real data flows); removed nonexistent repository layer, `streak.ts`, and placeholder-`index.tsx` references; added ADR-010…ADR-013 (recorded against the working-tree implementation, not retroactive); annotated R-5 as deferred; updated §9 testing strategy and §1 evidence policy. §1–2 stage logs left intact as history. |
+| 0.3.1 | 2026-10-15 | Implemented AC-2.6 / FR-9 distinct reading days: additive `reading_day` table (§3.1), `markCompleted` day parameter, domain `localDayKey` / `withReadingDay`, "X hari membaca" stat on Kemajuan (filled + zero state). Recorded the completed-timestamp-overwrite caveat and the two deliberate semantics (no undo deletion, no historical backfill). Tests 53 → 62. |
+| 0.3.2 | 2026-10-15 | Reader virtualization + scroll restoration (AC-1.5, AC-1.6 device half): `reader/[book]/[chapter].tsx` now renders verses through a virtualized `FlatList` (header/footer slots, per-verse dashed-border wrapper) instead of a full-chapter `ScrollView` + `map`; `VerseRow` is reused and restyled to the implemented theme; scroll restoration is keyed per chapter (`readyKey` layout-event gate + `restoredForKey` latch) with the pure decision helper `restoreScrollOffset` in `src/domain/progress.ts`. Tests 62 → **66** (four `restoreScrollOffset` cases in `progress.test.ts` 17 → 21). Native scrolling and on-device restoration remain **NOT YET VERIFIED**. |
+| 0.3.3 | 2026-10-22 | Current verification and smoke-test status synced: seven suites / 73 tests; TypeScript, lint, and Android Expo bundle export pass; limited Expo Go emulator flow observed. Clarified that this is not native APK testing and does not verify native SQLite rollback or real storage-failure recovery. |

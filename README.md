@@ -3,13 +3,25 @@
 Meno is an **Android-first mobile Bible reader** with **gentle, gamified
 reading habits**, built as a **university assignment**. The aim is a calm,
 Scripture-first reading experience supported by light, encouraging habit
-mechanics (streaks, daily goals, progress feedback).
+mechanics (progress feedback; streaks and daily goals are **deferred** from
+the MVP — see [`docs/PRD.md`](docs/PRD.md) §10).
 
-> **Status: Expo starter scaffold only.** The project currently contains a
-> minimal Expo application foundation. The **Bible Reader** and **Reading
-> Progress** features are **NOT implemented yet**, and **no Bible text is
-> bundled**. Nothing below should be read as a claim that a feature is
-> complete.
+> **Status (2026-10-22):** Both MVP features are implemented and runnable:
+> the **Bible Reader** (book list → chapter grid → reader) and **Persistent
+> Reading Progress** (SQLite last-read + idempotent chapter completion, with a
+> Kemajuan screen), plus the two-tab shell (Baca, Kemajuan) and the integrated
+> design system. **73 tests pass across 7 suites** (see
+> [`docs/TESTING.md`](docs/TESTING.md)). The bundled Bible text is still a
+> clearly-labelled **synthetic placeholder** — no real translation is bundled
+> (ILT3 redistribution permission remains unconfirmed,
+> [`docs/PRD.md`](docs/PRD.md) §5.4). An Android Expo Go smoke test observed
+> Home, chapter open, completion/undo, Progress, and completion/progress
+> persisting after force-stop/relaunch. Android bundle export passed; this is
+> not a native APK test. Native SQLite rollback and real storage-failure
+> recovery remain unverified. The demo video is outside this repository and
+> submission is unconfirmed. As of this date
+> the implementation exists in the working tree; **commits are pending the
+> student's review and approval**.
 
 ## Stack
 
@@ -19,7 +31,7 @@ mechanics (streaks, daily goals, progress feedback).
 | Runtime | React Native 0.86, React 19.2 |
 | Language | TypeScript (strict) |
 | Navigation | Expo Router (file-based; routes in `src/app/`) |
-| Local database | `expo-sqlite` (installed; no schema yet) |
+| Local database | `expo-sqlite` (schema + injectable driver seam implemented; tables created on first launch) |
 
 Verified toolchain versions (2026-10-11): `expo 57.0.27`, `react-native 0.86.3`,
 `react 19.2.3`, `expo-router 57.0.25`, `expo-sqlite 57.0.4`,
@@ -76,18 +88,23 @@ fnm exec --using=22 -- npx expo start
 
 ```bash
 fnm exec --using=22 -- npx tsc --noEmit
+fnm exec --using=22 -- npm run lint
+fnm exec --using=22 -- bash -c 'CI=1 npm test -- --runInBand'
 fnm exec --using=22 -- npx expo-doctor
 ```
 
-## MVP intentions (planned, not implemented)
+Actual results and the test inventory are recorded in
+[`docs/TESTING.md`](docs/TESTING.md).
 
-Per [`docs/PRD.md`](docs/PRD.md), the MVP is two features:
+## MVP status (implemented)
 
-1. **Bible Reader** — browse books, open a book/chapter, render verses, move
-   between chapters, and restore the last-read location.
-2. **Persistent Reading Progress** — mark chapters read (idempotently), store
-   progress locally in SQLite so it survives restarts, and show chapters read,
-   days read, and current streak.
+Per [`docs/PRD.md`](docs/PRD.md), the MVP is two features — both now implemented:
+
+1. **Bible Reader** — book list, chapter grid, verse rendering, next/previous
+   chapter navigation (cross-book boundaries), last-read restore.
+2. **Persistent Reading Progress** — idempotent per-chapter completion stored
+   in SQLite (survives restarts), last-read and scroll position persistence,
+   chapters-read totals, milestones, per-testament progress (Kemajuan screen).
 
 ### Explicitly out of scope (for now)
 
@@ -107,18 +124,25 @@ added until licensing is confirmed and recorded (see
 
 ## Documentation
 
+- [`HowToRun.md`](HowToRun.md) — setup, run, and verification commands
+- [`checklist_mvp.md`](checklist_mvp.md) — acceptance-criteria evidence map
 - [`docs/PRD.md`](docs/PRD.md)
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 - [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md)
+- [`docs/TESTING.md`](docs/TESTING.md)
 - [`docs/ASSIGNMENT_TRACEABILITY.md`](docs/ASSIGNMENT_TRACEABILITY.md)
 - [`docs/12_MEETING_PLAN.md`](docs/12_MEETING_PLAN.md)
 
 ## Repository layout
 
 ```
-src/app/        Expo Router routes (SDK 57 default location)
-assets/         icons and splash assets (template)
-docs/           planning documents
+src/app/        Expo Router routes (tabs, library, chapters, reader)
+src/data/       SQLite persistence (expo-sqlite driver seam), placeholder dataset
+src/domain/     Pure, unit-tested domain logic (navigation, progress rules)
+src/theme/      Design tokens (colors, fonts, spacing)
+src/components/ui/  Shared UI components (buttons, rings, icons, mascots)
+assets/         Icons, splash, and Meno mascot artwork
+docs/           Planning documents and evidence
 .opencode/      OpenCode workflow skills
-app.json  package.json  tsconfig.json  .gitignore  .vscode/
+app.json  package.json  tsconfig.json  metro.config.js  eslint.config.js
 ```

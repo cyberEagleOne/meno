@@ -53,7 +53,7 @@
 ### Meeting 5 — Reader performance & M1 close
 - **Goals:** Virtualized verse list, memoized rows, long-chapter performance; restore last-read location (FR-5).
 - **Deliverables:** M1 complete and runnable.
-- **Verification:** AC-1.5, AC-1.6; checklist from `ui-ux-pro-max`.
+- **Verification:** AC-1.5, AC-1.6; accessibility checklist (mirrored in `docs/DESIGN_SYSTEM.md` §5).
 - **Evidence:** Performance notes; screenshots; approved commit.
 
 ### Meeting 6 — Persistence layer
@@ -83,7 +83,7 @@
 ### Meeting 10 — Accessibility & robustness
 - **Goals:** Touch targets, `accessibilityLabel`, safe areas, font scaling, contrast audit; error handling.
 - **Deliverables:** Accessibility pass complete.
-- **Verification:** `ui-ux-pro-max` mobile checklist (§5 of design doc).
+- **Verification:** mobile accessibility checklist (mirrored in `docs/DESIGN_SYSTEM.md` §5).
 - **Evidence:** Screenshots; checklist; notes.
 
 ### Meeting 11 — Testing, docs, polish
