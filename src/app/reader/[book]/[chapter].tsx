@@ -1,42 +1,82 @@
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  AccessibilityInfo,
+  Animated,
+  Easing,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Button } from "../../../components/ui/Button";
+import { Chip } from "../../../components/ui/Chip";
+import { IconBack, IconCheck, IconChevron } from "../../../components/ui/Icons";
+import { Mascot } from "../../../components/ui/Mascot";
+import { PlaceholderBanner } from "../../../components/ui/PlaceholderBanner";
+import { StateMessage } from "../../../components/ui/StateMessage";
 import { VerseRow } from "../../../components/ui/VerseRow";
-import { PLACEHOLDER_NOTICE, placeholderBible } from "../../../data/placeholderBible";
+import { placeholderBible } from "../../../data/placeholderBible";
+import { useProgress } from "../../../data/progressContext";
 import {
   getBook,
   getChapter,
   getNextChapter,
   getPreviousChapter,
 } from "../../../domain/bibleNavigation";
-import type { ChapterLocation } from "../../../domain/types";
+import { isCompleted, restoreScrollOffset } from "../../../domain/progress";
+import type { ChapterLocation, Verse } from "../../../domain/types";
+import { colors, fonts, radius } from "../../../theme/colors";
 
-function NavButton({
+const CHEERS = ["Mantap!", "Bagus sekali!", "Satu pasal tuntas!", "Pelan tapi pasti!"];
+
+const BURST = Array.from({ length: 10 }, (_, i) => {
+  const a = (i / 10) * Math.PI * 2;
+  return {
+    dx: Math.round(Math.cos(a) * 70),
+    dy: Math.round(Math.sin(a) * 38 - 24),
+    color: [colors.gold, colors.mint, colors.lavender, colors.coral, colors.gold][i % 5],
+  };
+});
+
+interface CompletionFailure {
+  bookId: string;
+  chapter: number;
+  done: boolean;
+}
+
+function NavArrow({
   label,
+  direction,
   disabled,
   onPress,
 }: {
   label: string;
+  direction: "prev" | "next";
   disabled: boolean;
   onPress: () => void;
 }) {
   return (
     <Pressable
+      onPress={onPress}
+      disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={onPress}
       style={({ pressed }) => [
-        styles.navButton,
-        disabled && styles.navButtonDisabled,
-        pressed && !disabled && styles.navButtonPressed,
+        styles.arrow,
+        disabled && styles.arrowDisabled,
+        pressed && !disabled && styles.arrowPressed,
       ]}
     >
-      <Text style={[styles.navButtonText, disabled && styles.navButtonTextDisabled]}>
-        {label}
-      </Text>
+      {direction === "prev" ? (
+        <IconBack size={22} color={disabled ? colors.stone : colors.indigo} />
+      ) : (
+        <IconChevron size={22} color={disabled ? colors.stone : colors.indigo} />
+      )}
     </Pressable>
   );
 }
@@ -44,6 +84,8 @@ function NavButton({
 export default function ReaderScreen() {
   const params = useLocalSearchParams<{ book: string; chapter: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { completed, lastRead, openChapter, saveScroll, setCompleted } = useProgress();
 
   const bookId = params.book;
   const chapterNumber = Number(params.chapter);
@@ -53,6 +95,91 @@ export default function ReaderScreen() {
   const previous = getPreviousChapter(placeholderBible, bookId, chapterNumber);
   const next = getNextChapter(placeholderBible, bookId, chapterNumber);
 
+  const done = book && chapter ? isCompleted(completed, bookId, chapterNumber) : false;
+  const cheer = CHEERS[(chapterNumber + (book?.canonicalOrder ?? 0)) % CHEERS.length];
+
+  const [toastKey, setToastKey] = useState<string | null>(null);
+  const [completionPending, setCompletionPending] = useState(false);
+  const [completionError, setCompletionError] = useState<CompletionFailure | null>(null);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const [readRatio, setReadRatio] = useState(0);
+  const [readyKey, setReadyKey] = useState<string | null>(null);
+  const scrollRef = useRef<FlatList<Verse>>(null);
+  const restoredForKey = useRef<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [burst] = useState(() => new Animated.Value(0));
+  const [pop] = useState(() => new Animated.Value(1));
+  const completionInFlight = useRef(false);
+  const currentKey = `${bookId}:${chapterNumber}`;
+  const currentRouteKey = useRef(currentKey);
+  const visibleCompletionError =
+    completionError?.bookId === bookId && completionError.chapter === chapterNumber
+      ? completionError
+      : null;
+  const toast = toastKey === currentKey;
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then(setReduceMotion)
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!book || !chapter) return;
+    openChapter(bookId, chapterNumber);
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, [bookId, chapterNumber, book, chapter, openChapter]);
+
+  // Route replaced in place: clear the restore latch and snap to the top
+  // before the new chapter lays out, so a stale offset never survives into
+  // the next chapter. Readiness is tracked per chapter key (readyKey) and is
+  // only set from the layout event below — never reset from an effect.
+  useEffect(() => {
+    restoredForKey.current = null;
+    scrollRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [bookId, chapterNumber]);
+
+  useLayoutEffect(() => {
+    currentRouteKey.current = currentKey;
+  }, [currentKey]);
+
+  const onContentSizeChange = useCallback(() => {
+    setReadyKey(`${bookId}:${chapterNumber}`);
+  }, [bookId, chapterNumber]);
+
+  // Reactive restoration: applies only once this chapter's content has laid
+  // out AND the saved last-read actually points at it (openChapter may land
+  // after the first layout); the latch is keyed to the chapter so it can
+  // never permanently miss the correct target.
+  useEffect(() => {
+    if (readyKey !== currentKey || restoredForKey.current === currentKey) return;
+    const offset = restoreScrollOffset(lastRead, bookId, chapterNumber);
+    if (offset === null) return;
+    restoredForKey.current = currentKey;
+    if (offset > 0) {
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollToOffset({ offset, animated: false });
+      });
+    }
+  }, [readyKey, lastRead, bookId, chapterNumber, currentKey]);
+
+  const onScroll = (event: {
+    nativeEvent: {
+      contentOffset: { y: number };
+      contentSize: { height: number };
+      layoutMeasurement: { height: number };
+    };
+  }) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const scrollable = contentSize.height - layoutMeasurement.height;
+    if (scrollable > 0) {
+      setReadRatio(Math.min(Math.max(contentOffset.y / scrollable, 0), 1));
+    }
+    saveScroll(bookId, chapterNumber, Math.max(0, Math.round(contentOffset.y)));
+  };
+
   const goTo = (location: ChapterLocation) => {
     router.replace({
       pathname: "/reader/[book]/[chapter]",
@@ -60,103 +187,435 @@ export default function ReaderScreen() {
     });
   };
 
+  const performCompletion = async (
+    done: boolean,
+    targetBookId = bookId,
+    targetChapter = chapterNumber,
+  ) => {
+    if (completionInFlight.current) return;
+    completionInFlight.current = true;
+    setCompletionPending(true);
+    setCompletionError(null);
+    const targetKey = `${targetBookId}:${targetChapter}`;
+    try {
+      await setCompleted(targetBookId, targetChapter, done);
+      if (done) {
+        if (currentRouteKey.current !== targetKey) return;
+        setToastKey(targetKey);
+        if (!reduceMotion) {
+          burst.setValue(0);
+          pop.setValue(1);
+          Animated.parallel([
+            Animated.timing(burst, {
+              toValue: 1,
+              duration: 800,
+              easing: Easing.out(Easing.quad),
+              useNativeDriver: true,
+            }),
+            Animated.sequence([
+              Animated.timing(pop, { toValue: 1.08, duration: 140, useNativeDriver: true }),
+              Animated.timing(pop, { toValue: 1, duration: 140, useNativeDriver: true }),
+            ]),
+          ]).start();
+        }
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+        toastTimer.current = setTimeout(() => setToastKey(null), 4500);
+      } else {
+        if (currentRouteKey.current === targetKey) setToastKey(null);
+      }
+    } catch {
+      setCompletionError({ bookId: targetBookId, chapter: targetChapter, done });
+    } finally {
+      completionInFlight.current = false;
+      setCompletionPending(false);
+    }
+  };
+
   if (!book || !chapter) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+      <View style={styles.missing}>
         <Stack.Screen options={{ title: "Not found" }} />
-        <View style={styles.centered}>
-          <Text style={styles.emptyText}>This chapter is not in the placeholder dataset.</Text>
-        </View>
-      </SafeAreaView>
+        <StateMessage title="Pasal tidak ditemukan" body="Pasal ini tidak ada dalam data contoh." />
+      </View>
     );
   }
 
+  const prevLabel = previous
+    ? `Pasal sebelumnya: ${getBook(placeholderBible, previous.bookId)?.name} ${previous.chapterNumber}`
+    : "Awal Alkitab, tidak ada pasal sebelumnya";
+  const nextLabel = next
+    ? `Pasal berikutnya: ${getBook(placeholderBible, next.bookId)?.name} ${next.chapterNumber}`
+    : "Akhir Alkitab, tidak ada pasal berikutnya";
+  const endNote = !next
+    ? "Akhir Alkitab"
+    : next.bookId !== bookId
+      ? `Akhir ${book.name}. Berikutnya: ${getBook(placeholderBible, next.bookId)?.name} ${next.chapterNumber}`
+      : `Akhir pasal ${chapterNumber}`;
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
-      <Stack.Screen options={{ title: `${book.name} ${chapter.number}` }} />
+    <View style={styles.screen}>
+      <Stack.Screen options={{ title: `${book.name} ${chapterNumber}` }} />
+      <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 4) }]}>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Kembali"
+          style={({ pressed }) => [styles.back, pressed && styles.backPressed]}
+        >
+          <IconBack />
+        </Pressable>
+        <Text style={styles.topTitle} numberOfLines={1}>
+          {book.name} {chapterNumber}
+        </Text>
+        <View style={[styles.doneSlot, !done && styles.invisible]}>
+          <View style={styles.doneBadge}>
+            <IconCheck size={18} color={colors.indigo} />
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.progressTrack} aria-hidden>
+        <View style={[styles.progressFill, { width: `${Math.round(readRatio * 100)}%` }]} />
+      </View>
+
+      <View style={styles.bannerWrap}>
+        <PlaceholderBanner />
+      </View>
+
       <FlatList
+        ref={scrollRef}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
         data={chapter.verses}
         keyExtractor={(verse) => String(verse.number)}
-        renderItem={({ item }) => <VerseRow verse={item} />}
-        contentContainerStyle={styles.listContent}
-        style={styles.list}
-        ListHeaderComponent={<Text style={styles.notice}>{PLACEHOLDER_NOTICE}</Text>}
+        renderItem={({ item }) => (
+          <View style={styles.verseLine}>
+            <VerseRow verse={item} />
+          </View>
+        )}
+        ListHeaderComponent={
+          <>
+            <Chip tone="lavender" label={book.name} />
+            <Text style={styles.chapterTitle}>Pasal {chapterNumber}</Text>
+          </>
+        }
+        ListFooterComponent={
+          <View style={styles.end}>
+            <Mascot pose="calm" size={88} />
+            <Text style={styles.endNote}>{endNote}</Text>
+          </View>
+        }
+        onScroll={onScroll}
+        scrollEventThrottle={100}
+        onContentSizeChange={onContentSizeChange}
+        initialNumToRender={20}
+        maxToRenderPerBatch={10}
+        windowSize={5}
       />
-      <View style={styles.navBar}>
-        <NavButton
-          label="Previous chapter"
-          disabled={previous === null}
-          onPress={() => previous && goTo(previous)}
-        />
-        <NavButton
-          label="Next chapter"
-          disabled={next === null}
-          onPress={() => next && goTo(next)}
-        />
+
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+        {done && toast ? (
+          <Animated.View
+            style={[styles.statusWrap, { transform: [{ scale: pop }] }]}
+            accessibilityLiveRegion="polite"
+            accessibilityLabel={`${cheer} ${book.name} ${chapterNumber} ditandai selesai.`}
+          >
+            <View style={styles.cheerPill}>
+              <Mascot pose="celebrating" size={40} />
+              <Text style={styles.cheerText}>
+                {cheer} {book.name} {chapterNumber} ditandai selesai.
+              </Text>
+            </View>
+            {reduceMotion
+              ? null
+              : BURST.map((dot, i) => (
+                  <Animated.View
+                    key={i}
+                    pointerEvents="none"
+                    style={[
+                      styles.burstDot,
+                      {
+                        backgroundColor: dot.color,
+                        opacity: burst.interpolate({
+                          inputRange: [0, 0.7, 1],
+                          outputRange: [1, 1, 0],
+                        }),
+                        transform: [
+                          {
+                            translateX: burst.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0, dot.dx],
+                            }),
+                          },
+                          {
+                            translateY: burst.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0, dot.dy],
+                            }),
+                          },
+                          {
+                            scale: burst.interpolate({ inputRange: [0, 1], outputRange: [1, 0.4] }),
+                          },
+                        ],
+                      },
+                    ]}
+                  />
+                ))}
+          </Animated.View>
+        ) : done ? (
+          <View style={styles.statusWrap} accessibilityLiveRegion="polite" accessibilityLabel="Pasal selesai">
+            <View style={styles.statusDone}>
+              <IconCheck size={14} color={colors.goldText} />
+              <Text style={styles.statusDoneText}>Pasal selesai</Text>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.statusWrap} />
+        )}
+
+        {visibleCompletionError !== null ? (
+          <View style={styles.completionError}>
+            <Text style={styles.completionErrorText} accessibilityRole="alert">
+              Penyimpanan gagal. Progres belum berubah; coba lagi.
+            </Text>
+            <Button
+              variant="secondary"
+              disabled={completionPending}
+              onPress={() =>
+                void performCompletion(
+                  visibleCompletionError.done,
+                  visibleCompletionError.bookId,
+                  visibleCompletionError.chapter,
+                )
+              }
+            >
+              Coba lagi
+            </Button>
+          </View>
+        ) : null}
+
+        <View style={styles.footerRow}>
+          <NavArrow
+            label={prevLabel}
+            direction="prev"
+            disabled={!previous}
+            onPress={() => previous && goTo(previous)}
+          />
+          <View style={styles.footerCenter}>
+            {done ? (
+              <Button
+                variant="secondary"
+                disabled={completionPending}
+                onPress={() => void performCompletion(false)}
+              >
+                {completionPending ? "Menyimpan..." : "Batalkan penandaan"}
+              </Button>
+            ) : (
+              <Button
+                variant="gold"
+                disabled={completionPending}
+                onPress={() => void performCompletion(true)}
+                accessibilityLabel={`Tandai selesai ${book.name} ${chapterNumber}`}
+                icon={<IconCheck size={20} color={colors.indigo} />}
+              >
+                {completionPending ? "Menyimpan..." : "Tandai selesai"}
+              </Button>
+            )}
+          </View>
+          <NavArrow
+            label={nextLabel}
+            direction="next"
+            disabled={!next}
+            onPress={() => next && goTo(next)}
+          />
+        </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  screen: {
     flex: 1,
-    backgroundColor: "#FFFBEB",
+    backgroundColor: colors.ivory,
   },
-  list: {
+  missing: {
     flex: 1,
+    backgroundColor: colors.ivory,
+    justifyContent: "center",
   },
-  centered: {
-    flex: 1,
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 56,
+    paddingHorizontal: 8,
+    paddingTop: 4,
+  },
+  back: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
   },
-  emptyText: {
-    fontSize: 16,
-    color: "#475569",
+  backPressed: {
+    backgroundColor: "rgba(39,42,85,0.08)",
+  },
+  topTitle: {
+    flex: 1,
     textAlign: "center",
+    fontFamily: fonts.extrabold,
+    fontSize: 14,
+    color: colors.indigo,
   },
-  listContent: {
+  doneSlot: {
+    width: 48,
+    alignItems: "center",
+  },
+  invisible: {
+    opacity: 0,
+  },
+  doneBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.gold,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  progressTrack: {
+    height: 6,
+    marginHorizontal: 20,
+    borderRadius: 3,
+    backgroundColor: colors.divider,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 3,
+    backgroundColor: colors.lavender,
+  },
+  bannerWrap: {
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 24,
+    paddingBottom: 8,
   },
-  notice: {
-    fontSize: 12,
-    color: "#B45309",
-    marginBottom: 16,
-  },
-  navBar: {
-    flexDirection: "row",
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#EEEDED",
-    backgroundColor: "#FFFFFF",
-  },
-  navButton: {
+  scroll: {
     flex: 1,
-    minHeight: 48,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 32,
+  },
+  chapterTitle: {
+    fontFamily: fonts.extrabold,
+    fontSize: 40,
+    lineHeight: 46,
+    color: colors.indigo,
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  verseLine: {
+    borderLeftWidth: 3,
+    borderStyle: "dashed",
+    borderColor: "rgba(182,154,87,0.6)",
+    paddingLeft: 12,
+  },
+  end: {
+    alignItems: "center",
+    marginTop: 32,
+  },
+  endNote: {
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    color: colors.inkMuted,
+    marginTop: 8,
+    textAlign: "center",
+  },
+  footer: {
+    borderTopWidth: 2,
+    borderTopColor: colors.divider,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  statusWrap: {
+    minHeight: 40,
+    marginBottom: 4,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 12,
-    backgroundColor: "#4C1D95",
-    paddingHorizontal: 12,
   },
-  navButtonDisabled: {
-    backgroundColor: "#E2E8F0",
+  cheerPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: colors.mintTint,
+    borderRadius: radius.full,
+    paddingLeft: 4,
+    paddingRight: 12,
+    paddingVertical: 4,
   },
-  navButtonPressed: {
-    opacity: 0.8,
+  cheerText: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: colors.mintInk,
   },
-  navButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
+  statusDone: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
-  navButtonTextDisabled: {
-    color: "#94A3B8",
+  statusDoneText: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: colors.goldText,
+  },
+  burstDot: {
+    position: "absolute",
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  completionError: {
+    paddingHorizontal: 8,
+    paddingBottom: 8,
+    gap: 8,
+  },
+  completionErrorText: {
+    color: colors.coralInk,
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
+  },
+  footerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  footerCenter: {
+    flex: 1,
+  },
+  arrow: {
+    width: 52,
+    height: 52,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    borderWidth: 2,
+    borderColor: colors.divider,
+    borderBottomWidth: 4,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  arrowDisabled: {
+    backgroundColor: "rgba(227,217,195,0.4)",
+    borderColor: "transparent",
+    borderBottomWidth: 0,
+  },
+  arrowPressed: {
+    transform: [{ translateY: 3 }],
   },
 });
