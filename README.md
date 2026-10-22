@@ -1,27 +1,60 @@
 # Meno
 
-Meno is an **Android-first mobile Bible reader** with **gentle, gamified
-reading habits**, built as a **university assignment**. The aim is a calm,
-Scripture-first reading experience supported by light, encouraging habit
-mechanics (progress feedback; streaks and daily goals are **deferred** from
-the MVP — see [`docs/PRD.md`](docs/PRD.md) §10).
+Meno adalah aplikasi mobile pembaca Alkitab (**Android-first Bible reader**) dengan pendekatan pembiasaan membaca yang tenang (*gentle, habit-building mechanics*), dikembangkan sebagai tugas mata kuliah pengembangan aplikasi. Meno berfokus pada pengalaman membaca firman yang khidmat (*Scripture-first*), bebas dari distraksi, kompetisi berlebihan, maupun rasa bersalah.
 
-> **Status (2026-10-22):** Both MVP features are implemented and runnable:
-> the **Bible Reader** (book list → chapter grid → reader) and **Persistent
-> Reading Progress** (SQLite last-read + idempotent chapter completion, with a
-> Kemajuan screen), plus the two-tab shell (Baca, Kemajuan) and the integrated
-> design system. **73 tests pass across 7 suites** (see
-> [`docs/TESTING.md`](docs/TESTING.md)). The bundled Bible text is still a
-> clearly-labelled **synthetic placeholder** — no real translation is bundled
-> (ILT3 redistribution permission remains unconfirmed,
-> [`docs/PRD.md`](docs/PRD.md) §5.4). An Android Expo Go smoke test observed
-> Home, chapter open, completion/undo, Progress, and completion/progress
-> persisting after force-stop/relaunch. Android bundle export passed; this is
-> not a native APK test. Native SQLite rollback and real storage-failure
-> recovery remain unverified. The demo video is outside this repository and
-> submission is unconfirmed. As of this date
-> the implementation exists in the working tree; **commits are pending the
-> student's review and approval**.
+---
+
+## Ringkasan Proyek (Checkpoint Pertemuan 1)
+
+### 1. Deskripsi Masalah
+Banyak orang memiliki keinginan untuk membaca Alkitab secara teratur, namun kesulitan membangun dan mempertahankan kebiasaan membaca harian. Aplikasi Alkitab yang ada di pasaran saat ini umumnya terbagi menjadi dua ekstrem:
+- **Terlalu utilitarian / kaku**: hanya berupa teks digital tanpa motivasi atau pelacakan progres yang jelas.
+- **Terlalu banyak gamifikasi bising**: notifikasi agresif, sistem poin, dan *streak guilt* (tekanan berantai) yang justru terasa kurang khidmat dan membuat pengguna menyerah ketika melewatkan satu hari.
+
+Meno hadir mengisi celah tersebut: memberikan pengalaman membaca yang tenang, terstruktur, menghormati teks Kitab Suci, serta didukung pencatatan progres lokal yang terpercaya.
+
+### 2. Profil Target Pengguna
+- **Pengguna Utama ("The Returning Reader")**: Orang muda / dewasa yang ingin kembali membiasakan membaca Alkitab setiap hari setelah sempat terhenti. Membutuhkan kemudahan untuk melanjutkan bacaan terakhir dalam satu ketukan tanpa harus mencari ulang pasal, dan menghargai dorongan positif tanpa tekanan.
+- **Pengguna Sekunder ("The New Reader")**: Orang yang baru mulai membaca Alkitab dan membutuhkan struktur bacaan yang jelas (pembagian Perjanjian Lama & Baru, ringkasan pasal) dengan beban kognitif yang rendah.
+
+### 3. Manfaat Aplikasi
+1. **Kontinuitas Instan (One-tap Resume)**: Aplikasi mengingat kitab, pasal, dan posisi scroll terakhir sehingga pengguna dapat langsung melanjutkan membaca dalam 1 ketukan.
+2. **Pencatatan Progres Terpercaya (Idempotent)**: Menandai pasal yang sama berulang kali tidak akan menggandakan statistik bacaan. Angka progres yang dilihat pengguna selalu akurat.
+3. **Penyimpanan Lokal & Privasi Penuh**: Semua data progres tersimpan di perangkat melalui SQLite lokal—tidak membutuhkan akun, koneksi internet, maupun backend eksternal.
+4. **Kendali Penuh di Tangan Pembaca**: Menandai selesai adalah tindakan sadar pembaca (tombol "Tandai selesai"), bukan otomatis hanya karena membuka pasal.
+5. **Dorongan Positif Tanpa Tekanan**: Tonggak pencapaian bertahap (*milestones*) dan visual tenang tanpa papan peringkat (*leaderboard*) atau poin yang menimbulkan stres.
+
+### 4. Daftar Fitur Inti (MVP)
+1. **Bible Reader (Pembaca Alkitab)**:
+   - Navigasi daftar kitab (Perjanjian Lama & Perjanjian Baru) dan grid nomor pasal.
+   - Tampilan pembaca teks per pasal dengan virtualisasi daftar ayat yang responsif.
+   - Navigasi lintas kitab (tombol Pasal Selanjutnya / Sebelumnya menyeberang batas kitab secara mulus).
+   - Memori bacaan terakhir (*last-read position & scroll*).
+2. **Persistent Reading Progress (Pelacakan Progres Lokal)**:
+   - Penyimpanan berbasis SQLite (`expo-sqlite`) yang bertahan meskipun aplikasi ditutup/dimatikan.
+   - Tombol toggle status selesai (*"Tandai selesai"* / *"Batalkan penandaan"*).
+   - Layar Kemajuan: total pasal selesai, persentase Alkitab, jumlah hari membaca (*"X hari membaca"*), dan progress bar per-perjanjian.
+3. **Ayat Harian & Devosional (Integrasi API)**:
+   - Pemuatan ayat inspirasi harian secara dinamis dari REST API Alkitab online.
+4. **Fitur Lanjutan (Hardware & OS Features)**:
+   - Notifikasi pengingat membaca harian lokal (*Local Notification*).
+   - Sensor gerak (*Shake to Read Random Chapter*).
+   - Autentikasi biometrik (*Fingerprint / Face ID App Lock*).
+
+### 5. Fitur yang Tidak Dikerjakan (Out of Scope)
+- Akun pengguna di cloud, sinkronisasi multi-device, atau backend server mandiri (fokus pada *offline-first* dan privasi).
+- Fitur sosial, komentar publik, obrolan, atau *leaderboard*.
+- Audio Alkitab dan kamus konkordansi mendalam.
+- Monetisasi, iklan komersial, atau konten berbayar.
+
+### 6. Kriteria Aplikasi Dinyatakan Berhasil
+1. **Fungsionalitas Pembaca**: Seluruh 66 kitab dan 1.189 pasal dapat diakses, dibaca, dan dinavigasi maju/mundur dengan benar tanpa crash.
+2. **Persistensi Data**: Menandai pasal selesai bertahan saat aplikasi ditutup paksa (*force close*) dan dibuka kembali.
+3. **Kualitas Pengujian**: Minimal 70+ pengujian unit (*automated tests*) berjalan bersih (pass 100%) mencakup logika navigasi, idempotensi progres, dan aturan database.
+4. **Antarmuka Responsif & Rapi**: Tampilan memenuhi standar desain Meno (Indonesia, tipografi Plus Jakarta Sans, kontras warna yang nyaman, serta penanganan *safe area* Android).
+5. **Kesiapan Demo**: Aplikasi dapat dijalankan dan didemonstrasikan langsung di hadapan dosen/evaluator melalui Android Emulator atau perangkat fisik via Expo Go.
+
+---
 
 ## Stack
 
@@ -124,6 +157,7 @@ added until licensing is confirmed and recorded (see
 
 ## Documentation
 
+- [`docs/CHECKPOINT_EVALUATION.md`](docs/CHECKPOINT_EVALUATION.md) — panduan pemenuhan & pembuktian Checkpoint Dosen (P1–P7)
 - [`HowToRun.md`](HowToRun.md) — setup, run, and verification commands
 - [`checklist_mvp.md`](checklist_mvp.md) — acceptance-criteria evidence map
 - [`docs/PRD.md`](docs/PRD.md)

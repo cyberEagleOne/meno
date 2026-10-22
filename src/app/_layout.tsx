@@ -46,6 +46,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ contentStyle: { backgroundColor: colors.ivory }, headerShown: false }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="reader/[book]/[chapter]" />
+          <Stack.Screen name="settings" />
         </Stack>
       </ProgressGate>
     </ProgressProvider>

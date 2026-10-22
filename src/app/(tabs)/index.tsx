@@ -5,7 +5,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Chip } from "../../components/ui/Chip";
-import { IconBook, IconChevron, IconPlay, IconSpark } from "../../components/ui/Icons";
+import { DailyVerseCard } from "../../components/ui/DailyVerseCard";
+import { IconBook, IconChevron, IconGear, IconPlay, IconSpark } from "../../components/ui/Icons";
 import { Mascot } from "../../components/ui/Mascot";
 import { ProgressRing } from "../../components/ui/ProgressRing";
 import { getBookById, TOTAL_CHAPTERS } from "../../data/canon";
@@ -42,6 +43,18 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.content} style={styles.scroll}>
+        <View style={styles.topActionRow}>
+          <Pressable
+            onPress={() => router.push("/settings" as any)}
+            style={({ pressed }) => [styles.settingsButton, pressed && styles.pressed]}
+            accessibilityRole="button"
+            accessibilityLabel="Buka Pengaturan dan Fitur Lanjutan"
+          >
+            <IconGear size={16} color={colors.indigo} />
+            <Text style={styles.settingsButtonText}>Fitur & Pengaturan (P4 / P7)</Text>
+          </Pressable>
+        </View>
+
         <View style={styles.header}>
           <View style={styles.headerText}>
             <Text style={styles.greeting}>{greeting()}!</Text>
@@ -104,6 +117,8 @@ export default function HomeScreen() {
             </Button>
           </Card>
         )}
+
+        <DailyVerseCard />
 
         <Pressable
           onPress={() => router.navigate("/progress")}
@@ -338,5 +353,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.lavenderInk,
     marginTop: 2,
+  },
+  topActionRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginBottom: 8,
+  },
+  settingsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.divider,
+    borderRadius: radius.full,
+  },
+  settingsButtonText: {
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    color: colors.indigo,
+  },
+  pressed: {
+    opacity: 0.75,
   },
 });
