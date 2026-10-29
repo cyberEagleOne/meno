@@ -201,6 +201,38 @@ Berikut adalah katalog error riil yang dapat terjadi pada aplikasi Meno, represe
 
 ---
 
+### Kasus 7: Kegagalan Sensor Akselerometer pada Platform Web (`this._nativeModule.addListener is not a function`)
+
+#### Contoh Log Aman:
+```json
+{
+  "timestamp": "2026-10-30T01:35:10.412Z",
+  "level": "WARN",
+  "category": "HARDWARE_SENSOR",
+  "event": "sensor_listener_unsupported_on_web",
+  "errorType": "TypeError",
+  "platform": "web",
+  "fallbackActive": true,
+  "sanitizedMessage": "Native accelerometer module not available on web; falling back to devicemotion / manual simulation"
+}
+```
+
+#### Penyebab Error:
+1. Pustaka `expo-sensors` (`Accelerometer`) dirancang untuk mengakses sensor perangkat keras fisik pada sistem operasi mobile (Android/iOS).
+2. Ketika dijalankan di browser web, modul jembatan native `this._nativeModule` tidak tersedia atau bernilai `undefined`. Memanggil `Accelerometer.addListener(...)` secara langsung menyebabkan *uncaught exception* `TypeError: this._nativeModule.addListener is not a function`.
+3. Komponen belum dibungkus oleh `ErrorBoundary` bawaan Expo Router sehingga error level komponen langsung merusak (*unmount*) tampilan antarmuka.
+
+#### Tindakan Perbaikan:
+1. **Pengecekan Platform & Fallback Web API**:
+   - Pada [src/services/sensorService.ts](file:///c:/Users/siril/Documents/AppDev/meno/src/services/sensorService.ts), ditambahkan percabangan `Platform.OS === 'web'`. Di browser, fungsi memanfaatkan Web API standar `window.addEventListener('devicemotion', ...)` jika peramban mendukungnya, atau *no-op cleanup* yang aman jika peramban desktop tidak memiliki sensor fisik.
+   - Panggilan `Accelerometer.addListener` pada platform native dibungkus dengan pengecekan ketersediaan fungsi `typeof Accelerometer.addListener === 'function'` serta blok `try...catch`.
+2. **Penyediaan Tombol Simulasi Emulator/Web**:
+   - Pada layar Pengaturan, pengguna disediakan tombol *"Simulasi Gerakan Goyang (Emulator)"* yang memicu fungsi acak ayat tanpa bergantung pada sensor fisik.
+3. **Pemasangan Error Boundary Global**:
+   - Diekspor komponen `ErrorBoundary` standar pada [src/app/_layout.tsx](file:///c:/Users/siril/Documents/AppDev/meno/src/app/_layout.tsx) menggunakan komponen `StateMessage` agar setiap kegagalan *render* dapat ditangkap dengan ramah pengguna tanpa *blank screen*.
+
+---
+
 ## 3. Kesimpulan Implementasi
 
 Dengan menerapkan prinsip-prinsip di atas:
