@@ -79,65 +79,150 @@ Verified toolchain versions (2026-10-11): `expo 57.0.27`, `react-native 0.86.3`,
   platform-tools, and an emulator — at `~/.local/share/android-sdk`.
 - An **Android emulator (AVD)** named `meno_api36`.
 
-## Setup
+## Panduan Fresh Clone & Instalasi Ulang
 
-From the project root:
+### 1. Fresh Clone Repository
 
-```bash
-fnm exec --using=22 -- npm install
-```
-
-## Run on the Android emulator
-
-The AVD must be **running before** you start Expo. Set the environment for the
-current shell and boot the existing `meno_api36` AVD:
+Untuk menyalin (*clone*) proyek ini dari repositori GitHub ke komputer lokal Anda:
 
 ```bash
-export ANDROID_HOME="$HOME/.local/share/android-sdk"
-export PATH="$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH"
-export JAVA_HOME="$HOME/.local/share/jdks/temurin-17"
-
-# Launch the existing AVD (headless example)
-emulator -avd meno_api36 -no-window -no-audio -no-boot-anim \
-  -gpu swiftshader_indirect -memory 2048 -no-snapshot -no-metrics &
-
-adb wait-for-device
-adb shell getprop sys.boot_completed   # expect: 1
+git clone https://github.com/cyberEagleOne/meno.git
+cd meno
 ```
 
-Then start Expo and open the app on Android:
+### 2. Instalasi Dependensi (Standar)
+
+Pastikan Anda menggunakan **Node.js 22** (atau `>= 22.13.0`):
 
 ```bash
-fnm exec --using=22 -- npx expo start --android
+npm install
 ```
 
-If you prefer, start Metro separately and open Android from the Expo CLI:
+### 3. Prosedur Instalasi Ulang Bersih (Clean Reinstall)
+
+Jika Anda ingin melakukan instalasi ulang bersih (*fresh re-install*) atau membersihkan cache dependensi lama:
+
+- **Windows (PowerShell)**:
+  ```powershell
+  Remove-Item -Recurse -Force node_modules, package-lock.json
+  npm cache clean --force
+  npm install
+  ```
+
+- **macOS / Linux**:
+  ```bash
+  rm -rf node_modules package-lock.json
+  npm cache clean --force
+  npm install
+  ```
+
+---
+
+## Cara Menjalankan & Mengakses Paket Demo Aplikasi
+
+Pilih salah satu cara akses aplikasi sesuai kebutuhan pengujian atau demonstrasi:
+
+### Opsi A: Akses Cepat via Web Preview (Paling Mudah untuk Demo)
+Aplikasi Meno mendukung web preview responsif yang dapat langsung dicoba melalui peramban:
+```bash
+npm run web
+# atau
+npx expo start --web
+```
+Aplikasi akan otomatis terbuka pada `http://localhost:8081` (tampilan ramah navigasi mobile).
+
+### Opsi B: Akses via Perangkat Fisik (Expo Go di Android / iOS)
+1. Pasang aplikasi **Expo Go** dari Google Play Store atau Apple App Store pada smartphone.
+2. Pastikan komputer dan smartphone terhubung pada jaringan Wi-Fi yang sama.
+3. Jalankan server Metro:
+   ```bash
+   npx expo start
+   ```
+4. Buka Expo Go dan pindai (*scan*) QR Code yang tampil di layar terminal.
+
+### Opsi C: Akses via Android Emulator
+Jika Anda telah mengonfigurasi Android SDK dan AVD:
+```bash
+npm run android
+```
+*(Lihat rincian konfigurasi AVD di [HowToRun.md](HowToRun.md) jika emulator belum berjalan).*
+
+### Opsi D: Akses Paket Demo Lokal Hasil Build
+Jalankan bundle statis yang telah diekspor:
+```bash
+npx serve dist
+```
+
+---
+
+## Prosedur Build & Deployment
+
+### 1. Build Bundle Aplikasi
+
+Meno dapat diekspor menjadi bundle produksi siap pakai tanpa memerlukan Android Studio secara lokal:
+
+- **Build Bundle Android (Hermes + JS Bundle)**:
+  ```bash
+  npx expo export --platform android
+  ```
+  *Output:* Direktori `dist/` berisi file `entry-*.hbc` (Hermes bytecode teroptimasi) dan aset grafis.
+
+- **Build Bundle Web Statis**:
+  ```bash
+  npx expo export --platform web
+  ```
+  *Output:* Direktori `dist/` berisi seluruh file HTML statis per rute (`/index`, `/settings`, `/library`, dll.) dan bundle JS web.
+
+- **Build Standalone APK Android (via EAS Build)**:
+  Jika ingin menghasilkan file installer `.apk` standalone:
+  ```bash
+  npx eas-cli build --platform android --profile preview
+  ```
+
+### 2. Prosedur Deployment
+
+- **Deploy Web Demo ke Vercel**:
+  ```bash
+  npx vercel deploy --prebuilt
+  ```
+- **Deploy Web Demo ke GitHub Pages**:
+  Unggah seluruh isi direktori `dist/` ke branch `gh-pages` pada repositori GitHub.
+
+---
+
+## Verifikasi Kualitas & Test Suite (Unit Test All Passed)
+
+Sebelum melakukan demonstrasi atau commit, jalankan pengujian untuk memastikan seluruh fungsionalitas berjalan normal:
 
 ```bash
-fnm exec --using=22 -- npx expo start
+# 1. Jalankan seluruh unit test (83 skenario pengujian)
+npm test
+
+# 2. Periksa static typing TypeScript
+npx tsc --noEmit
+
+# 3. Periksa aturan kode (ESLint)
+npm run lint
 ```
 
-## Verification
+**Status Verifikasi Terkini**:
+- ✅ **Unit Tests**: 9 test suites / 83 unit test **100% LULUS (Passed)**.
+- ✅ **TypeScript**: Strict clean, 0 error.
+- ✅ **Linter**: Clean, 0 warnings/errors.
+- ✅ **Bundle Export**: Android & Web build sukses di direktori `dist/`.
 
-```bash
-fnm exec --using=22 -- npx tsc --noEmit
-fnm exec --using=22 -- npm run lint
-fnm exec --using=22 -- bash -c 'CI=1 npm test -- --runInBand'
-fnm exec --using=22 -- npx expo-doctor
-```
+Rincian inventaris pengujian tercatat lengkap di [`docs/TESTING.md`](docs/TESTING.md).
 
-Actual results and the test inventory are recorded in
-[`docs/TESTING.md`](docs/TESTING.md).
+---
 
 ## MVP status (implemented)
 
-Per [`docs/PRD.md`](docs/PRD.md), the MVP is two features — both now implemented:
+Per [`docs/PRD.md`](docs/PRD.md), MVP mencakup fitur utama yang telah diimplementasikan penuh:
 
-1. **Bible Reader** — book list, chapter grid, verse rendering, next/previous
-   chapter navigation (cross-book boundaries), last-read restore.
-2. **Persistent Reading Progress** — idempotent per-chapter completion stored
-   in SQLite (survives restarts), last-read and scroll position persistence,
-   chapters-read totals, milestones, per-testament progress (Kemajuan screen).
+1. **Bible Reader** — navigasi kitab (PL & PB), grid nomor pasal, tampilan teks ayat, navigasi lintas kitab (*cross-book boundaries*), pemulihan posisi bacaan terakhir (*last-read restore*).
+2. **Persistent Reading Progress** — pencatatan progres per pasal idempotent berbasis SQLite (bertahan saat restart), pelacakan posisi scroll, kalkulasi persentase dan hari membaca (*reading days*), layar Kemajuan.
+3. **Daily Verse Integration** — integrasi REST API online untuk ayat inspirasi harian dengan penanganan loading, error, retry, dan validasi model data.
+4. **Hardware & Advanced OS Features** — notifikasi harian lokal (`expo-notifications`), sensor goyang ganti pasal acak (`expo-sensors`), dan proteksi privasi biometrik/PIN (`expo-local-authentication`).
 
 ### Explicitly out of scope (for now)
 
@@ -155,28 +240,38 @@ unresolved**. Permission must not be assumed granted, and no Bible text will be
 added until licensing is confirmed and recorded (see
 [`docs/PRD.md`](docs/PRD.md) §5.4).
 
-## Documentation
+---
 
-- [`docs/CHECKPOINT_EVALUATION.md`](docs/CHECKPOINT_EVALUATION.md) — panduan pemenuhan & pembuktian Checkpoint Dosen (P1–P7)
-- [`HowToRun.md`](HowToRun.md) — setup, run, and verification commands
-- [`checklist_mvp.md`](checklist_mvp.md) — acceptance-criteria evidence map
-- [`docs/PRD.md`](docs/PRD.md)
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
-- [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md)
-- [`docs/TESTING.md`](docs/TESTING.md)
-- [`docs/ASSIGNMENT_TRACEABILITY.md`](docs/ASSIGNMENT_TRACEABILITY.md)
-- [`docs/12_MEETING_PLAN.md`](docs/12_MEETING_PLAN.md)
+## Dokumentasi Lengkap Proyek
 
-## Repository layout
+| Dokumen | Deskripsi |
+|---|---|
+| [`docs/SECURITY_AUDIT.md`](docs/SECURITY_AUDIT.md) | **Hasil Uji Security**, audit dependensi (`npm audit`), dan catatan perubahan relevan |
+| [`docs/LOGGING_AND_ERROR_HANDLING.md`](docs/LOGGING_AND_ERROR_HANDLING.md) | **Contoh Log Aman**, mitigasi data PII, penyebab error, dan tindakan perbaikannya |
+| [`docs/CHECKPOINT_EVALUATION.md`](docs/CHECKPOINT_EVALUATION.md) | Panduan pemenuhan & pembuktian Checkpoint Dosen (P1–P7) |
+| [`docs/TESTING.md`](docs/TESTING.md) | Catatan eksekusi riil pengujian unit (83 tests pass), tsc, lint, dan bundler |
+| [`HowToRun.md`](HowToRun.md) | Panduan setup teknis lingkungan Android SDK & AVD |
+| [`checklist_mvp.md`](checklist_mvp.md) | Matriks pemenuhan acceptance criteria MVP |
+| [`docs/PRD.md`](docs/PRD.md) | Product Requirement Document (PRD) & User Stories |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Dokumentasi arsitektur 4-layer, skema database SQLite, dan data model |
+| [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) | Token desain, tipografi, palet warna, dan aset Meno |
+| [`docs/ASSIGNMENT_TRACEABILITY.md`](docs/ASSIGNMENT_TRACEABILITY.md) | Matriks penelusuran requirement ke kode pengujian |
+| [`docs/12_MEETING_PLAN.md`](docs/12_MEETING_PLAN.md) | Rencana pertemuan dan catatan kontribusi |
+
+---
+
+## Struktur Direktori Repositori
 
 ```
-src/app/        Expo Router routes (tabs, library, chapters, reader)
-src/data/       SQLite persistence (expo-sqlite driver seam), placeholder dataset
-src/domain/     Pure, unit-tested domain logic (navigation, progress rules)
-src/theme/      Design tokens (colors, fonts, spacing)
-src/components/ui/  Shared UI components (buttons, rings, icons, mascots)
-assets/         Icons, splash, and Meno mascot artwork
-docs/           Planning documents and evidence
-.opencode/      OpenCode workflow skills
+src/app/            Expo Router routes (tabs, library, chapters, reader, settings)
+src/data/           SQLite persistence (expo-sqlite driver seam), REST API repository, placeholder dataset
+src/domain/         Pure, unit-tested domain logic (navigation, progress rules, form validation, daily verse)
+src/services/       Advanced OS features (notifikasi, sensor accelerometer, biometrik)
+src/theme/          Design tokens (colors, fonts, spacing)
+src/components/ui/  Shared UI components (buttons, rings, icons, cards, mascots)
+assets/             Icons, splash, and Meno mascot artwork
+docs/               Dokumentasi teknis, audit keamanan, panduan error, dan bukti evaluasi
+dist/               Hasil build bundle produksi (Android Hermes & Web static)
 app.json  package.json  tsconfig.json  metro.config.js  eslint.config.js
 ```
+
