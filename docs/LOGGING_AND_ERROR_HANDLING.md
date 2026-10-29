@@ -169,6 +169,70 @@ Berikut adalah katalog error riil yang dapat terjadi pada aplikasi Meno, represe
 
 ---
 
+### Kasus 6: Kegagalan Bundling Web Metro Akibat Web Worker SQLite (`Worker chunk not found`)
+
+#### Contoh Log Aman:
+```json
+{
+  "timestamp": "2026-10-30T01:30:15.890Z",
+  "level": "ERROR",
+  "category": "METRO_BUNDLER_WEB",
+  "event": "metro_worker_chunk_missing",
+  "errorType": "AssertionError [ERR_ASSERTION]",
+  "module": "expo-sqlite/web/worker.ts",
+  "platform": "web",
+  "sanitizedMessage": "Worker chunk not found during Metro static web serialization"
+}
+```
+
+#### Penyebab Error:
+1. Pustaka `expo-sqlite` versi web menggunakan browser Web Worker (`new Worker(new URL('./worker', window.location.href))`).
+2. Metro web bundler pada sistem operasi Windows tidak memiliki konfigurasi bawaan untuk menghasilkan *worker chunk* secara otomatis dari modul TypeScript mentah di `node_modules`.
+3. Pada file driver tunggal terdahulu (`sqliteDriver.ts`), terdapat import statis: `import * as SQLite from "expo-sqlite"`. Meskipun terdapat percabangan logika `Platform.OS === 'web'` pada saat *runtime*, Metro tetap membedah dan memasukkan paket `expo-sqlite` ke dalam *dependency graph* web saat proses kompilasi awal (*static analysis*), sehingga proses bundling web terhenti dengan error `AssertionError [ERR_ASSERTION]: Worker chunk not found`.
+
+#### Tindakan Perbaikan:
+1. **Pemisahan Modul Berbasis Platform Extension**:
+   - Dibuat file driver khusus web: [src/data/sqliteDriver.web.ts](file:///c:/Users/siril/Documents/AppDev/meno/src/data/sqliteDriver.web.ts) yang mengimplementasikan antarmuka `SqlDriver` berbasis `window.localStorage` murni tanpa sekalipun mengimpor modul `expo-sqlite`.
+   - File [src/data/sqliteDriver.ts](file:///c:/Users/siril/Documents/AppDev/meno/src/data/sqliteDriver.ts) dikhususkan untuk lingkungan *native* (Android & iOS).
+2. **Resolusi Metro Bersih**:
+   - Kompiler Metro secara otomatis mengenali ekstensi `.web.ts` saat menargetkan platform web dan melewati `sqliteDriver.ts`. Hal ini meniadakan dependensi `expo-sqlite/web/worker.ts` dari *bundle graph* web.
+3. **Verifikasi Build**:
+   - Perintah `npx expo export --platform web` dan server `npm run web` kini menghasilkan status `StatusCode 200 OK` dan bundling sukses tanpa error chunk.
+
+---
+
+### Kasus 7: Kegagalan Sensor Akselerometer pada Platform Web (`this._nativeModule.addListener is not a function`)
+
+#### Contoh Log Aman:
+```json
+{
+  "timestamp": "2026-10-30T01:35:10.412Z",
+  "level": "WARN",
+  "category": "HARDWARE_SENSOR",
+  "event": "sensor_listener_unsupported_on_web",
+  "errorType": "TypeError",
+  "platform": "web",
+  "fallbackActive": true,
+  "sanitizedMessage": "Native accelerometer module not available on web; falling back to devicemotion / manual simulation"
+}
+```
+
+#### Penyebab Error:
+1. Pustaka `expo-sensors` (`Accelerometer`) dirancang untuk mengakses sensor perangkat keras fisik pada sistem operasi mobile (Android/iOS).
+2. Ketika dijalankan di browser web, modul jembatan native `this._nativeModule` tidak tersedia atau bernilai `undefined`. Memanggil `Accelerometer.addListener(...)` secara langsung menyebabkan *uncaught exception* `TypeError: this._nativeModule.addListener is not a function`.
+3. Komponen belum dibungkus oleh `ErrorBoundary` bawaan Expo Router sehingga error level komponen langsung merusak (*unmount*) tampilan antarmuka.
+
+#### Tindakan Perbaikan:
+1. **Pengecekan Platform & Fallback Web API**:
+   - Pada [src/services/sensorService.ts](file:///c:/Users/siril/Documents/AppDev/meno/src/services/sensorService.ts), ditambahkan percabangan `Platform.OS === 'web'`. Di browser, fungsi memanfaatkan Web API standar `window.addEventListener('devicemotion', ...)` jika peramban mendukungnya, atau *no-op cleanup* yang aman jika peramban desktop tidak memiliki sensor fisik.
+   - Panggilan `Accelerometer.addListener` pada platform native dibungkus dengan pengecekan ketersediaan fungsi `typeof Accelerometer.addListener === 'function'` serta blok `try...catch`.
+2. **Penyediaan Tombol Simulasi Emulator/Web**:
+   - Pada layar Pengaturan, pengguna disediakan tombol *"Simulasi Gerakan Goyang (Emulator)"* yang memicu fungsi acak ayat tanpa bergantung pada sensor fisik.
+3. **Pemasangan Error Boundary Global**:
+   - Diekspor komponen `ErrorBoundary` standar pada [src/app/_layout.tsx](file:///c:/Users/siril/Documents/AppDev/meno/src/app/_layout.tsx) menggunakan komponen `StateMessage` agar setiap kegagalan *render* dapat ditangkap dengan ramah pengguna tanpa *blank screen*.
+
+---
+
 ## 3. Kesimpulan Implementasi
 
 Dengan menerapkan prinsip-prinsip di atas:

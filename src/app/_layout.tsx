@@ -5,7 +5,7 @@ import {
   PlusJakartaSans_700Bold,
   PlusJakartaSans_800ExtraBold,
 } from "@expo-google-fonts/plus-jakarta-sans";
-import { Stack } from "expo-router";
+import { Stack, type ErrorBoundaryProps } from "expo-router";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -19,6 +19,21 @@ import { ProgressProvider, useProgress } from "../data/progressContext";
 import { colors, fonts } from "../theme/colors";
 
 void SplashScreen.preventAutoHideAsync();
+
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return (
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+      <View style={styles.centre}>
+        <StateMessage
+          tone="error"
+          title="Terjadi kendala pada antarmuka"
+          body={error?.message || "Terjadi kesalahan tidak terduga. Silakan coba muat ulang."}
+          action={<Button onPress={retry}>Muat ulang tampilan</Button>}
+        />
+      </View>
+    </SafeAreaView>
+  );
+}
 
 export default function RootLayout() {
   const [loaded] = useFonts({

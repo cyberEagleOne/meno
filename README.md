@@ -195,7 +195,7 @@ Meno dapat diekspor menjadi bundle produksi siap pakai tanpa memerlukan Android 
 Sebelum melakukan demonstrasi atau commit, jalankan pengujian untuk memastikan seluruh fungsionalitas berjalan normal:
 
 ```bash
-# 1. Jalankan seluruh unit test (83 skenario pengujian)
+# 1. Jalankan seluruh unit test (95 skenario pengujian)
 npm test
 
 # 2. Periksa static typing TypeScript
@@ -206,7 +206,7 @@ npm run lint
 ```
 
 **Status Verifikasi Terkini**:
-- ✅ **Unit Tests**: 9 test suites / 83 unit test **100% LULUS (Passed)**.
+- ✅ **Unit Tests**: 10 test suites / 95 unit test **100% LULUS (Passed)**.
 - ✅ **TypeScript**: Strict clean, 0 error.
 - ✅ **Linter**: Clean, 0 warnings/errors.
 - ✅ **Bundle Export**: Android & Web build sukses di direktori `dist/`.
@@ -223,6 +223,7 @@ Per [`docs/PRD.md`](docs/PRD.md), MVP mencakup fitur utama yang telah diimplemen
 2. **Persistent Reading Progress** — pencatatan progres per pasal idempotent berbasis SQLite (bertahan saat restart), pelacakan posisi scroll, kalkulasi persentase dan hari membaca (*reading days*), layar Kemajuan.
 3. **Daily Verse Integration** — integrasi REST API online untuk ayat inspirasi harian dengan penanganan loading, error, retry, dan validasi model data.
 4. **Hardware & Advanced OS Features** — notifikasi harian lokal (`expo-notifications`), sensor goyang ganti pasal acak (`expo-sensors`), dan proteksi privasi biometrik/PIN (`expo-local-authentication`).
+5. **Gentle Gamification & Usability** — Pohon Pertumbuhan Kebiasaan (*The Habit Tree* 6 tahap interaktif), sistem Lencana Prestasi Koleksi (*Collectible Badges*), Maskot Meno Interaktif (*Tap-to-Talk Companion*), serta pengatur ukuran huruf pembaca dinamis (`A±`).
 
 ### Explicitly out of scope (for now)
 

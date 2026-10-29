@@ -8,6 +8,7 @@ import { Chip } from "../../components/ui/Chip";
 import { DailyVerseCard } from "../../components/ui/DailyVerseCard";
 import { IconBook, IconChevron, IconGear, IconPlay, IconSpark } from "../../components/ui/Icons";
 import { Mascot } from "../../components/ui/Mascot";
+import { InteractiveMascot } from "../../components/ui/InteractiveMascot";
 import { ProgressRing } from "../../components/ui/ProgressRing";
 import { getBookById, TOTAL_CHAPTERS } from "../../data/canon";
 import { placeholderBible } from "../../data/placeholderBible";
@@ -65,7 +66,7 @@ export default function HomeScreen() {
                 : "Satu pasal saja sudah cukup untuk hari ini."}
             </Text>
           </View>
-          <Mascot pose="welcome" size={92} />
+          <InteractiveMascot defaultPose="welcome" size={92} />
         </View>
 
         {lastRead && book ? (
