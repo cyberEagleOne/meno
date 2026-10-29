@@ -6,12 +6,19 @@ import { colors, fonts } from "../../theme/colors";
 
 interface VerseRowProps {
   verse: Verse;
+  fontSize?: number;
+  lineHeight?: number;
 }
 
-function VerseRowComponent({ verse }: VerseRowProps) {
+function VerseRowComponent({ verse, fontSize = 19, lineHeight = 35 }: VerseRowProps) {
   return (
-    <Text style={styles.verse} accessibilityLabel={`Ayat ${verse.number}. ${verse.text}`}>
-      <Text style={styles.number}>{verse.number} </Text>
+    <Text
+      style={[styles.verse, { fontSize, lineHeight }]}
+      accessibilityLabel={`Ayat ${verse.number}. ${verse.text}`}
+    >
+      <Text style={[styles.number, { fontSize: Math.max(10, fontSize - 7) }]}>
+        {verse.number}{" "}
+      </Text>
       {verse.text}
     </Text>
   );

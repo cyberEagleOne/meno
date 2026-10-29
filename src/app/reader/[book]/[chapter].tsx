@@ -42,6 +42,13 @@ const BURST = Array.from({ length: 10 }, (_, i) => {
   };
 });
 
+const FONT_SIZES = [
+  { label: "Kecil", size: 16, lineHeight: 28 },
+  { label: "Sedang", size: 19, lineHeight: 35 },
+  { label: "Besar", size: 23, lineHeight: 42 },
+  { label: "Ekstra", size: 27, lineHeight: 48 },
+];
+
 interface CompletionFailure {
   bookId: string;
   chapter: number;
@@ -97,6 +104,9 @@ export default function ReaderScreen() {
 
   const done = book && chapter ? isCompleted(completed, bookId, chapterNumber) : false;
   const cheer = CHEERS[(chapterNumber + (book?.canonicalOrder ?? 0)) % CHEERS.length];
+
+  const [fontSizeIdx, setFontSizeIdx] = useState(1);
+  const activeFont = FONT_SIZES[fontSizeIdx];
 
   const [toastKey, setToastKey] = useState<string | null>(null);
   const [completionPending, setCompletionPending] = useState(false);
@@ -267,9 +277,19 @@ export default function ReaderScreen() {
         <Text style={styles.topTitle} numberOfLines={1}>
           {book.name} {chapterNumber}
         </Text>
-        <View style={[styles.doneSlot, !done && styles.invisible]}>
-          <View style={styles.doneBadge}>
-            <IconCheck size={18} color={colors.indigo} />
+        <View style={styles.topRightActions}>
+          <Pressable
+            onPress={() => setFontSizeIdx((prev) => (prev + 1) % FONT_SIZES.length)}
+            accessibilityRole="button"
+            accessibilityLabel={`Ubah ukuran teks, saat ini: ${activeFont.label}`}
+            style={({ pressed }) => [styles.fontSizeBtn, pressed && styles.fontSizeBtnPressed]}
+          >
+            <Text style={styles.fontSizeBtnText}>A<Text style={styles.fontPlus}>±</Text></Text>
+          </Pressable>
+          <View style={[styles.doneSlot, !done && styles.invisible]}>
+            <View style={styles.doneBadge}>
+              <IconCheck size={18} color={colors.indigo} />
+            </View>
           </View>
         </View>
       </View>
@@ -290,7 +310,11 @@ export default function ReaderScreen() {
         keyExtractor={(verse) => String(verse.number)}
         renderItem={({ item }) => (
           <View style={styles.verseLine}>
-            <VerseRow verse={item} />
+            <VerseRow
+              verse={item}
+              fontSize={activeFont.size}
+              lineHeight={activeFont.lineHeight}
+            />
           </View>
         )}
         ListHeaderComponent={
@@ -468,8 +492,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.indigo,
   },
+  topRightActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  fontSizeBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.divider,
+  },
+  fontSizeBtnPressed: {
+    backgroundColor: colors.goldTint,
+    borderColor: colors.gold,
+  },
+  fontSizeBtnText: {
+    fontFamily: fonts.bold,
+    fontSize: 12,
+    color: colors.indigo,
+  },
+  fontPlus: {
+    fontSize: 10,
+    color: colors.goldText,
+  },
   doneSlot: {
-    width: 48,
+    width: 36,
     alignItems: "center",
   },
   invisible: {

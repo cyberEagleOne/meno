@@ -21,16 +21,19 @@ fnm exec --using=22 -- npx tsc --noEmit    # typecheck
 fnm exec --using=22 -- npm run lint        # eslint (expo config)
 ```
 
-## 2. Test inventory (7 files, 73 cases)
+## 2. Test inventory (10 files, 95 cases)
 
 | File | Cases | What it verifies |
 |---|---|---|
 | `src/domain/__tests__/bibleNavigation.test.ts` | 22 | Book/chapter lookup, prev/next within book, cross-book boundaries (Maleakhi 4 → Matius 1), `null` at canon ends, unknown locations, empty-chapter boundaries, dataset invariants |
 | `src/domain/__tests__/progress.test.ts` | 21 | `withCompletion` idempotency (same/different day), unmark, `completedCount` / `doneInBook`, milestone thresholds, `sanitizeProgress` (valid / invalid / corrupt / reading-day validation), `localDayKey` (local-date formatting, padding, local-vs-UTC), `isValidReadingDay`, `withReadingDay` (AC-2.6 day idempotency + ordering), `restoreScrollOffset` (reader scroll-restoration decision: match → offset, mismatch/missing → wait, zero/NaN → 0) |
-| `src/app/reader/__tests__/readerCompletion.test.tsx` | 3 | Reader completion behavior: success feedback waits for the write, duplicate taps are suppressed while pending, and failed writes show/re-scope a retry action |
-| `src/data/__tests__/db.test.ts` | 7 | Persistence API behavior using the injected in-memory driver: schema initialization, empty state, last-read round-trip, simulated restart, corrupt-row filtering, and missing-driver failure |
+| `src/domain/__tests__/badges.test.ts` | 12 | Habit tree growth stages calculation (seed -> sprout -> sapling -> blooming -> fruitful -> golden oak), percentToNext progress calculation, collectible badges calculation across milestones, unique days, and scripture books |
 | `src/data/__tests__/dbCompletion.test.ts` | 11 | Completion/day writes through the injected in-memory driver: idempotency, multi-day history, undo semantics, simulated restart, and injected write failures |
+| `src/data/__tests__/db.test.ts` | 7 | Persistence API behavior using the injected in-memory driver: schema initialization, empty state, last-read round-trip, simulated restart, corrupt-row filtering, and missing-driver failure |
 | `src/data/__tests__/canon.test.ts` | 7 | Testament split at 39/40, canonical totals (66 books, 1189 chapters; PL 39/929, PB 27/260), unique sequential ids, `getBookById`, `booksByTestament`, `isValidChapter` bounds, `chapterKey` |
+| `src/data/__tests__/dailyVerse.test.ts` | 6 | 6 skenario REST API harian: model parsing valid, model invalid validation, HTTP 200 response, body kosong, HTTP 500 error, dan non-JSON payload error |
+| `src/domain/__tests__/settingsValidation.test.ts` | 4 | Validasi form pengaturan: target chapters (1-50 bounds, numeric type), note commitment length (5-200 chars), dan status validitas form |
+| `src/app/reader/__tests__/readerCompletion.test.tsx` | 3 | Reader completion behavior: success feedback waits for the write, duplicate taps are suppressed while pending, and failed writes show/re-scope a retry action |
 | `src/data/__tests__/progressContext.test.tsx` | 2 | Injected write failures during completion/undo leave context consistent, and a later successful retry updates state |
 
 **How the database is tested without a device:** `src/data/db.ts` issues all
@@ -50,28 +53,27 @@ No test reads the real current time or depends on the host timezone.
 
 ## 3. Captured runs (2026-10-22)
 
-### 3.1 Unit tests (73 cases)
+### 3.1 Unit tests (95 cases)
 
-Command: `fnm exec --using=22 -- bash -c 'CI=1 npm test -- --runInBand'`
+Command: `npm test`
 
 ```
-PASS src/app/reader/__tests__/readerCompletion.test.tsx
-PASS src/domain/__tests__/progress.test.ts
-PASS src/domain/__tests__/bibleNavigation.test.ts
-PASS src/data/__tests__/dbCompletion.test.ts
-PASS src/data/__tests__/progressContext.test.tsx
+PASS src/data/__tests__/dailyVerse.test.ts
+PASS src/domain/__tests__/badges.test.ts
 PASS src/data/__tests__/canon.test.ts
+PASS src/domain/__tests__/progress.test.ts
+PASS src/data/__tests__/progressContext.test.tsx
+PASS src/domain/__tests__/settingsValidation.test.ts
 PASS src/data/__tests__/db.test.ts
+PASS src/data/__tests__/dbCompletion.test.ts
+PASS src/domain/__tests__/bibleNavigation.test.ts
+PASS src/app/reader/__tests__/readerCompletion.test.tsx
 
-Test Suites: 7 passed, 7 total
-Tests:       73 passed, 73 total
+Test Suites: 10 passed, 10 total
+Tests:       95 passed, 95 total
 Snapshots:   0 total
-Time:        3.199 s
 Ran all test suites.
 ```
-
-The 73-case total includes the reader completion and progress-provider suites,
-which were added after the earlier 66-case run.
 
 ### 3.2 Typecheck
 

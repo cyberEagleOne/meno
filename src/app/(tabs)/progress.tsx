@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,6 +10,10 @@ import { Mascot } from "../../components/ui/Mascot";
 import { ProgressBar } from "../../components/ui/ProgressBar";
 import { ProgressRing } from "../../components/ui/ProgressRing";
 import { ScreenHeader } from "../../components/ui/ScreenHeader";
+import { HabitTree } from "../../components/ui/HabitTree";
+import { BadgeCard } from "../../components/ui/BadgeCard";
+import { BadgeUnlockModal } from "../../components/ui/BadgeUnlockModal";
+import { calculateBadges, Badge } from "../../domain/badges";
 import {
   TESTAMENT_LABEL,
   TESTAMENT_TOTALS,
@@ -86,6 +91,9 @@ export default function ProgressScreen() {
   const days = readingDays.length;
   const next = nextMilestone(total);
 
+  const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
+  const badges = calculateBadges(completed, readingDays);
+
   const byTestament = (t: Testament) => {
     const done = booksByTestament(placeholderBible, t).reduce(
       (n, b) => n + doneInBook(completed, b.id, b.chapters.length),
@@ -102,6 +110,7 @@ export default function ProgressScreen() {
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <ScreenHeader title="Kemajuan" />
       <ScrollView contentContainerStyle={styles.content}>
+        <HabitTree totalChapters={total} />
         {total === 0 ? (
           <>
             <Card tone="gold" style={styles.emptyCard}>
@@ -242,6 +251,33 @@ export default function ProgressScreen() {
             </View>
           </>
         )}
+
+        <View style={styles.badgeSection}>
+          <View style={styles.badgeHeaderRow}>
+            <Text style={styles.sectionTitle}>Lencana Koleksi Prestasi</Text>
+            <View style={styles.badgeCountBadge}>
+              <Text style={styles.badgeCountText}>
+                {badges.filter((b) => b.unlocked).length} / {badges.length} Terbuka
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.sectionSubtitle}>
+            Pencapaian spesial yang didapatkan seiring kesetiaan membaca firman. Ketuk lencana untuk info.
+          </Text>
+          {badges.map((badge) => (
+            <BadgeCard
+              key={badge.id}
+              badge={badge}
+              onPress={() => setSelectedBadge(badge)}
+            />
+          ))}
+        </View>
+
+        <BadgeUnlockModal
+          badge={selectedBadge}
+          visible={selectedBadge !== null}
+          onClose={() => setSelectedBadge(null)}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -491,6 +527,35 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
     fontSize: 12,
     color: colors.inkMuted,
+    marginTop: 2,
+  },
+  badgeSection: {
+    marginTop: 28,
+    marginBottom: 16,
+  },
+  badgeHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  badgeCountBadge: {
+    backgroundColor: colors.goldTint,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.gold,
+  },
+  badgeCountText: {
+    fontFamily: fonts.bold,
+    fontSize: 11,
+    color: colors.goldText,
+  },
+  sectionSubtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    color: colors.inkMuted,
+    marginBottom: 14,
     marginTop: 2,
   },
 });

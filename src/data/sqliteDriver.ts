@@ -4,7 +4,7 @@ import type { SqlDriver, SqlParam } from "./sqlDriver";
 
 const DB_NAME = "meno.db";
 
-/** Production driver: one lazily-opened expo-sqlite database. */
+/** Production driver: uses native expo-sqlite on Android and iOS */
 export async function createExpoSqliteDriver(): Promise<SqlDriver> {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
   let writeQueue = Promise.resolve();
