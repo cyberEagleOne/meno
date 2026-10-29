@@ -39,7 +39,7 @@ export function ProgressRing({
       accessibilityValue={decorative ? undefined : { min: 0, max, now: value }}
     >
       <Svg width={size} height={size} aria-hidden>
-        <G rotation={-90} origin={`${size / 2}, ${size / 2}`}>
+        <G transform={`rotate(-90 ${size / 2} ${size / 2})`}>
           <Circle
             cx={size / 2}
             cy={size / 2}
