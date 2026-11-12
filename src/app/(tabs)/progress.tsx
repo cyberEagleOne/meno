@@ -31,9 +31,7 @@ import {
   nextMilestone,
 } from "../../domain/progress";
 import { colors, fonts, radius } from "../../theme/colors";
-
-const fmt = (n: number) => n.toLocaleString("id-ID");
-const pct = (a: number, b: number) => (b ? ((a / b) * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 }) : "0");
+import { formatNumber as fmt, formatPercent as pct } from "../../utils/formatters";
 
 function MilestonePath({ total }: { total: number }) {
   const next = nextMilestone(total);

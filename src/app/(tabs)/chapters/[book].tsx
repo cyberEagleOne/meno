@@ -19,8 +19,7 @@ import { placeholderBible } from "../../../data/placeholderBible";
 import { useProgress } from "../../../data/progressContext";
 import { doneInBook, isCompleted } from "../../../domain/progress";
 import { colors, fonts } from "../../../theme/colors";
-
-const pctNum = (a: number, b: number) => (b ? (a / b) * 100 : 0);
+import { calculatePercentNumber as pctNum } from "../../../utils/formatters";
 
 export default function ChaptersScreen() {
   const router = useRouter();

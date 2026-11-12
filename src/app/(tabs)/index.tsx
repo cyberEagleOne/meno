@@ -15,8 +15,7 @@ import { placeholderBible } from "../../data/placeholderBible";
 import { useProgress } from "../../data/progressContext";
 import { completedCount, nextMilestone } from "../../domain/progress";
 import { colors, fonts, radius } from "../../theme/colors";
-
-const fmt = (n: number) => n.toLocaleString("id-ID");
+import { formatNumber as fmt, formatPercent } from "../../utils/formatters";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -39,7 +38,7 @@ export default function HomeScreen() {
   const doneCount = completedCount(completed);
   const book = lastRead ? getBookById(placeholderBible, lastRead.bookId) : null;
   const next = nextMilestone(doneCount);
-  const pct = TOTAL_CHAPTERS > 0 ? ((doneCount / TOTAL_CHAPTERS) * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 }) : "0";
+  const pct = formatPercent(doneCount, TOTAL_CHAPTERS);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
