@@ -16,11 +16,18 @@ import { useEffect, type ReactNode } from "react";
 import { Button } from "../components/ui/Button";
 import { StateMessage } from "../components/ui/StateMessage";
 import { ProgressProvider, useProgress } from "../data/progressContext";
+import { logger } from "../services/logger";
 import { colors, fonts } from "../theme/colors";
 
 void SplashScreen.preventAutoHideAsync();
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  useEffect(() => {
+    logger.error("APP_LIFECYCLE", "react_boundary_caught_error", error, {
+      screen: "RootLayout",
+    }, "Uncaught React component error rendered by ErrorBoundary");
+  }, [error]);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <View style={styles.centre}>
@@ -46,6 +53,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
+      logger.info("APP_LIFECYCLE", "app_startup", { fontsLoaded: true });
       SplashScreen.hideAsync().catch(() => {});
     }
   }, [loaded]);
@@ -82,6 +90,7 @@ function ProgressGate({ children }: { children: ReactNode }) {
   }
 
   if (status === "error") {
+    logger.error("DATABASE", "bootstrap_gate_error", undefined, { status }, "Database initialization failed at ProgressGate");
     return (
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <View style={styles.centre}>

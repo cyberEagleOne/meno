@@ -1,4 +1,5 @@
 import * as LocalAuthentication from "expo-local-authentication";
+import { logger } from "./logger";
 
 export interface BiometricCheckResult {
   hasHardware: boolean;
@@ -68,10 +69,12 @@ export async function authenticateUser(prompt: string = "Konfirmasi identitasmu 
   });
 
   if (result.success) {
+    logger.info("SECURITY_AUTH", "biometric_auth_success", { hasHardware: true });
     return { success: true };
   }
 
   if (result.error === "user_cancel" || result.error === "app_cancel") {
+    logger.warn("SECURITY_AUTH", "biometric_auth_cancelled", { userCancelled: true });
     return {
       success: false,
       cancelled: true,
@@ -79,6 +82,7 @@ export async function authenticateUser(prompt: string = "Konfirmasi identitasmu 
     };
   }
 
+  logger.warn("SECURITY_AUTH", "biometric_auth_failed", { errorReason: result.error || "unknown" });
   return {
     success: false,
     error: result.warning || "Autentikasi gagal.",

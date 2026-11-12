@@ -1,4 +1,5 @@
 import * as Notifications from "expo-notifications";
+import { logger } from "./logger";
 
 // Configure how notifications appear when app is in foreground
 Notifications.setNotificationHandler({
@@ -59,6 +60,7 @@ export async function scheduleDailyReminder(hour: number = 7, minute: number = 0
     },
   });
 
+  logger.info("GENERAL", "daily_reminder_scheduled", { hour, minute, notificationId: id });
   return id;
 }
 
@@ -79,4 +81,5 @@ export async function triggerTestNotification(): Promise<void> {
     },
     trigger: null, // triggers immediately
   });
+  logger.info("GENERAL", "test_notification_triggered");
 }

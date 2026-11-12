@@ -5,6 +5,7 @@ import {
 } from "../domain/progress";
 import { getSqlDriver } from "./sqlDriver";
 import { placeholderBible } from "./placeholderBible";
+import { logger } from "../services/logger";
 
 /**
  * Progress persistence. All SQL goes through the injected SqlDriver
@@ -15,25 +16,37 @@ import { placeholderBible } from "./placeholderBible";
  */
 export async function initProgressDb(): Promise<void> {
   const sql = getSqlDriver();
-  await sql.exec(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS last_read (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
-      book_id TEXT NOT NULL,
-      chapter INTEGER NOT NULL,
-      scroll_y REAL NOT NULL DEFAULT 0,
-      opened_at TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS completed (
-      book_id TEXT NOT NULL,
-      chapter INTEGER NOT NULL,
-      completed_at TEXT NOT NULL,
-      PRIMARY KEY (book_id, chapter)
-    );
-    CREATE TABLE IF NOT EXISTS reading_day (
-      day TEXT PRIMARY KEY
-    );
-  `);
+  try {
+    await sql.exec(`
+      PRAGMA journal_mode = WAL;
+      CREATE TABLE IF NOT EXISTS last_read (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        book_id TEXT NOT NULL,
+        chapter INTEGER NOT NULL,
+        scroll_y REAL NOT NULL DEFAULT 0,
+        opened_at TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS completed (
+        book_id TEXT NOT NULL,
+        chapter INTEGER NOT NULL,
+        completed_at TEXT NOT NULL,
+        PRIMARY KEY (book_id, chapter)
+      );
+      CREATE TABLE IF NOT EXISTS reading_day (
+        day TEXT PRIMARY KEY
+      );
+      CREATE TABLE IF NOT EXISTS reading_goal (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        target INTEGER NOT NULL,
+        note TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+    `);
+    logger.info("DATABASE", "sqlite_init_success");
+  } catch (err: unknown) {
+    logger.error("DATABASE", "sqlite_init_failed", err);
+    throw err;
+  }
 }
 
 interface LastReadRow {
@@ -79,19 +92,31 @@ export async function loadProgress(): Promise<ProgressState> {
 
 export async function saveLastRead(lastRead: LastRead): Promise<void> {
   const sql = getSqlDriver();
-  await sql.run(
-    `INSERT INTO last_read (id, book_id, chapter, scroll_y, opened_at)
-     VALUES (1, ?, ?, ?, ?)
-     ON CONFLICT(id) DO UPDATE SET
-       book_id = excluded.book_id,
-       chapter = excluded.chapter,
-       scroll_y = excluded.scroll_y,
-       opened_at = excluded.opened_at`,
-    lastRead.bookId,
-    lastRead.chapter,
-    lastRead.scrollY,
-    lastRead.openedAt,
-  );
+  try {
+    await sql.run(
+      `INSERT INTO last_read (id, book_id, chapter, scroll_y, opened_at)
+       VALUES (1, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         book_id = excluded.book_id,
+         chapter = excluded.chapter,
+         scroll_y = excluded.scroll_y,
+         opened_at = excluded.opened_at`,
+      lastRead.bookId,
+      lastRead.chapter,
+      lastRead.scrollY,
+      lastRead.openedAt,
+    );
+    logger.debug("DATABASE", "last_read_saved", {
+      bookId: lastRead.bookId,
+      chapter: lastRead.chapter,
+    });
+  } catch (err: unknown) {
+    logger.error("DATABASE", "last_read_save_failed", err, {
+      bookId: lastRead.bookId,
+      chapter: lastRead.chapter,
+    });
+    throw err;
+  }
 }
 
 /**
@@ -109,20 +134,32 @@ export async function markCompleted(
   day: string,
 ): Promise<void> {
   const sql = getSqlDriver();
-  await sql.transaction(async (tx) => {
-    await tx.run(
-      `INSERT INTO completed (book_id, chapter, completed_at)
-       VALUES (?, ?, ?)
-       ON CONFLICT(book_id, chapter) DO UPDATE SET completed_at = excluded.completed_at`,
-      bookId,
-      chapter,
-      completedAt,
-    );
-    await tx.run("INSERT OR IGNORE INTO reading_day (day) VALUES (?)", day);
-  });
+  try {
+    await sql.transaction(async (tx) => {
+      await tx.run(
+        `INSERT INTO completed (book_id, chapter, completed_at)
+         VALUES (?, ?, ?)
+         ON CONFLICT(book_id, chapter) DO UPDATE SET completed_at = excluded.completed_at`,
+        bookId,
+        chapter,
+        completedAt,
+      );
+      await tx.run("INSERT OR IGNORE INTO reading_day (day) VALUES (?)", day);
+    });
+    logger.info("DATABASE", "chapter_marked_completed", { bookId, chapter, day });
+  } catch (err: unknown) {
+    logger.error("DATABASE", "mark_completed_failed", err, { bookId, chapter, day });
+    throw err;
+  }
 }
 
 export async function unmarkCompleted(bookId: string, chapter: number): Promise<void> {
   const sql = getSqlDriver();
-  await sql.run("DELETE FROM completed WHERE book_id = ? AND chapter = ?", bookId, chapter);
+  try {
+    await sql.run("DELETE FROM completed WHERE book_id = ? AND chapter = ?", bookId, chapter);
+    logger.info("DATABASE", "chapter_unmarked_completed", { bookId, chapter });
+  } catch (err: unknown) {
+    logger.error("DATABASE", "unmark_completed_failed", err, { bookId, chapter });
+    throw err;
+  }
 }
