@@ -1,10 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
   View,
   ScrollView,
-  TextInput,
   Pressable,
   ActivityIndicator,
   Alert,
@@ -17,6 +16,7 @@ import { colors, fonts, radius } from "../theme/colors";
 import { Card } from "../components/ui/Card";
 import { Chip } from "../components/ui/Chip";
 import { IconChevron, IconSpark } from "../components/ui/Icons";
+import { ReadingGoalForm } from "../components/ui/ReadingGoalForm";
 import {
   scheduleDailyReminder,
   triggerTestNotification,
@@ -31,75 +31,9 @@ import {
   authenticateUser,
   BiometricCheckResult,
 } from "../services/authService";
-import { validateReadingGoal } from "../domain/settingsValidation";
 
 export default function SettingsScreen() {
   const router = useRouter();
-
-  // ==========================================
-  // P4: State Management & Form with 6 UI States
-  // ==========================================
-  const [formState, setFormState] = useState<"loading" | "ready" | "empty" | "error">("loading");
-  const [targetChapters, setTargetChapters] = useState<string>("1");
-  const [reflectionNote, setReflectionNote] = useState<string>("");
-  const [savedGoal, setSavedGoal] = useState<{ target: number; note: string } | null>(null);
-  const [loadTrigger, setLoadTrigger] = useState<number>(0);
-
-  // Form Validation & Submit loading
-  const [targetError, setTargetError] = useState<string>("");
-  const [noteError, setNoteError] = useState<string>("");
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [submitFeedback, setSubmitFeedback] = useState<string>("");
-
-  useEffect(() => {
-    let isMounted = true;
-    const timer = setTimeout(() => {
-      if (!isMounted) return;
-      setFormState(savedGoal ? "ready" : "empty");
-    }, 400);
-
-    return () => {
-      isMounted = false;
-      clearTimeout(timer);
-    };
-  }, [loadTrigger, savedGoal]);
-
-  const handleRetryLoad = useCallback(() => {
-    setFormState("loading");
-    setSubmitFeedback("");
-    setLoadTrigger((prev) => prev + 1);
-  }, []);
-
-  // Form Submission with Anti-Double Tap & Validation
-  const handleSubmitGoal = async () => {
-    setTargetError("");
-    setNoteError("");
-    setSubmitFeedback("");
-
-    const validation = validateReadingGoal({
-      targetChapters,
-      reflectionNote,
-    });
-
-    if (!validation.valid) {
-      if (validation.targetError) setTargetError(validation.targetError);
-      if (validation.noteError) setNoteError(validation.noteError);
-      return;
-    }
-
-    // Loading saat proses submit agar pengguna tidak dapat melakukan double tap
-    setIsSubmitting(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 750));
-      setSavedGoal({ target: validation.parsedTarget!, note: reflectionNote.trim() });
-      setFormState("ready");
-      setSubmitFeedback("Target dan catatan berhasil disimpan!");
-    } catch {
-      setFormState("error");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   // ==========================================
   // P7: Advanced Feature 1 - Local Notifications
@@ -228,109 +162,9 @@ export default function SettingsScreen() {
         </View>
 
         {/* ======================================================== */}
-        {/* P4: FORM DENGAN 6 KONDISI UI & STATE MANAGEMENT         */}
+        {/* P4: SEPARATED READING GOAL FORM COMPONENT               */}
         {/* ======================================================== */}
-        <Card tone="surface" style={styles.sectionCard}>
-          <View style={styles.cardHeaderRow}>
-            <Chip label="P4: State & Form" tone="gold" icon={<IconSpark size={12} color={colors.goldText} />} />
-          </View>
-          <Text style={styles.sectionTitle}>Target Bacaan & Komitmen Pribadi</Text>
-          <Text style={styles.sectionDesc}>
-            Fitur ini mengimplementasikan form dengan validasi, loading, empty state, error handling, serta proteksi anti-double tap.
-          </Text>
-
-          {/* 1. Initial Loading State */}
-          {formState === "loading" && (
-            <View style={styles.inlineLoading}>
-              <ActivityIndicator size="small" color={colors.gold} />
-              <Text style={styles.helperText}>Memuat data preferensi...</Text>
-            </View>
-          )}
-
-          {/* 4. Error State with Retry */}
-          {formState === "error" && (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorTitle}>Terjadi kesalahan saat memuat data.</Text>
-              <Pressable style={styles.retryBtn} onPress={handleRetryLoad}>
-                <Text style={styles.retryBtnText}>Coba Lagi</Text>
-              </Pressable>
-            </View>
-          )}
-
-          {/* 3. Empty State Notice */}
-          {formState === "empty" && (
-            <View style={styles.emptyBox}>
-              <Text style={styles.emptyText}>Belum ada target membaca yang disimpan. Tentukan komitmenmu di bawah ini.</Text>
-            </View>
-          )}
-
-          {/* 2. Success State Notice */}
-          {formState === "ready" && savedGoal && (
-            <View style={styles.savedGoalBox}>
-              <Text style={styles.savedGoalTitle}>Target Aktif:</Text>
-              <Text style={styles.savedGoalBody}>📖 {savedGoal.target} pasal per hari</Text>
-              <Text style={styles.savedGoalBody}>💬 “{savedGoal.note}”</Text>
-            </View>
-          )}
-
-          {/* 5. Input Fields with Live Validation */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Target Pasal per Hari (1 - 50):</Text>
-            <TextInput
-              style={[styles.input, targetError ? styles.inputError : null]}
-              value={targetChapters}
-              onChangeText={(text) => {
-                setTargetChapters(text);
-                setTargetError("");
-              }}
-              keyboardType="number-pad"
-              placeholder="Contoh: 2"
-              placeholderTextColor={colors.stone}
-            />
-            {targetError ? <Text style={styles.fieldErrorText}>{targetError}</Text> : null}
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Catatan Komitmen Membaca:</Text>
-            <TextInput
-              style={[styles.input, styles.textArea, noteError ? styles.inputError : null]}
-              value={reflectionNote}
-              onChangeText={(text) => {
-                setReflectionNote(text);
-                setNoteError("");
-              }}
-              multiline
-              numberOfLines={3}
-              placeholder="Contoh: Membaca renungan setiap pagi sebelum beraktivitas."
-              placeholderTextColor={colors.stone}
-            />
-            {noteError ? <Text style={styles.fieldErrorText}>{noteError}</Text> : null}
-          </View>
-
-          {submitFeedback ? <Text style={styles.feedbackSuccessText}>{submitFeedback}</Text> : null}
-
-          {/* 6. Loading saat Submit (Anti-Double Tap) */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.submitButton,
-              isSubmitting && styles.submitButtonDisabled,
-              pressed && !isSubmitting && styles.pressed,
-            ]}
-            onPress={handleSubmitGoal}
-            disabled={isSubmitting}
-            accessibilityRole="button"
-            accessibilityLabel="Simpan Komitmen Bacaan"
-          >
-            {isSubmitting ? (
-              <View style={styles.submitRow}>
-                <ActivityIndicator size="small" color="#FFFFFF" />
-                <Text style={styles.submitButtonText}>Menyimpan...</Text>
-              </View>
-            ) : (
-              <Text style={styles.submitButtonText}>Simpan Komitmen</Text>
-            )}
-          </Pressable>
-        </Card>
+        <ReadingGoalForm />
 
         {/* ======================================================== */}
         {/* P7: ADVANCED FEATURE 1 - NOTIFIKASI LOKAL               */}
