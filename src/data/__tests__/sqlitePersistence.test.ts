@@ -9,6 +9,7 @@ import {
   saveLastRead,
   unmarkCompleted,
 } from "../db";
+import { deleteReadingGoal, getReadingGoal, saveReadingGoal } from "../goalRepository";
 import { setSqlDriver, type SqlDriver, type SqlParam } from "../sqlDriver";
 
 /** Uses Node's real SQLite engine and a disk file, not the memory test driver. */
@@ -106,6 +107,38 @@ describe("disk-backed SQLite repository integration", () => {
     await unmarkCompleted("kejadian", 1);
     reopen();
     await expect(loadProgress()).resolves.toMatchObject({ completed: {}, readingDays: ["2026-11-19"] });
+  });
+
+  it("creates and reads a saved reading goal from disk after reopening", async () => {
+    await initProgressDb();
+    await saveReadingGoal({ target: 3, note: "Membaca dengan tenang", updatedAt: "2026-11-19T08:00:00.000Z" });
+    reopen();
+    await initProgressDb();
+    await expect(getReadingGoal()).resolves.toEqual({
+      target: 3,
+      note: "Membaca dengan tenang",
+      updatedAt: "2026-11-19T08:00:00.000Z",
+    });
+  });
+
+  it("updates a saved reading goal in the singleton row", async () => {
+    await initProgressDb();
+    await saveReadingGoal({ target: 2, note: "Awal", updatedAt: "2026-11-18T08:00:00.000Z" });
+    await saveReadingGoal({ target: 5, note: "Diperbarui", updatedAt: "2026-11-19T08:00:00.000Z" });
+    await expect(driver!.getAll("SELECT id FROM reading_goal")).resolves.toHaveLength(1);
+    await expect(getReadingGoal()).resolves.toEqual({
+      target: 5,
+      note: "Diperbarui",
+      updatedAt: "2026-11-19T08:00:00.000Z",
+    });
+  });
+
+  it("deletes a reading goal and leaves it absent after reopening", async () => {
+    await initProgressDb();
+    await saveReadingGoal({ target: 4, note: "Akan dihapus", updatedAt: "2026-11-19T08:00:00.000Z" });
+    await deleteReadingGoal();
+    reopen();
+    await expect(getReadingGoal()).resolves.toBeNull();
   });
 
   it("rolls back completion creation when a later transaction write fails", async () => {
