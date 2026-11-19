@@ -18,6 +18,7 @@
 | 2026-11-19 | Phase 4/5 | Extend disk-backed SQLite tests to the reading-goal repository lifecycle | `sqlitePersistence.test.ts` | Focused SQLite suite 9/9; complete suite 277/277; TypeScript and lint passed; CI run `44558937344` passed ARM64 build and artifact upload | `00fdae2` | Pushed; remote SHA verified |
 | 2026-11-19 | Phase 5/11 | Record refreshed 277-test acceptance result and CI build state | Requirements audit, release candidate, final report | CI run `44558740936` failed only at Gradle APK build; run `44558937344` still running at last check | `8d3cb5d` | Pushed; remote SHA verified |
 | 2026-11-19 | Phase 5/11 | Record successful rerun and uploaded latest ARM64 CI artifact | Requirements audit, release candidate, final report | CI run `44558937344` completed successfully; artifact digest recorded, local inspection still pending | `a598ed1` | Pushed; remote SHA verified |
+| 2026-11-19 | Phase 5/11 | Synchronize CI outcome and current acceptance blockers | `DEVELOPMENT_PROGRESS.md` | 277 local tests pass; CI run `44558937344` success verified; run `44558740936` failure retained as history | `7c09f44` | Pushed; remote SHA verified |
 
 ## Current state
 
@@ -30,7 +31,7 @@
 - Remaining: install the standalone ARM64 APK on a physical phone; verify native notifications, sensor and biometric behavior; content rights decision; resolve or formally accept the six npm audit findings; refresh final report and release branches only after acceptance.
 - Blockers: no physical ARM64 device connected; Bible redistribution rights unresolved; six audit findings (3 high, 3 moderate); local Windows Gradle toolchain failure; only three genuine defect findings established. The available x86_64 AVD cannot install the ARM64-only APK.
 
-The continuation has eight pushed commits, including tests, emulator evidence, release updates, and progress synchronization. Run `44558740936` failed at Gradle APK build after prerequisite checks passed, with no public detail; the later run `44558937344` for `00fdae2` passed the full CI workflow and uploaded the ARM64 artifact. The artifact digest is recorded in `RELEASE_CANDIDATE.md`; local APK download/inspection and physical installation remain outstanding. This progress-log update records the latest verified state.
+The continuation has nine pushed commits, including tests, emulator evidence, release updates, and progress synchronization. Run `44558740936` failed at Gradle APK build after prerequisite checks passed, with no public detail; the later run `44558937344` for `00fdae2` passed the full CI workflow and uploaded the ARM64 artifact. The artifact digest is recorded in `RELEASE_CANDIDATE.md`; local APK download/inspection and physical installation remain outstanding. This progress-log update records the latest verified state.
 - Original user edits in `app.json` and `package.json` were preserved in pushed commit `a41bf72`.
 
 No `v1.0` or `v1.0_dev` branch is created because release acceptance criteria remain unmet.
