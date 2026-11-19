@@ -14,6 +14,13 @@ interface CompletedRow {
   completed_at: string;
 }
 
+interface ReadingGoalRow {
+  id: number;
+  target: number;
+  note: string;
+  updated_at: string;
+}
+
 export interface MemoryDriver extends SqlDriver {
   /** Statements passed to exec() — lets tests assert schema setup. */
   readonly execLog: string[];
@@ -23,8 +30,15 @@ export interface MemoryDriver extends SqlDriver {
   completedRows(): CompletedRow[];
   /** Raw reading-day rows — lets tests assert AC-2.6 day idempotency. */
   readingDayRows(): { day: string }[];
+  /** Raw reading_goal row, or null. */
+  readingGoalRow(): ReadingGoalRow | null;
   /** Serializes state so a second driver can simulate an app restart. */
-  snapshot(): { lastRead: LastReadRow | null; completed: CompletedRow[]; readingDays: { day: string }[] };
+  snapshot(): {
+    lastRead: LastReadRow | null;
+    completed: CompletedRow[];
+    readingDays: { day: string }[];
+    readingGoal: ReadingGoalRow | null;
+  };
   /** Fail a future run call, counted from the next SQL statement. */
   failOnNextRun(offset?: number): void;
 }
@@ -33,6 +47,7 @@ export interface MemorySeed {
   lastRead?: LastReadRow | null;
   completed?: CompletedRow[];
   readingDays?: { day: string }[];
+  readingGoal?: ReadingGoalRow | null;
 }
 
 /**
@@ -43,6 +58,7 @@ export interface MemorySeed {
  */
 export function createMemoryDriver(seed?: MemorySeed): MemoryDriver {
   let lastRead: LastReadRow | null = seed?.lastRead ?? null;
+  let readingGoal: ReadingGoalRow | null = seed?.readingGoal ?? null;
   const completed = new Map<string, CompletedRow>();
   for (const row of seed?.completed ?? []) {
     completed.set(`${row.book_id}:${row.chapter}`, row);
@@ -64,22 +80,26 @@ export function createMemoryDriver(seed?: MemorySeed): MemoryDriver {
     lastReadRow: () => lastRead,
     completedRows: () => [...completed.values()],
     readingDayRows: () => [...readingDays.values()],
+    readingGoalRow: () => readingGoal,
     snapshot: () => ({
       lastRead,
       completed: [...completed.values()],
       readingDays: [...readingDays.values()],
+      readingGoal,
     }),
     failOnNextRun(offset = 1) {
       failureRun = runCount + offset;
     },
     async transaction(task) {
       const beforeLastRead = lastRead;
+      const beforeReadingGoal = readingGoal;
       const beforeCompleted = new Map(completed);
       const beforeReadingDays = new Map(readingDays);
       try {
         await task({ run: this.run.bind(this) });
       } catch (error) {
         lastRead = beforeLastRead;
+        readingGoal = beforeReadingGoal;
         completed.clear();
         beforeCompleted.forEach((row, key) => completed.set(key, row));
         readingDays.clear();
@@ -94,6 +114,7 @@ export function createMemoryDriver(seed?: MemorySeed): MemoryDriver {
     },
     async getFirst<T>(sql: string): Promise<T | null> {
       if (/FROM last_read/i.test(sql)) return lastRead as unknown as T | null;
+      if (/FROM reading_goal/i.test(sql)) return readingGoal as unknown as T | null;
       unsupported(sql);
     },
     async getAll<T>(sql: string): Promise<T[]> {
@@ -112,6 +133,11 @@ export function createMemoryDriver(seed?: MemorySeed): MemoryDriver {
         lastRead = { id: 1, book_id, chapter, scroll_y, opened_at };
         return;
       }
+      if (/INSERT INTO reading_goal/i.test(sql)) {
+        const [target, note, updated_at] = params as [number, string, string];
+        readingGoal = { id: 1, target, note, updated_at };
+        return;
+      }
       if (/INSERT INTO completed/i.test(sql)) {
         const [book_id, chapter, completed_at] = params as [string, number, string];
         completed.set(`${book_id}:${chapter}`, { book_id, chapter, completed_at });
@@ -121,6 +147,10 @@ export function createMemoryDriver(seed?: MemorySeed): MemoryDriver {
         const [day] = params as [string];
         // INSERT OR IGNORE: keep the first row for a day, ignore later inserts.
         if (!readingDays.has(day)) readingDays.set(day, { day });
+        return;
+      }
+      if (/DELETE FROM reading_goal/i.test(sql)) {
+        readingGoal = null;
         return;
       }
       if (/DELETE FROM completed/i.test(sql)) {

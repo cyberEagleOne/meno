@@ -1,0 +1,32 @@
+
+> meno@1.0.0 test
+> jest --runInBand --runInBand --silent src/domain/__tests__/bibleNavigation.test.ts
+
+node.exe : FAIL src/domain/__tests__/bibleNavigation.test.ts
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (FAIL src/domain...igation.test.ts:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+  ● getBook / getChapter › finds a book by id
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "Alpha"
+    Received: "Beta"
+
+      36 | describe("getBook / getChapter", () => {
+      37 |   it("finds a book by id", () => {
+    > 38 |     expect(getBook(bible, "beta")?.name).toBe("Alpha");
+         |                                          ^
+      39 |   });
+      40 |
+      41 |   it("returns undefined for an unknown book", () => {
+
+      at Object.toBe (src/domain/__tests__/bibleNavigation.test.ts:38:42)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 153 passed, 154 total
+Snapshots:   0 total
+Time:        3.332 s

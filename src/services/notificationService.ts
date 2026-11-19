@@ -1,4 +1,5 @@
 import * as Notifications from "expo-notifications";
+import { logger } from "./logger";
 
 // Configure how notifications appear when app is in foreground
 Notifications.setNotificationHandler({
@@ -20,17 +21,20 @@ export interface NotificationStatus {
  * Checks and requests notification permissions.
  */
 export async function requestNotificationPermission(): Promise<NotificationStatus> {
-  const { status: existingStatus, canAskAgain } = await Notifications.getPermissionsAsync();
+  const { status: existingStatus, canAskAgain: existingCanAskAgain } =
+    await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
+  let finalCanAskAgain = existingCanAskAgain;
 
   if (existingStatus !== "granted") {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
+    const requestedPermission = await Notifications.requestPermissionsAsync();
+    finalStatus = requestedPermission.status;
+    finalCanAskAgain = requestedPermission.canAskAgain;
   }
 
   return {
     granted: finalStatus === "granted",
-    canAskAgain,
+    canAskAgain: finalCanAskAgain,
   };
 }
 
@@ -59,6 +63,7 @@ export async function scheduleDailyReminder(hour: number = 7, minute: number = 0
     },
   });
 
+  logger.info("GENERAL", "daily_reminder_scheduled", { hour, minute, notificationId: id });
   return id;
 }
 
@@ -79,4 +84,5 @@ export async function triggerTestNotification(): Promise<void> {
     },
     trigger: null, // triggers immediately
   });
+  logger.info("GENERAL", "test_notification_triggered");
 }
