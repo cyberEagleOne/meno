@@ -18,4 +18,6 @@ Repository: [cyberEagleOne/meno](https://github.com/cyberEagleOne/meno/issues). 
 
 Three defects/findings were established: the goal-form state update broke lint, notification denial showed stale permission guidance, and the APK advertised x86/x86_64 while packaging Expo SQLite JNI only for ARM64. The first two are fixed and closed. The ABI discrepancy is corrected by making the new CI APK ARM64-only (run 44529697756 passed and its package metadata was inspected). Issue #13 remains open until supported ARM64 phone startup is verified. Testing did not find five genuine bugs; the assignment's five-bug quota remains unmet. The other eight issues are concrete improvements or acceptance work, not bugs.
 
+The issue was updated with the successful ARM64 CI result and the remaining physical-device verification step in [comment 7010440584](https://github.com/cyberEagleOne/meno/issues/13#issuecomment-7010440584).
+
 Failure evidence: `docs/evidence/android/02-x86_64-storage-error.png`, `02-x86_64-logcat.txt`, and `02-install-verification.txt`. This records a failed x86_64 run, not successful phone acceptance. The four passing UI screenshots and accessibility review remain outstanding.
