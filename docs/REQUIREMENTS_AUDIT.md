@@ -56,7 +56,7 @@
 | M11-04 | CI test/build pipeline | NOT IMPLEMENTED | No tracked workflow found | Add workflow; validate with available GitHub runner | P2 |
 | M11-05 | V1.1 milestone and release notes | NOT IMPLEMENTED | No roadmap file found | Document proposed/completed work and tests | P2 |
 | GIT-01 | Preserve initial uncommitted user changes | VERIFIED | Initial diff confined to `app.json`, `package.json`; retained unstaged | Keep unstaged unless included by user later | P0 |
-| GIT-02 | Push reviewed checkpoints on correct branch | PARTIALLY IMPLEMENTED | Existing branch is 3 commits ahead; remote fetched; no task push yet | Fix lint, verify diffs, commit scoped audit work, push | P1 |
+| GIT-02 | Push reviewed checkpoints on correct branch | VERIFIED | Scoped commit `871548b` pushed; remote ref verified at matching SHA; GitHub Actions run started | Continue checkpoint pushes | P1 |
 | A-01 | APK installation, startup, UI and navigation on Android | BLOCKED | No current device/emulator; no fresh install | Requires accessible Android device/emulator | P1 |
 | A-02 | Core form, persistence, API, errors and retry on Android | IMPLEMENTED — NOT VERIFIED | Code/tests; no target-device run in current audit | Verify on Android | P1 |
 | A-03 | Three advanced feature permissions and cancellation on Android | IMPLEMENTED — NOT VERIFIED | Service implementations inspected | Verify all native permission paths | P1 |
