@@ -29,3 +29,9 @@ The CI APK from run 44517378110 was downloaded and installed on the API 37 x86_6
 ## v1.0 readiness
 
 Not ready: current Bible content is synthetic placeholder text; native build/install, advanced features, physical persistence, device screenshots, failed-test demonstration, and release signing are incomplete/unverified. No `v1.0` branch or release tag should be created yet.
+
+## Continuation check — 2026-11-19
+
+The continuation added six disk-backed SQLite repository tests and service tests for notification, shake, and biometric behavior. Latest test result is 274/274 across 18 suites; TypeScript, lint, and Android JS/Hermes export pass. Real Expo Go AVD screenshots and a process-restart persistence observation are recorded, but they are not tests of this standalone APK. The connected AVD is x86_64 and the ARM64-only APK cannot run there. The current APK is still the CI artifact from run 44529697756 (debug-signed; hash in the Android verification record); this continuation did not produce a fresh native APK.
+
+`v1.0` and `v1.0_dev` remain intentionally uncreated: physical installation and feature verification, real content rights, outstanding npm audit findings, and final release acceptance are unresolved. The dependency audit result is six findings (three high, three moderate); details and remediation assessment are in `docs/SECURITY_AUDIT.md`.

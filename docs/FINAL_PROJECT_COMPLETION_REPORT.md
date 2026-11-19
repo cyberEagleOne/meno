@@ -65,4 +65,20 @@ The CI APK from run 44517378110 installed on API 37 x86_64 but failed SQLite boo
 
 ## 9. Lecturer demonstration
 
+### Continuation acceptance update — 2026-11-19
+
+This update supersedes earlier counts and device-evidence statements where they differ. Meno remains **not complete** and is not ready for v1.0.
+
+| Requirement | Implementation | Automated Test | Emulator | Physical Android |
+|---|---|---|---|---|
+| App startup/navigation | Implemented | Component/navigation coverage passes | Current app JS opened in Expo Go; screens navigated | Not verified |
+| SQLite progress persistence | Expo SQLite driver and schema implemented | Disk-backed SQLite integration suite covers init, create/read, update, delete, reopen, rollback and errors | Completion survived Expo Go force-stop/relaunch; evidence recorded | Standalone APK not verified |
+| Daily notification | Local reminder/test notification implemented | Permission, denial, scheduling/replacement and trigger-request tests pass | UI visible; OS delivery/permission prompt not verified | Not verified |
+| Shake navigation | Accelerometer subscription, threshold, debounce and cleanup implemented | Sensor service tests pass | Sensor input not tested | Not verified |
+| Biometric/device auth | Native local-auth integration implemented | Hardware/enrollment/success/cancel/failure paths tested with mocks | Native prompt not tested | Not verified |
+| UI evidence | Screens render in current app | UI suite passes | Five real Expo Go AVD screenshots captured | Not verified |
+| ARM64 APK | CI APK available and metadata/signature checked | CI build passed for prior code; continuation did not rebuild native APK | Incompatible with x86_64 AVD | Not installed or verified |
+
+Fresh verification: **274 tests passed across 18 suites, 0 failed/skipped; TypeScript passed; lint passed; Android JS/Hermes export passed.** `npm audit` remains at 6 findings (3 high, 3 moderate). Test milestone `3c98cf820696be1d893f1bd10fe83874b38242a4` was pushed to `feat/assignment-completion`; this documentation/evidence checkpoint follows separately. Physical phone acceptance and Bible text rights remain blockers. Only three genuine defects/findings are evidenced; no additional defects were invented to meet the assignment target.
+
 Use `ANDROID_DEMO_GUIDE.md`. The 5–10 minute sequence covers home, library/chapter navigation, explicit completion, progress, daily verse, notification, shake navigation, app lock, and restart persistence. Explain that the current reader content is a synthetic placeholder and that native-device verification is pending.
