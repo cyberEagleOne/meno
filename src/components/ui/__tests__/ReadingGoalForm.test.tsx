@@ -1,6 +1,6 @@
 import React from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
-import { TextInput, Pressable } from "react-native";
+import { TextInput } from "react-native";
 
 import { ReadingGoalForm } from "../ReadingGoalForm";
 import * as goalRepo from "../../../data/goalRepository";

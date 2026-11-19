@@ -38,7 +38,6 @@ export function ReadingGoalForm({ onGoalSaved }: ReadingGoalFormProps) {
   // Load existing reading goal via GoalRepository
   useEffect(() => {
     let isMounted = true;
-    setFormState("loading");
 
     getReadingGoal()
       .then((goal) => {

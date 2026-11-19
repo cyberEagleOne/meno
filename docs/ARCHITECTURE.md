@@ -7,7 +7,7 @@
 | Last updated | 2026-10-22 |
 | Author | AI-assisted draft (opencode); not yet reviewed by the student |
 
-> Evidence policy: §2 records the 2026-10-10/11 toolchain validation and scaffold (Stages 1–5, verbatim logs). This document describes the current working-tree implementation. Current host verification is **7 suites / 73 tests**, with TypeScript, lint, and Android Expo bundle export passing (`docs/TESTING.md`). An Expo Go emulator smoke test observed selected UI flows and completion/progress persistence after force-stop/relaunch; it does not verify native APK behavior, native SQLite rollback, or real storage-failure recovery. Historical stage logs are not rewritten.
+> Evidence policy: §2 records historical 2026-10-10/11 toolchain validation and scaffold logs. Current audit verification on 2026-11-19 is **14 suites / 250 tests**, TypeScript clean, lint clean after the `ReadingGoalForm` effect fix, and Android Expo JS/Hermes bundle export successful. This is not a native APK build/install test. The previously reported Expo Go smoke test is historical and does not verify native APK behavior, native SQLite rollback, or real storage-failure recovery; see `docs/TESTING.md` and `docs/PROJECT_RECONNAISSANCE.md`.
 
 ---
 
@@ -19,7 +19,7 @@
 | Framework | React Native via Expo | **Verified** — Expo SDK 57 (`expo 57.0.27`, `react-native 0.86.3`, `react 19.2.3`) |
 | Navigation | Expo Router (file-based) | **Verified** — `expo-router 57.0.25` |
 | Local database | Expo SQLite (`expo-sqlite`) | **Verified compatible / installed** — `expo-sqlite 57.0.4`; schema + driver seam implemented (see §3.1) |
-| Unit testing | Jest + `jest-expo` | **Verified** — jest 29.7.0; 7 suites / 73 tests passing (2026-10-22, `docs/TESTING.md`) |
+| Unit testing | Jest + `jest-expo` | **Verified** — 14 suites / 250 tests passing (2026-11-19, `docs/TESTING.md`) |
 
 ## 2. Compatibility validation (2026-10-10)
 

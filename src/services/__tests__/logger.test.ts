@@ -1,4 +1,4 @@
-import { logger, LogEntry } from "../logger";
+import { logger } from "../logger";
 
 describe("Runtime Logging System", () => {
   beforeEach(() => {

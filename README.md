@@ -195,7 +195,7 @@ Meno dapat diekspor menjadi bundle produksi siap pakai tanpa memerlukan Android 
 Sebelum melakukan demonstrasi atau commit, jalankan pengujian untuk memastikan seluruh fungsionalitas berjalan normal:
 
 ```bash
-# 1. Jalankan seluruh unit test (95 skenario pengujian)
+# 1. Jalankan seluruh unit test
 npm test
 
 # 2. Periksa static typing TypeScript
@@ -205,13 +205,14 @@ npx tsc --noEmit
 npm run lint
 ```
 
-**Status Verifikasi Terkini**:
-- ✅ **Unit Tests**: 10 test suites / 95 unit test **100% LULUS (Passed)**.
-- ✅ **TypeScript**: Strict clean, 0 error.
-- ✅ **Linter**: Clean, 0 warnings/errors.
-- ✅ **Bundle Export**: Android & Web build sukses di direktori `dist/`.
+**Verifikasi lokal (2026-11-19)**:
+- ✅ **Unit Tests**: 14 test suites / 250 tests lulus (`npm test -- --runInBand --silent`).
+- ✅ **TypeScript**: `npx tsc --noEmit` lulus.
+- ✅ **Linter**: `npm run lint` lulus setelah perbaikan aturan React hooks.
+- ✅ **Android bundle**: `npx expo export --platform android` lulus (bundle Hermes 3.3 MB). Ini bukan build APK native.
+- ⚠️ **APK/perangkat**: APK yang ada adalah artefak Gradle lokal 15 Nov 2026; build ulang dan instalasi pada perangkat belum diverifikasi di lingkungan audit ini.
 
-Rincian inventaris pengujian tercatat lengkap di [`docs/TESTING.md`](docs/TESTING.md).
+Rincian inventaris dan batas verifikasi tercatat di [`docs/TESTING.md`](docs/TESTING.md).
 
 ---
 
@@ -250,7 +251,10 @@ added until licensing is confirmed and recorded (see
 | [`docs/SECURITY_AUDIT.md`](docs/SECURITY_AUDIT.md) | **Hasil Uji Security**, audit dependensi (`npm audit`), dan catatan perubahan relevan |
 | [`docs/LOGGING_AND_ERROR_HANDLING.md`](docs/LOGGING_AND_ERROR_HANDLING.md) | **Contoh Log Aman**, mitigasi data PII, penyebab error, dan tindakan perbaikannya |
 | [`docs/CHECKPOINT_EVALUATION.md`](docs/CHECKPOINT_EVALUATION.md) | Panduan pemenuhan & pembuktian Checkpoint Dosen (P1–P7) |
-| [`docs/TESTING.md`](docs/TESTING.md) | Catatan eksekusi riil pengujian unit (83 tests pass), tsc, lint, dan bundler |
+| [`docs/TESTING.md`](docs/TESTING.md) | Catatan eksekusi terbaru unit test, TypeScript, lint, dan bundler |
+| [`docs/REQUIREMENTS_AUDIT.md`](docs/REQUIREMENTS_AUDIT.md) | Audit requirement satu per satu beserta status dan bukti |
+| [`docs/ANDROID_DEMO_GUIDE.md`](docs/ANDROID_DEMO_GUIDE.md) | Urutan demo Android dan troubleshooting |
+| [`docs/DEVELOPMENT_PROGRESS.md`](docs/DEVELOPMENT_PROGRESS.md) | Checkpoint pengembangan dan status Git |
 | [`HowToRun.md`](HowToRun.md) | Panduan setup teknis lingkungan Android SDK & AVD |
 | [`checklist_mvp.md`](checklist_mvp.md) | Matriks pemenuhan acceptance criteria MVP |
 | [`docs/PRD.md`](docs/PRD.md) | Product Requirement Document (PRD) & User Stories |

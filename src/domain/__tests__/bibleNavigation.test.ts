@@ -148,4 +148,34 @@ describe("placeholder dataset boundaries", () => {
     const orders = placeholderBible.books.map((book) => book.canonicalOrder);
     expect(orders).toEqual([...orders].sort((a, b) => a - b));
   });
+
+  it.each(placeholderBible.books)(
+    "$name: first chapter has the correct previous-book boundary",
+    (book) => {
+      const index = placeholderBible.books.findIndex((candidate) => candidate.id === book.id);
+      const previousBook = placeholderBible.books[index - 1];
+      const expected = previousBook
+        ? {
+            bookId: previousBook.id,
+            chapterNumber: previousBook.chapters[previousBook.chapters.length - 1]!.number,
+          }
+        : null;
+
+      expect(getPreviousChapter(placeholderBible, book.id, book.chapters[0]!.number)).toEqual(expected);
+    },
+  );
+
+  it.each(placeholderBible.books)(
+    "$name: last chapter has the correct next-book boundary",
+    (book) => {
+      const index = placeholderBible.books.findIndex((candidate) => candidate.id === book.id);
+      const nextBook = placeholderBible.books[index + 1];
+      const expected = nextBook
+        ? { bookId: nextBook.id, chapterNumber: nextBook.chapters[0]!.number }
+        : null;
+      const lastChapter = book.chapters[book.chapters.length - 1]!;
+
+      expect(getNextChapter(placeholderBible, book.id, lastChapter.number)).toEqual(expected);
+    },
+  );
 });

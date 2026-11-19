@@ -1,0 +1,62 @@
+name: Android CI
+
+on:
+  push:
+    branches:
+      - master
+      - feat/assignment-completion
+      - v1.0_dev
+  pull_request:
+    branches:
+      - master
+      - feat/assignment-completion
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-build:
+    name: Verify and build Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test -- --runInBand --silent
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Export Android JavaScript bundle
+        run: npx expo export --platform android
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Build release APK
+        run: ./android/gradlew --no-daemon -p android assembleRelease
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: meno-android-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 14

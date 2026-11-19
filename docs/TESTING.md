@@ -21,7 +21,7 @@ fnm exec --using=22 -- npx tsc --noEmit    # typecheck
 fnm exec --using=22 -- npm run lint        # eslint (expo config)
 ```
 
-## 2. Test inventory (10 files, 95 cases)
+## 2. Test inventory (14 files; historical detailed inventory below)
 
 | File | Cases | What it verifies |
 |---|---|---|
@@ -51,7 +51,7 @@ passing silently.
 construct `Date`s with local-noon components (`new Date(2026, 9, 15, 12)`).
 No test reads the real current time or depends on the host timezone.
 
-## 3. Captured runs (2026-10-22)
+## 3. Historical captured runs (2026-10-22)
 
 ### 3.1 Unit tests (95 cases)
 
@@ -118,6 +118,43 @@ does not verify a standalone/native APK or SQLite rollback behavior.
 The database unit tests use `memoryDriver.ts`; they do not directly test native
 SQLite transaction rollback. Expo Go persistence above was observed, but no
 controlled storage-failure/recovery scenario was performed.
+
+## 6. Fresh audit run (2026-11-19)
+
+Commands run in the project workspace using Node 24.19.0:
+
+```text
+npm test -- --runInBand --silent
+Test Suites: 14 passed, 14 total
+Tests:       250 passed, 250 total
+Time:        12.082 s
+
+npx tsc --noEmit
+exit 0, no diagnostics
+
+npm run lint
+exit 0, no findings
+
+npx expo export --platform android
+success; Hermes bundle entry-a33cb9e7233de8cfd9a8ee003e672809.hbc, 3.3 MB
+```
+
+The test suite rose from 118 to 250 cases by adding per-book previous/next
+boundary checks for all 66 canonical books. These exercise each real navigation
+boundary (including first and last canon bounds); they are not repeated
+no-op assertions. Lint and TypeScript were rerun after the API catch bindings
+were restored. The 3.3 MB Expo export validates the JS bundle only. Native APK
+build/install and device runtime are unverified in this environment.
+
+An intermediate failed run (1 failed / 117 passed) occurred during the lint
+cleanup after an exception binding was accidentally removed. The failing API
+regression exposed the mistake; the catch was restored. A dedicated failing-
+test demonstration was subsequently performed with a deliberately incorrect
+expected book name in the isolated navigation test. The controlled run failed
+as expected (1 failed / 153 passed in that file); the original expectation was
+restored immediately. Captured output is in
+`docs/evidence/testing/controlled-failure.log`. The full suite is being rerun
+after restoration; no intentionally failing test remains in the source.
 
 ## 5. Deferred by design (PRD §10 — not required to pass)
 

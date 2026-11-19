@@ -84,7 +84,7 @@ export async function fetchDailyVerseFromApi(
   let rawJson: unknown;
   try {
     rawJson = JSON.parse(textPayload);
-  } catch (err: unknown) {
+  } catch {
     const jsonError = new ApiJsonError("Format data respons bukan JSON yang valid (JSON rusak).");
     logger.error("API_INTEGRATION", "daily_verse_json_error", jsonError, {
       endpoint: apiUrl,
