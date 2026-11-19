@@ -19,6 +19,7 @@ import {
 import { initProgressDb, loadProgress, markCompleted, saveLastRead, unmarkCompleted } from "./db";
 import { setSqlDriver } from "./sqlDriver";
 import { createExpoSqliteDriver } from "./sqliteDriver";
+import { logger } from "../services/logger";
 
 export type ProgressStatus = "loading" | "ready" | "error";
 
@@ -59,7 +60,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         setState(next);
         setStatus("ready");
       })
-      .catch(() => {
+      .catch((err: unknown) => {
+        logger.error("DATABASE", "progress_bootstrap_failed", err);
         if (mounted.current) setStatus("error");
       });
   }, []);

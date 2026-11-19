@@ -5,6 +5,7 @@ import { ProgressProvider, useProgress } from "../progressContext";
 import { setSqlDriver } from "../sqlDriver";
 import { createExpoSqliteDriver } from "../sqliteDriver";
 import { createMemoryDriver } from "./support/memoryDriver";
+import { logger } from "../../services/logger";
 
 jest.mock("../sqliteDriver", () => ({
   createExpoSqliteDriver: jest.fn(),
@@ -37,6 +38,37 @@ describe("ProgressProvider completion persistence", () => {
     await act(async () => renderer.unmount());
     setSqlDriver(null);
     jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
+
+  it("logs a database bootstrap failure and recovers when retry succeeds", async () => {
+    const error = new Error("native SQLite unavailable");
+    await act(async () => renderer.unmount());
+    setSqlDriver(null);
+    createDriver.mockReset().mockRejectedValueOnce(error);
+    const retryDriver = createMemoryDriver();
+    createDriver.mockResolvedValueOnce(retryDriver);
+    const logError = jest.spyOn(logger, "error").mockImplementation();
+
+    await act(async () => {
+      renderer = create(
+        <ProgressProvider>
+          <Probe />
+        </ProgressProvider>,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(progress.status).toBe("error");
+    expect(logError).toHaveBeenCalledWith("DATABASE", "progress_bootstrap_failed", error);
+
+    await act(async () => {
+      progress.retry();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(createDriver).toHaveBeenCalledTimes(2);
+    expect(progress.status).toBe("ready");
   });
 
   it("keeps failed completion out of context and applies it after retry", async () => {
