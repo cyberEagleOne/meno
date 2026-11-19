@@ -37,3 +37,9 @@ The continuation added nine disk-backed SQLite repository tests and service test
 `v1.0` and `v1.0_dev` remain intentionally uncreated: physical installation and feature verification, real content rights, outstanding npm audit findings, and final release acceptance are unresolved. The dependency audit result is six findings (three high, three moderate); details and remediation assessment are in `docs/SECURITY_AUDIT.md`.
 
 Continuation CI update: run `44558740936` failed at **Build release APK** (exit code 1) after tests, type check, lint, Android export, native prebuild, and JDK setup succeeded; its public annotation does not include the cause and unauthenticated log retrieval returned HTTP 403. The later run [44558937344](https://github.com/cyberEagleOne/meno/actions/runs/44558937344) for commit `00fdae2` completed successfully, including tests and APK upload. Its ARM64 APK artifact is 28.7 MB, digest `1d918bb58905bc4772fd8f4e3683f0084f4bc7813cd51e3e3475ea7cb273d544`. I could not download it from this environment. The pre-existing local APK remains the independently inspected artifact from `44529697756`.
+
+## Physical Android startup — 2026-11-19
+
+The locally verified APK from run `44529697756` (SHA-256 `CD388C88CD1119782B802CC1F03D8BD6765FA88AD12DD3B1DCC4486435C0C128`) was installed on RMX2103 Android 11/API 30 ARM64. It was a fresh install; package `com.meno.app` was absent beforehand. Installation returned `Success`; MainActivity resumed. App PID Logcat confirms startup, SQLite initialization, and daily verse fetch success; no Meno fatal, native-library, SQLite bootstrap, or JavaScript runtime failure was observed. Details and genuine screenshot/logs: `docs/evidence/physical-android/`.
+
+This is not the newer CI artifact from run `44558937344` (different digest; not downloaded or installed). Physical functional workflows and OS features remain unverified until the user confirms the displayed screen and testing continues.

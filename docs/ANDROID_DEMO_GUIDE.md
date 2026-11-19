@@ -73,3 +73,11 @@ Until this checklist is run, physical Android acceptance is blocked on connectin
 - **Biometric unavailable:** configure a device fingerprint/face and secure screen lock; use the app's PIN fallback.
 - **Daily verse error:** check internet and use Retry; the provider is an external service.
 - **Unexpected content:** the local reader is synthetic sample content, explicitly not a Bible translation.
+
+## Physical Android startup update — 2026-11-19
+
+The local APK (`artifacts/android/meno-release.apk`, SHA-256 `CD388C88CD1119782B802CC1F03D8BD6765FA88AD12DD3B1DCC4486435C0C128`, artifact inspected from CI run 44529697756) installed successfully on the authorized RMX2103 (Android 11/API 30, ARM64). The package was not previously installed. `com.meno.app/.MainActivity` resumed, the app process stayed alive, and startup Logcat recorded `app_startup`, `sqlite_init_success`, and a successful daily-verse fetch. No Meno fatal exception, missing native library, SQLite initialization error, or JS runtime failure was found in the app PID log.
+
+Physical evidence is under `docs/evidence/physical-android/`. The screenshot captured after launch shows the **Pilih kitab** screen. The later CI artifact from run 44558937344 has a different reported digest and was not used for this install; do not describe the tested local APK as that artifact. The separate crash buffer contains a ColorOS Phone Manager `DeadObjectException`, which is not from Meno.
+
+Startup and SQLite initialization are verified on this physical phone. Stop at this point until the user confirms that the screen currently shown on the phone matches the captured book chooser. Core interactions, persistence after force-stop, notifications, shake, and biometrics have not been tested on the phone yet.
