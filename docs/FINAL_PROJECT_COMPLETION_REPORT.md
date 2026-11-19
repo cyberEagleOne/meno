@@ -49,14 +49,14 @@ A fresh CI APK from run 44517378110 was downloaded and installed on the API 37 x
 
 ## 6. Git state
 
-Current branch at the latest verified push: `feat/assignment-completion`, HEAD `a41bf72`. Three task commits were created and pushed; the remote ref was verified at the matching SHA. Three commits were already ahead at audit start and are not counted as task-created commits. The original `app.json` and `package.json` edits were reviewed and preserved in the Android setup commit along with SDK patches. Earlier GitHub runs `44511377505` and `44511508792` failed at Gradle; corrected run `44513648948` passed the native release build and artifact upload. The notification permission changes and their tests are included in the next checkpoint commit.
+Current branch: `feat/assignment-completion`. Latest pushed HEAD at this report update: `fd3d6f51b909acaaf3e0c2cc9a46101ac127a295`; the remote ref matched. Eight task commits have been created and pushed in this work; three commits were already ahead at audit start and are not included. The user's initial `app.json`/`package.json` edits were preserved in `a41bf72`. Latest successful ARM64 APK workflow: `44529697756`; the physical phone remains untested. The current documentation reconciliation is the next local change to push.
 
 ## 7. Remaining issues
 
 - Bible translation and embedding rights require a documented decision before real text can be included.
-- JDK 17, Android SDK and device/emulator access are needed for a fresh APK and Android acceptance checks.
+- The fresh ARM64 APK is available at `artifacts/android/meno-release.apk`; physical ARM64 phone access is needed for runtime acceptance.
 - Four current runtime UI screenshots, accessibility/keyboard testing and advanced-feature device evidence remain outstanding.
-- The controlled failed-test capture and CI release build are verified. Issue creation, device testing, and release branches remain outstanding.
+- The controlled failed-test capture, eleven issue records (#3–13), and CI release build are verified. Physical-device testing and release branches remain outstanding.
 - APK signing uses a debug keystore and is not appropriate for public distribution.
 
 ## 8. Latest Android verification update

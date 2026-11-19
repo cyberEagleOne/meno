@@ -1,5 +1,9 @@
 # State Management
 
+## Latest verification update (2026-11-19)
+
+The local state suite now has 253 passing tests after adding SQLite bootstrap failure logging coverage; TypeScript and lint passed. The x86_64 AVD's storage bootstrap failure was diagnosed as missing x86_64 Expo SQLite JNI in the older APK. ARM64-only CI run 44529697756 succeeded, but no physical ARM64 phone was available to verify native state transitions or persistence.
+
 ## Feature 1: reading progress
 
 - **UI:** `src/app/reader/[book]/[chapter].tsx`, `src/app/(tabs)/progress.tsx`, `src/app/(tabs)/index.tsx`.
