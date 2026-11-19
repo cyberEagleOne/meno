@@ -16,7 +16,7 @@ The initial full `npm audit` reported 18 dependency findings (5 high, 13 moderat
 | Initial `npm audit --omit=dev` | 13 vulnerabilities: 5 high, 8 moderate |
 | After compatible Expo SDK 57 patch alignment and `npm audit fix` | 6 total: 3 high, 3 moderate, 0 critical |
 | `npx expo-doctor` after updates | 21/21 checks passed |
-| App regression suite after updates | 14 suites / 250 tests passed in 14.654 s |
+| App regression suite after updates | 15 suites / 252 tests passed in 6.812 s |
 | Forced remediation | Not run; npm proposes `expo-router@58` or Expo downgrade paths |
 
 Current package patches include Expo 57.0.33, Expo Router 57.0.31, SQLite 57.0.5 and the matching SDK-57 native modules. See `package.json` and `package-lock.json` for exact resolutions.
@@ -47,5 +47,5 @@ This audit did not perform penetration testing, device filesystem inspection, na
 
 | Date | Change | Evidence |
 |---|---|---|
-| 2026-11-19 | Updated compatible SDK 57 patches and applied non-breaking audit fixes | Expo Doctor 21/21; 250 tests passed; 6 dependency advisories remain |
+| 2026-11-19 | Updated compatible SDK 57 patches and applied non-breaking audit fixes; added notification permission regression coverage | Expo Doctor 21/21; 252 tests passed; 6 dependency advisories remain |
 | 2026-11-19 | Replaced stale 2026-10-30 summary that reported 22/18 findings and unverified low-risk conclusions | Current npm audit and source review |

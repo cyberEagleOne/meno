@@ -11,5 +11,6 @@ The GitHub CLI is not installed and no connected GitHub issue-management tool is
 | Finding | Evidence | Classification | Priority |
 |---|---|---|---|
 | `npm run lint` failed on a synchronous `setState` inside the `ReadingGoalForm` load effect | Fresh baseline lint output on 2026-11-19; fixed and subsequent lint passed | Bug, resolved locally; not yet pushed as a distinct issue | P2 |
+| Notification permission response returned the pre-prompt `canAskAgain` value after the user denied the prompt | `src/services/notificationService.ts`; regression test `src/services/__tests__/notificationService.test.ts` verifies the post-prompt denial response | Bug, fixed locally; regression test passes; not yet filed as an issue | P1 |
 
 Potential follow-up issues (translation licensing/content decision, fresh Android build/device acceptance, native permission tests, accessibility evidence, and release signing) are improvement/blocker items rather than confirmed product bugs. No issue links are fabricated.

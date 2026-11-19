@@ -206,7 +206,7 @@ npm run lint
 ```
 
 **Verifikasi lokal (2026-11-19)**:
-- ✅ **Unit Tests**: 14 test suites / 250 tests lulus (`npm test -- --runInBand --silent`).
+- ✅ **Unit Tests**: 15 test suites / 252 tests lulus (`npm test -- --runInBand --silent`).
 - ✅ **TypeScript**: `npx tsc --noEmit` lulus.
 - ✅ **Linter**: `npm run lint` lulus setelah perbaikan aturan React hooks.
 - ✅ **Android bundle**: `npx expo export --platform android` lulus (bundle Hermes 3.3 MB). Ini bukan build APK native.
@@ -256,6 +256,7 @@ added until licensing is confirmed and recorded (see
 | [`docs/REQUIREMENTS_AUDIT.md`](docs/REQUIREMENTS_AUDIT.md) | Audit requirement satu per satu beserta status dan bukti |
 | [`docs/ANDROID_DEMO_GUIDE.md`](docs/ANDROID_DEMO_GUIDE.md) | Urutan demo Android dan troubleshooting |
 | [`docs/DEVELOPMENT_PROGRESS.md`](docs/DEVELOPMENT_PROGRESS.md) | Checkpoint pengembangan dan status Git |
+| [`docs/V1_1_ROADMAP.md`](docs/V1_1_ROADMAP.md) | Rencana milestone V1.1; belum dirilis |
 | [`HowToRun.md`](HowToRun.md) | Panduan setup teknis lingkungan Android SDK & AVD |
 | [`checklist_mvp.md`](checklist_mvp.md) | Matriks pemenuhan acceptance criteria MVP |
 | [`docs/PRD.md`](docs/PRD.md) | Product Requirement Document (PRD) & User Stories |

@@ -21,17 +21,20 @@ export interface NotificationStatus {
  * Checks and requests notification permissions.
  */
 export async function requestNotificationPermission(): Promise<NotificationStatus> {
-  const { status: existingStatus, canAskAgain } = await Notifications.getPermissionsAsync();
+  const { status: existingStatus, canAskAgain: existingCanAskAgain } =
+    await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
+  let finalCanAskAgain = existingCanAskAgain;
 
   if (existingStatus !== "granted") {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
+    const requestedPermission = await Notifications.requestPermissionsAsync();
+    finalStatus = requestedPermission.status;
+    finalCanAskAgain = requestedPermission.canAskAgain;
   }
 
   return {
     granted: finalStatus === "granted",
-    canAskAgain,
+    canAskAgain: finalCanAskAgain,
   };
 }
 

@@ -21,9 +21,9 @@ The main value proposition is local, private reading progress with a low-pressur
 | Local data | `expo-sqlite` through `SqlDriver`, with a web implementation and injectable in-memory test driver |
 | Remote data | Daily verse GET request in `src/data/dailyVerseRepository.ts` to `https://bible-api.com/john+3:16` |
 | Device features | `expo-notifications`, `expo-sensors`, and `expo-local-authentication` wrappers in `src/services/` |
-| Tests | Jest / `jest-expo`, React Test Renderer, pure domain and repository tests; 250 cases after audit expansion |
+| Tests | Jest / `jest-expo`, React Test Renderer, pure domain, repository and notification permission tests; 252 cases after audit expansion |
 | Android | Expo prebuild project under `android/`; release APK/AAB are present under ignored Gradle output |
-| CI | `.github/workflows/android-ci.yml`; first pushed run passed tests/type/lint/bundle but APK stage failed; corrected workflow prebuild is not yet pushed |
+| CI | `.github/workflows/android-ci.yml`; corrected run `44513648948` passed tests/type/lint/export/prebuild and is building the APK |
 
 Main source folders are `src/app` (screens/routes), `src/components/ui` (shared UI), `src/data` (repositories and SQLite), `src/domain` (business rules), `src/services` (OS integrations and logging), and `src/theme` / `src/utils` (design and formatting).
 
@@ -47,7 +47,7 @@ The repository contains 14 test files. The initial 2026-11-19 baseline was:
 - `npx tsc --noEmit`: **passed, no diagnostics**.
 - `npm run lint`: initial failure due to a synchronous state update in an effect and four unused declarations; the narrow fix subsequently passed lint.
 
-After adding exhaustive per-book navigation boundary cases, the suite is now 250 tests; it passed after SDK dependency updates in 14.654 s. `npx tsc --noEmit` and `npm run lint` also passed after source/dependency changes. `npx expo-doctor` reported 21/21 checks. The Android export passed before SDK patch updates; a post-update export is pending. Most local persistence coverage uses the injected in-memory driver. Prior docs report Expo Go smoke testing, but this audit did not repeat that test.
+After adding exhaustive per-book navigation boundary cases and notification permission tests, the suite is now 252 tests; it passed after SDK dependency updates in 6.812 s. `npx tsc --noEmit` and `npm run lint` also passed after source/dependency changes. `npx expo-doctor` reported 21/21 checks. Android export passed after SDK patch updates; the post-notification-fix export passed as well. Most local persistence coverage uses the injected in-memory driver. Prior docs report Expo Go smoke testing, but this audit did not repeat that test.
 
 ## Current build and Android environment
 
@@ -62,13 +62,13 @@ The current host reports Node 24.19.0 and Java 8.401. `adb`, `ANDROID_HOME`, and
 - HEAD at audit start: `38b7616`; three commits ahead of `origin/feat/assignment-completion`.
 - User's pre-existing working-tree changes: `app.json` and `package.json`. They add Android identity/permission configuration and change `android`/`ios` scripts to native `expo run`. They are preserved and not staged by this audit.
 - `git fetch origin` succeeded; the remote feature branch remains at `9ae7413`. Remote `master` advanced to `a0d0bcd` and is separate from this feature branch.
-- Audit commits `871548b` and `4c7603c` were pushed. A dependency/security/CI correction is in progress and not yet committed.
+- Audit commits `871548b`, `4c7603c`, and `a41bf72` were pushed. Notification permission source/test changes and refreshed documentation remain uncommitted.
 
 ## Technical debt and risks
 
 1. **Content blocker:** synthetic placeholder verses prevent a real Scripture-reading demonstration. Resolve exact translation, source, licence, attribution, and redistribution permission before replacing the content.
-2. **Android verification gap:** the existing APK is a pre-existing, debug-signed artifact. JDK 17, Android SDK, and a device/emulator are unavailable in the active shell. CI ran but could not find the ignored Android project; the workflow now prebuilds it before Gradle, pending rerun.
-3. **Test target gap:** 118 current tests vs 200 required; there is no in-repository evidence for a controlled failed-test demonstration.
+2. **Android verification gap:** the existing APK is a pre-existing, debug-signed artifact. JDK 17, Android SDK, and a device/emulator are unavailable in the active shell. Corrected GitHub Actions run 44513648948 completed successfully, including Gradle release APK build and artifact upload (53,627,356-byte ZIP artifact). Artifact installation and device behavior remain unverified.
+3. **Test target:** 252 meaningful tests currently pass; controlled failure evidence is saved in `docs/evidence/testing/controlled-failure.log`.
 4. **UI evidence gap:** no current-run screenshots or full screen-size, keyboard, TalkBack, and accessibility evidence is stored in `docs/evidence/`.
 5. **Advanced-feature verification gap:** feature wrappers and UI exist, but permission denial/cancellation and real native behavior have not been verified in this audit.
 6. **API scope:** daily verse is a meaningful read-only external API integration. Meno intentionally has no app backend/database server, so a UI→model→repository→API→backend→database write slice is not applicable to its architecture. Live service connectivity still needs verification.

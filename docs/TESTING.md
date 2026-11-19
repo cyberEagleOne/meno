@@ -21,11 +21,11 @@ fnm exec --using=22 -- npx tsc --noEmit    # typecheck
 fnm exec --using=22 -- npm run lint        # eslint (expo config)
 ```
 
-## 2. Test inventory (14 files; historical detailed inventory below)
+## 2. Test inventory (15 files; current suite)
 
 | File | Cases | What it verifies |
 |---|---|---|
-| `src/domain/__tests__/bibleNavigation.test.ts` | 22 | Book/chapter lookup, prev/next within book, cross-book boundaries (Maleakhi 4 → Matius 1), `null` at canon ends, unknown locations, empty-chapter boundaries, dataset invariants |
+| `src/domain/__tests__/bibleNavigation.test.ts` | 154 | Book/chapter lookup, prev/next within book, cross-book boundaries (Maleakhi 4 → Matius 1), `null` at canon ends, unknown locations, empty-chapter boundaries, dataset invariants |
 | `src/domain/__tests__/progress.test.ts` | 21 | `withCompletion` idempotency (same/different day), unmark, `completedCount` / `doneInBook`, milestone thresholds, `sanitizeProgress` (valid / invalid / corrupt / reading-day validation), `localDayKey` (local-date formatting, padding, local-vs-UTC), `isValidReadingDay`, `withReadingDay` (AC-2.6 day idempotency + ordering), `restoreScrollOffset` (reader scroll-restoration decision: match → offset, mismatch/missing → wait, zero/NaN → 0) |
 | `src/domain/__tests__/badges.test.ts` | 12 | Habit tree growth stages calculation (seed -> sprout -> sapling -> blooming -> fruitful -> golden oak), percentToNext progress calculation, collectible badges calculation across milestones, unique days, and scripture books |
 | `src/data/__tests__/dbCompletion.test.ts` | 11 | Completion/day writes through the injected in-memory driver: idempotency, multi-day history, undo semantics, simulated restart, and injected write failures |
@@ -35,6 +35,11 @@ fnm exec --using=22 -- npm run lint        # eslint (expo config)
 | `src/domain/__tests__/settingsValidation.test.ts` | 4 | Validasi form pengaturan: target chapters (1-50 bounds, numeric type), note commitment length (5-200 chars), dan status validitas form |
 | `src/app/reader/__tests__/readerCompletion.test.tsx` | 3 | Reader completion behavior: success feedback waits for the write, duplicate taps are suppressed while pending, and failed writes show/re-scope a retry action |
 | `src/data/__tests__/progressContext.test.tsx` | 2 | Injected write failures during completion/undo leave context consistent, and a later successful retry updates state |
+| `src/components/ui/__tests__/ReadingGoalForm.test.tsx` | 5 | Goal form load, validation, success and failure behavior using a mocked repository |
+| `src/data/__tests__/goalRepository.test.ts` | 5 | Goal repository read/save behavior through the SQL driver seam |
+| `src/services/__tests__/logger.test.ts` | 7 | Runtime log levels, structured entries, and sensitive-value sanitization |
+| `src/utils/__tests__/formatters.test.ts` | 6 | Shared number and percentage formatting behavior |
+| `src/services/__tests__/notificationService.test.ts` | 2 | Permission result reflects post-prompt OS status; existing grant avoids another prompt |
 
 **How the database is tested without a device:** `src/data/db.ts` issues all
 SQL through an injected `SqlDriver` (`src/data/sqlDriver.ts`). Production
@@ -125,9 +130,9 @@ Commands run in the project workspace using Node 24.19.0:
 
 ```text
 npm test -- --runInBand --silent
-Test Suites: 14 passed, 14 total
-Tests:       250 passed, 250 total
-Time:        14.654 s
+Test Suites: 15 passed, 15 total
+Tests:       252 passed, 252 total
+Time:        6.812 s
 
 npx tsc --noEmit
 exit 0, no diagnostics
@@ -145,11 +150,7 @@ npm audit
 6 findings remain: 3 high, 3 moderate, 0 critical; details in SECURITY_AUDIT.md
 ```
 
-The test suite rose from 118 to 250 cases by adding per-book previous/next
-boundary checks for all 66 canonical books. These exercise each real navigation
-boundary (including first and last canon bounds); they are not repeated
-no-op assertions. Lint and TypeScript were rerun after the API catch bindings
-were restored. The 3.3 MB Expo export validates the JS bundle only. Native APK
+The test suite rose from 118 to 252 cases by adding per-book previous/next boundary checks for all 66 canonical books and notification permission cases. These exercise real navigation boundaries and permission transitions; they are not repeated no-op assertions. Lint and TypeScript were rerun after source changes. The 3.3 MB Expo export validates the JS bundle only. Native APK
 build/install and device runtime are unverified in this environment.
 
 An intermediate failed run (1 failed / 117 passed) occurred during the lint
@@ -159,8 +160,7 @@ test demonstration was subsequently performed with a deliberately incorrect
 expected book name in the isolated navigation test. The controlled run failed
 as expected (1 failed / 153 passed in that file); the original expectation was
 restored immediately. Captured output is in
-`docs/evidence/testing/controlled-failure.log`. The full suite is being rerun
-after restoration; no intentionally failing test remains in the source.
+`docs/evidence/testing/controlled-failure.log`. The restored full suite passed 252 tests after the notification permission fix; no intentionally failing test remains in the source.
 
 ## 5. Deferred by design (PRD §10 — not required to pass)
 
