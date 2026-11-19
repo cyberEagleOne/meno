@@ -8,6 +8,10 @@ The current `npx expo export --platform android` succeeded after SDK patch updat
 
 ## Release configuration observations
 
+### Android runtime verification
+
+The CI APK from run 44517378110 was downloaded and installed on the API 37 x86_64 AVD. It displayed the SQLite bootstrap failure; APK inspection showed `libexpo-sqlite.so` only under ARM64 despite x86 ABIs advertised. The workflow was narrowed to ARM64. Run [44529697756](https://github.com/cyberEagleOne/meno/actions/runs/44529697756) succeeded and its artifact was inspected: package `com.meno.app`, version 1.0.0/code 1, target SDK 36, native-code `arm64-v8a`, SQLite JNI present for ARM64, APK size 49,734,787 bytes, SHA-256 `CD388C88CD1119782B802CC1F03D8BD6765FA88AD12DD3B1DCC4486435C0C128`. `apksigner verify` passed; certificate is Android Debug. Local copy: `artifacts/android/meno-release.apk` (ignored by Git). The available x86_64 emulator cannot validate this ARM64-only build. No physical phone test has been completed.
+
 - Expo package name and permissions are present in the local `app.json` change and are included with the corrected Android build configuration.
 - Native Gradle namespace/application ID are `com.meno.app`; version code 1 and version name 1.0.0 are configured in `android/app/build.gradle`.
 - Native release signing currently uses `android/app/debug.keystore` with the standard debug credentials. Do not ship this as a public/Play Store release; create a private release keystore and manage it as a secret if distribution is planned.

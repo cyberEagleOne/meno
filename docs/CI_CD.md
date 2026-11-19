@@ -2,9 +2,9 @@
 
 ## Current status
 
-`.github/workflows/android-ci.yml` was added and ran on GitHub. The pushed workflow passed npm install, all 250 tests, TypeScript, lint, Android JS bundle export, native prebuild, Gradle release APK build, and artifact upload. Its earlier native APK step failed with exit 127 because `/android` is ignored and absent from a clean checkout. The GitHub job summary identifies the failure; log download requires repository admin rights and was denied to this environment.
+`.github/workflows/android-ci.yml` was added and ran on GitHub. An early workflow run stopped at the native APK step (exit 127) because `/android` is ignored and absent from a clean checkout. The corrected workflow generates the native project before Gradle; corrected run results are summarized below.
 
-The workflow now generates the native Android project with `expo prebuild --platform android --no-install` before running Gradle. The correction was pushed in `a41bf72`; run [44513648948](https://github.com/cyberEagleOne/meno/actions/runs/44513648948) completed successfully. Every job step passed, including release APK build and artifact upload. The 53,627,356-byte ZIP artifact is available from the run page to authorized repository users. This run predates the notification fix and its two added tests; a new CI run will verify that follow-up commit.
+The workflow generates Android with `expo prebuild --platform android --no-install`. Runs [44513648948](https://github.com/cyberEagleOne/meno/actions/runs/44513648948) and [44517378110](https://github.com/cyberEagleOne/meno/actions/runs/44517378110) successfully built and uploaded APKs. The latter passed 252 tests and all static/bundle/build steps. Installing its APK on API 37 x86_64 exposed missing Expo SQLite JNI for x86_64. The workflow now targets ARM64 only; run [44529697756](https://github.com/cyberEagleOne/meno/actions/runs/44529697756) for commit `54619fd` succeeded, including all checks and APK upload. The downloaded APK advertises only `arm64-v8a` and contains `lib/arm64-v8a/libexpo-sqlite.so`. Its SHA-256 is `CD388C88CD1119782B802CC1F03D8BD6765FA88AD12DD3B1DCC4486435C0C128`; physical-device runtime remains unverified. The current local suite passes 253 tests.
 
 No deployment host or credentials are configured. Meno has no backend to deploy.
 

@@ -1,0 +1,15 @@
+Verification date: 2026-11-19
+CI run: https://github.com/cyberEagleOne/meno/actions/runs/44529697756
+Commit: 54619fdbf8471d1240b8dbba44ab004fe001c5a7
+Workflow result: success (test, typecheck, lint, Android export, prebuild, Gradle release APK, artifact upload).
+
+Local APK: artifacts/android/meno-release.apk (not tracked by Git)
+Size: 49,734,787 bytes
+SHA-256: CD388C88CD1119782B802CC1F03D8BD6765FA88AD12DD3B1DCC4486435C0C128
+aapt: package com.meno.app, versionName 1.0.0, versionCode 1, target SDK 36
+aapt native-code: arm64-v8a only
+Native SQLite library: lib/arm64-v8a/libexpo-sqlite.so present
+apksigner verify: passed
+Signer certificate: Android Debug (demo sideload only; not a Play Store release key)
+
+Runtime status: not installed on the x86_64 AVD because the APK targets ARM64 only. No physical ARM64 Android phone was connected. Startup, navigation, native SQLite, persistence across restart, and Android advanced-feature behavior remain unverified on the target phone.

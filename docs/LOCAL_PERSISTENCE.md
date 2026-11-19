@@ -21,3 +21,7 @@ Automated coverage exists for schema setup, reads, last-read round trip, complet
 `docs/TESTING.md` records a previous Expo Go smoke test in which completion and progress were still present after force-stopping/relaunching. That observation is useful but is not a current standalone APK test. This audit did not complete a controlled native create → terminate → read → update → terminate → read → delete → terminate → verify-deleted sequence.
 
 **Status:** persistence is implemented; native CRUD/restart verification remains unverified. No native persistence result is claimed based on the in-memory driver.
+
+## Native runtime observation
+
+A release APK from CI run 44517378110 was installed on the API 37 x86_64 emulator. The app displayed its local-storage bootstrap error; Logcat showed `libexpo-sqlite.so` missing for x86_64. APK inspection found the library only for ARM64. The new ARM64-only APK from run 44529697756 contains the SQLite JNI and advertises only `arm64-v8a`; `apksigner verify` passed. Its ABI is unsupported by the available x86_64 emulator, and no physical ARM64 device is attached. Native database startup and restart persistence therefore remain unverified.

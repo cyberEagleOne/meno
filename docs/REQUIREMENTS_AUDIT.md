@@ -45,19 +45,19 @@
 | M9-03 | Refactoring report | VERIFIED | `docs/REFACTORING_REPORT.md` records changes, tests and remaining debt | Keep aligned with future changes | P2 |
 | M10-01 | Useful safe runtime logging | IMPLEMENTED — NOT VERIFIED | `src/services/logger.ts` and logger tests | Review logs during Android runtime; avoid sensitive output | P2 |
 | M10-02 | Android release configuration/package/icon/permissions | IMPLEMENTED — NOT VERIFIED | Expo config, `android/`; pre-existing release artifact | Rebuild from current source and inspect manifest | P1 |
-| M10-03 | Fresh APK build and install | PARTIALLY IMPLEMENTED | GitHub Actions run 44513648948 passed Gradle release APK build and artifact upload; artifact requires authenticated Actions access; no install evidence | Download artifact and install on Android | P1 |
-| M10-04 | Physical Android verification | BLOCKED | No `adb` or device/emulator detected | Connect Android phone or emulator | P1 |
+| M10-03 | Fresh APK build and install | PARTIALLY IMPLEMENTED | Run 44529697756 built APK; aapt confirms only `arm64-v8a`, SQLite JNI present, and apksigner passes. Older APK's x86_64 failure reproduced on AVD | Install ARM64 artifact on physical phone and exercise app | P1 |
+| M10-04 | Physical Android verification | BLOCKED | API 37 x86_64 AVD is available; no physical Android phone connected | Connect ARM64 Android phone and verify runtime | P1 |
 | M10-05 | Release candidate documentation | VERIFIED | `docs/RELEASE_CANDIDATE.md` records CI APK build, artifact and signing limitations | Download/install CI artifact | P1 |
-| M10-06 | At least five genuine bugs and five other issues | PARTIALLY IMPLEMENTED | Lint failure is one verified bug; no issue list inspected online | Check GitHub issues; report genuine count without invention | P2 |
+| M10-06 | At least five genuine bugs and five other issues | PARTIALLY IMPLEMENTED | Issues #3–13 tracked; three genuine defects/findings (two closed, ABI issue pending phone check) and eight improvements | Five-bug assignment target remains unmet; do not invent findings | P2 |
 | M10-07 | Stable `v1.0` branch with release criteria | NOT IMPLEMENTED | No `v1.0` branch observed | Create only after all release criteria pass | P1 |
 | M11-01 | `v1.0_dev` development branch | NOT IMPLEMENTED | No `v1.0_dev` branch observed | Prepare after stable branch criteria | P2 |
-| M11-02 | At least 200 meaningful unit tests | VERIFIED | 15 suites / 252 passed; includes 132 exhaustive per-book first/last navigation boundary cases and 2 permission-state cases | Keep meaningful coverage and regression results current | P1 |
+| M11-02 | At least 200 meaningful unit tests | VERIFIED | 15 suites / 253 passed; includes 132 exhaustive per-book first/last navigation boundary cases, permission cases and bootstrap-error coverage | Keep meaningful coverage and regression results current | P1 |
 | M11-03 | Controlled failing-test demonstration and restored passing suite | VERIFIED | Isolated wrong-book expectation failed (1 failed / 153 passed); restored full suite passed 250; output in `docs/evidence/testing/controlled-failure.log` | Keep final tree passing | P1 |
-| M11-04 | CI test/build pipeline | VERIFIED | Run 44513648948 passed tests, type, lint, export, prebuild, Gradle APK build and artifact upload | Follow-up CI for notification fix pending | P2 |
+| M11-04 | CI test/build pipeline | VERIFIED | Run 44529697756 for `54619fd` passed tests, type, lint, export, prebuild, ARM64 Gradle APK build and artifact upload | Upgrade upload-artifact v4 to v5 when convenient | P2 |
 | M11-05 | V1.1 milestone and release notes | VERIFIED | `docs/V1_1_ROADMAP.md` records proposed next milestone | Scope after v1.0 acceptance | P2 |
-| GIT-01 | Preserve initial uncommitted user changes | VERIFIED | Initial diff confined to `app.json`, `package.json`; retained unstaged | Keep unstaged unless included by user later | P0 |
-| GIT-02 | Push reviewed checkpoints on correct branch | VERIFIED | Scoped commit `871548b` pushed; remote ref verified at matching SHA; GitHub Actions run started | Continue checkpoint pushes | P1 |
-| A-01 | APK installation, startup, UI and navigation on Android | BLOCKED | CI artifact built, but no connected device/emulator and artifact API download requires authentication | Download artifact and install on Android | P1 |
+| GIT-01 | Preserve initial uncommitted user changes | VERIFIED | Initial `app.json`/`package.json` edits were reviewed and preserved in pushed commit `a41bf72` | Keep in place | P0 |
+| GIT-02 | Push reviewed checkpoints on correct branch | VERIFIED | Six task commits pushed to `origin/feat/assignment-completion`; latest remote SHA verified as `54619fd` | Continue checkpoint pushes | P1 |
+| A-01 | APK installation, startup, UI and navigation on Android | PARTIALLY IMPLEMENTED | ARM64 APK artifact retrieved and inspected; older artifact failed on x86_64 AVD; no ARM64 phone run | Install current APK and verify primary workflow on phone | P1 |
 | A-02 | Core form, persistence, API, errors and retry on Android | IMPLEMENTED — NOT VERIFIED | Code/tests; no target-device run in current audit | Verify on Android | P1 |
 | A-03 | Three advanced feature permissions and cancellation on Android | IMPLEMENTED — NOT VERIFIED | Service implementations inspected | Verify all native permission paths | P1 |
 | A-04 | Lecturer walkthrough and troubleshooting guide | VERIFIED | `docs/ANDROID_DEMO_GUIDE.md` provides install and demonstration sequence | Execute on target phone | P1 |

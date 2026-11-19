@@ -21,7 +21,7 @@ The main value proposition is local, private reading progress with a low-pressur
 | Local data | `expo-sqlite` through `SqlDriver`, with a web implementation and injectable in-memory test driver |
 | Remote data | Daily verse GET request in `src/data/dailyVerseRepository.ts` to `https://bible-api.com/john+3:16` |
 | Device features | `expo-notifications`, `expo-sensors`, and `expo-local-authentication` wrappers in `src/services/` |
-| Tests | Jest / `jest-expo`, React Test Renderer, pure domain, repository and notification permission tests; 252 cases after audit expansion |
+| Tests | Jest / `jest-expo`, React Test Renderer, pure domain, repository, notification permission and bootstrap-error tests; 253 cases after audit expansion |
 | Android | Expo prebuild project under `android/`; release APK/AAB are present under ignored Gradle output |
 | CI | `.github/workflows/android-ci.yml`; corrected run `44513648948` passed tests/type/lint/export/prebuild and is building the APK |
 

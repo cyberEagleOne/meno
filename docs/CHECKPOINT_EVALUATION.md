@@ -49,7 +49,7 @@ Implementation references and limitations: [`ADVANCED_FEATURES.md`](ADVANCED_FEA
 
 On 2026-11-19, after dependency and notification permission changes:
 
-- Jest: **15 suites / 252 tests passed**.
+- Jest: **15 suites / 253 tests passed**.
 - TypeScript: `npx tsc --noEmit` passed.
 - ESLint: `npm run lint` passed.
 - Expo Doctor: **21/21 checks passed**.

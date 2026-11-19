@@ -131,8 +131,8 @@ Commands run in the project workspace using Node 24.19.0:
 ```text
 npm test -- --runInBand --silent
 Test Suites: 15 passed, 15 total
-Tests:       252 passed, 252 total
-Time:        6.812 s
+Tests:       253 passed, 253 total
+Time:        25.52 s
 
 npx tsc --noEmit
 exit 0, no diagnostics
@@ -160,9 +160,17 @@ test demonstration was subsequently performed with a deliberately incorrect
 expected book name in the isolated navigation test. The controlled run failed
 as expected (1 failed / 153 passed in that file); the original expectation was
 restored immediately. Captured output is in
-`docs/evidence/testing/controlled-failure.log`. The restored full suite passed 252 tests after the notification permission fix; no intentionally failing test remains in the source.
+`docs/evidence/testing/controlled-failure.log`. The restored suite at that checkpoint passed 252 tests after the notification permission fix; the current suite is 253 after bootstrap-error coverage. No intentionally failing test remains in the source.
 
-## 5. Deferred by design (PRD §10 — not required to pass)
+## 5. Latest runtime and suite update (2026-11-19)
+
+After bootstrap-error logging coverage was added, the local suite passed **15 suites / 253 tests in 25.52 seconds**. TypeScript and lint passed. The prior controlled failure capture remains at `docs/evidence/testing/controlled-failure.log`.
+
+The release APK from CI run 44517378110 was installed on an API 37 x86_64 AVD. It showed the SQLite bootstrap error; Logcat reported `libexpo-sqlite.so` missing for x86_64, and APK inspection found the library only in the ARM64 directory. This is packaging/runtime evidence for that x86_64 APK, not a test of SQLite on a supported ARM64 device. ARM64-only CI run 44529697756 succeeded and the APK metadata/signature were verified. Native persistence across restart on a supported phone is not verified.
+
+## 6. Deferred by design (PRD §10 — not required to pass)
+
+Correction to the runtime update above: ARM64-only CI run 44529697756 succeeded. The produced APK targets `arm64-v8a` and includes the matching Expo SQLite JNI library; its signature was verified. No supported physical phone was available to test it.
 
 - Streak-boundary tests (BR-3, BR-4) — streaks deferred from the MVP.
 - Reading-plan validation tests — plans out of MVP.

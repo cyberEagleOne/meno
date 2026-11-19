@@ -2,18 +2,18 @@
 
 ## Status
 
-This is a prepared walkthrough, not a claim that the current build has been installed on a phone. No `adb`, Android SDK environment, emulator, or physical device was detected in the audit shell. Build an APK with JDK 17 and SDK Platform 36, or use a configured EAS development/preview build, before the demonstration. The only current native APK in this workspace is a pre-existing 15-Nov debug-signed artifact.
+The ARM64 APK from [successful CI run 44529697756](https://github.com/cyberEagleOne/meno/actions/runs/44529697756) is saved locally at `artifacts/android/meno-release.apk`. It has not been run on a physical phone. The earlier multi-ABI APK from run 44517378110 failed SQLite bootstrap on the API 37 x86_64 AVD because Expo SQLite JNI was absent for x86_64; this was captured at `docs/evidence/android/`. The newer APK is ARM64-only and cannot be tested on that x86_64 emulator. Windows local Gradle fails in Reanimated CMake/Ninja.
 
 The reader currently contains synthetic text labelled **TEKS CONTOH — BUKAN KITAB SUCI** because redistribution rights for the intended translation are unresolved. Disclose this limitation during the demo; do not represent sample text as Scripture.
 
 ## Install and start
 
-For a fresh native APK, build with the environment requirements from `HowToRun.md` and `docs/RELEASE_CANDIDATE.md`, then install with:
+Connect an ARM64 Android phone with USB debugging enabled and authorize the computer. The APK is already available at `artifacts/android/meno-release.apk`. Install with:
 
 ```powershell
-adb devices
-adb install -r artifacts/android/meno-release.apk
-adb shell monkey -p com.meno.app 1
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" devices
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r artifacts/android/meno-release.apk
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" shell monkey -p com.meno.app 1
 ```
 
 If installing manually, transfer the APK to the phone, allow the package installer to install that file if Android asks, and open **Meno**. No backend or account configuration is required. Internet is only needed for the daily verse API. No demonstration account or credentials exist.

@@ -2,25 +2,26 @@
 
 | Date | Phase | Task | Files Changed | Tests | Commit | Push Status |
 |---|---|---|---|---|---|---|
-| 2026-11-19 | Phase 1 | Repository reconnaissance and requirement audit | `docs/PROJECT_RECONNAISSANCE.md`, `docs/REQUIREMENTS_AUDIT.md` | Inspected source/config/Git; baseline 118 passed, TypeScript passed, lint failed | `871548b` | Pushed to `origin/feat/assignment-completion` |
-| 2026-11-19 | Phase 2/QA | Remove lint violation and unused declarations; expand canonical boundary coverage | `ReadingGoalForm.tsx`, settings/test/repository imports, `bibleNavigation.test.ts` | Final restored run: 250 passed in 12.082 s; TypeScript and lint passed; Android JS export passed | `871548b` | Pushed to `origin/feat/assignment-completion` |
-| 2026-11-19 | Phase 5 | Attempt native release build | no source change | `gradlew assembleRelease` blocked before compile: JVM 8, requires 17 | N/A | Not applicable |
-| 2026-11-19 | Phase 1–6 | Add implementation audit, state/API/persistence/release/demo docs and CI workflow | `docs/*.md`, `.github/workflows/android-ci.yml`, README, Architecture, Testing | Docs checked against source; CI run 44511377505 in progress | `871548b` | Pushed; workflow started |
-| 2026-11-19 | Phase 4 | Demonstrate a controlled unit test failure, restore expectation | `docs/evidence/testing/controlled-failure.log` | Temporary wrong expected book name failed as intended (1 failed / 153 passed in navigation suite); restored full suite: 250 passed | `871548b` | Pushed to `origin/feat/assignment-completion` |
-| 2026-11-19 | Phase 1/P0 | Align SDK 57 patches and remediate compatible dependency advisories | `package.json`, `package-lock.json`, `docs/SECURITY_AUDIT.md` | 250 tests passed; Expo Doctor 21/21; TS/lint/export passed; npm audit reduced 18 → 6 (3 high, 3 moderate) | `a41bf72` | Pushed to `origin/feat/assignment-completion` |
-| 2026-11-19 | Phase 5 | Fix CI native build setup after failed run | `.github/workflows/android-ci.yml`, `app.json`, release/CI docs | Earlier CI passed JS checks but Android step exited 127; corrected run 44513648948 built and uploaded the APK successfully | `a41bf72` | Pushed; CI APK build and upload succeeded |
-| 2026-11-19 | Phase 2/QA | Fix stale notification permission state after denial and reconcile build evidence | `src/services/notificationService.ts`, notification tests, updated audit/release docs | 252 tests, typecheck, lint, export passed; CI run 44513648948 built and uploaded release APK (pre-fix commit) | Pending | Not pushed |
+| 2026-11-19 | Phase 1 | Repository reconnaissance and requirements audit | `docs/PROJECT_RECONNAISSANCE.md`, `docs/REQUIREMENTS_AUDIT.md` | Initial 118 tests; TS passed; lint failure recorded | `871548b` | Pushed to `origin/feat/assignment-completion` |
+| 2026-11-19 | Phase 2/QA | Lint cleanup, unused declarations, navigation boundary coverage | Form, tests, supporting docs | 250 tests; TS/lint/export passed | `871548b` | Pushed |
+| 2026-11-19 | Phase 4 | Controlled failing-test demonstration and restoration | `docs/evidence/testing/controlled-failure.log` | Expected isolated failure; restored 250 passing tests | `871548b` | Pushed |
+| 2026-11-19 | Phase 1/P0 | Align SDK 57 patches and compatible dependency advisories | `package.json`, lockfile, docs | 250 tests; Expo Doctor 21/21; TS/lint/export passed; npm findings reduced 18 to 6 | `a41bf72` | Pushed |
+| 2026-11-19 | Phase 5 | Generate native Android project in CI before Gradle | Workflow, app config, release docs | Run 44513648948 built and uploaded an APK | `a41bf72` | Pushed; CI succeeded |
+| 2026-11-19 | Phase 2/QA | Fix notification denial state | Notification service and tests | 252 tests; TS/lint/export passed | `882ae88` | Pushed; remote SHA verified |
+| 2026-11-19 | Phase 5/Android QA | Capture SQLite bootstrap exception for diagnosis | Progress context and test | 253 tests; TS/lint passed | `8a28073` | Pushed; remote SHA verified |
+| 2026-11-19 | Phase 5/Android QA | Restrict APK ABI to match Expo SQLite native library | Android CI workflow | CI run 44529697756 succeeded; APK metadata and signature inspected | `54619fd` | Pushed; remote SHA verified |
+| 2026-11-19 | Phase 5/Android QA | Reproduce x86_64 APK failure, inspect ARM64 build and document evidence | `artifacts/android/meno-release.apk` (ignored), `docs/evidence/android/*`, audit/release docs | Old APK failed SQLite bootstrap on x86_64; new APK is ARM64-only and contains SQLite JNI; physical device remains untested | Documentation checkpoint (current commit) | Pushing next |
 
 ## Current state
 
-- **Repository:** `https://github.com/cyberEagleOne/meno.git`
-- **Current branch:** `feat/assignment-completion`
-- **Current HEAD at last push:** `a41bf72` (`build: align Expo patches and prebuild Android in CI`).
-- **Last successful push:** `a41bf72` to `origin/feat/assignment-completion`; remote verification confirmed the exact 40-character SHA. Runs `44511377505` (`871548b`) and `44511508792` (`4c7603c`) failed at native Gradle (exit 127); corrected run `44513648948` completed successfully: native release build and artifact upload passed.
-- **Current phase:** Phase 1 audit plus early critical quality fixes and documentation.
-- **Completed:** baseline inventory; 252-test suite; current typecheck/lint/Android JS bundle verification; SDK patch alignment (Expo Doctor 21/21); controlled failed-test evidence; requirement and supporting docs; CI prebuild correction and successful APK artifact; notification permission fix.
-- **Remaining:** push notification fix/docs; follow-up CI; download/install APK (artifact download requires authentication); four UI screenshots and device advanced-feature tests; authenticated issue creation; review 6 remaining dependency advisories; final report and release branches.
-- **Known blockers:** unresolved Bible translation licence; JDK 17 and Android SDK/device unavailable to current shell; physical device access not established.
-- **User's original changes:** Android package/permission config in `app.json` and native run scripts in `package.json`; reviewed and being included without alteration alongside the SDK patch updates.
+- Repository: `https://github.com/cyberEagleOne/meno.git`
+- Branch: `feat/assignment-completion`
+- Latest pushed HEAD: `54619fdbf8471d1240b8dbba44ab004fe001c5a7`; remote ref matched this SHA.
+- Latest successful ARM64 CI artifact: run `44529697756` for `54619fd`; APK signature and ABI metadata verified. Run 44529463698 for preceding commit remains in progress at last check and has not superseded the successful latest run.
+- Test suite: 15 suites, 253 passing; TypeScript and lint passed. Android export and Expo Doctor 21/21 passed earlier after SDK patch alignment.
+- Completed: repository audit, implementation documents, notification fix, SQLite error logging, CI prebuild correction, release artifact retrieval, x86_64 failure reproduction, Android evidence capture.
+- Remaining: install on a physical ARM64 phone; capture four successful UI states; check persistence and three native features on phone; complete final report and release branches.
+- Blockers: Bible translation redistribution rights unresolved; six npm audit findings (3 high, 3 moderate); local Windows Gradle fails in Reanimated CMake/Ninja; no physical device connected; five genuine-bug target not met (three findings established).
+- Original user edits in `app.json` and `package.json` were preserved in pushed commit `a41bf72`.
 
-Three task commits have been created and pushed. The three commits already ahead at audit start were authored before this task and are not counted as task commits.
+Six task commits are pushed. Three commits already ahead at task start are not included in that count. No v1.0 or v1.0_dev branch is created because release acceptance criteria remain unmet.

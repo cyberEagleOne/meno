@@ -9,7 +9,7 @@
 
 ## Current small fix
 
-`ReadingGoalForm` already initializes in `loading`, so the effect's synchronous `setFormState("loading")` was redundant and violated the configured React hooks rule. It was removed while preserving the explicit loading state set by the retry action. Unused imports/variables were removed in adjacent changed files. The first correction accidentally changed an unrelated API catch binding; the regression test caught it (1 failed / 117 passed), and that binding was restored. The notification permission result also now uses the OS response after prompting; its new denial regression test passes. The restored suite now passes 15 suites / 252 tests.
+`ReadingGoalForm` already initializes in `loading`, so the effect's synchronous `setFormState("loading")` was redundant and violated the configured React hooks rule. It was removed while preserving the explicit loading state set by the retry action. Unused imports/variables were removed in adjacent changed files. The first correction accidentally changed an unrelated API catch binding; the regression test caught it (1 failed / 117 passed), and that binding was restored. The notification permission result uses the OS response after prompting; its denial regression test passes. SQLite bootstrap errors now preserve the original cause in structured logs. The latest suite passes 15 suites / 253 tests.
 
 ## Remaining review
 
