@@ -19,4 +19,4 @@
 
 ## Verification boundary
 
-Test evidence proves application behavior against test doubles. It does not prove device UI rendering, native SQLite failure recovery, OS permission outcomes, or physical persistence. Initial baseline: 14 suites / 118 tests passed; TypeScript passed; lint initially failed and a corrective change is being verified.
+Test evidence proves application behavior against test doubles. It does not prove device UI rendering, native SQLite failure recovery, OS permission outcomes, or physical persistence. Current post-dependency-update run: 14 suites / 250 tests passed; TypeScript and lint passed.

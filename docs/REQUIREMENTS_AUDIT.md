@@ -45,7 +45,7 @@
 | M9-03 | Refactoring report | NOT IMPLEMENTED | No `docs/REFACTORING_REPORT.md` | Create report with evidence | P2 |
 | M10-01 | Useful safe runtime logging | IMPLEMENTED — NOT VERIFIED | `src/services/logger.ts` and logger tests | Review logs during Android runtime; avoid sensitive output | P2 |
 | M10-02 | Android release configuration/package/icon/permissions | IMPLEMENTED — NOT VERIFIED | Expo config, `android/`; pre-existing release artifact | Rebuild from current source and inspect manifest | P1 |
-| M10-03 | Fresh APK build and install | BLOCKED | Existing APK is 120 MB from 2026-11-15; Java is 8, no adb/SDK env discovered | Set up JDK 17 + SDK or use configured CI/build service; install | P1 |
+| M10-03 | Fresh APK build and install | BLOCKED | Existing APK is 120 MB from 2026-11-15; local Java is 8; CI Gradle step failed because native project was ignored (exit 127) | Verify corrected CI prebuild; provide device install target | P1 |
 | M10-04 | Physical Android verification | BLOCKED | No `adb` or device/emulator detected | Connect Android phone or emulator | P1 |
 | M10-05 | Release candidate documentation | NOT IMPLEMENTED | No `docs/RELEASE_CANDIDATE.md` | Record build/signing/install facts | P1 |
 | M10-06 | At least five genuine bugs and five other issues | PARTIALLY IMPLEMENTED | Lint failure is one verified bug; no issue list inspected online | Check GitHub issues; report genuine count without invention | P2 |
@@ -53,7 +53,7 @@
 | M11-01 | `v1.0_dev` development branch | NOT IMPLEMENTED | No `v1.0_dev` branch observed | Prepare after stable branch criteria | P2 |
 | M11-02 | At least 200 meaningful unit tests | NOT IMPLEMENTED | Fresh baseline 118 tests | Add behavior-focused tests; report exact count | P1 |
 | M11-03 | Controlled failing-test demonstration and restored passing suite | NOT IMPLEMENTED | No failure evidence found | Run isolated intentional expectation failure; save captured output, restore, rerun | P1 |
-| M11-04 | CI test/build pipeline | NOT IMPLEMENTED | No tracked workflow found | Add workflow; validate with available GitHub runner | P2 |
+| M11-04 | CI test/build pipeline | IMPLEMENTED — NOT VERIFIED | `.github/workflows/android-ci.yml`; GitHub run passed tests/type/lint/export but failed APK step because `/android` was absent. Workflow now prebuilds it. | Push correction and observe successful artifact run | P2 |
 | M11-05 | V1.1 milestone and release notes | NOT IMPLEMENTED | No roadmap file found | Document proposed/completed work and tests | P2 |
 | GIT-01 | Preserve initial uncommitted user changes | VERIFIED | Initial diff confined to `app.json`, `package.json`; retained unstaged | Keep unstaged unless included by user later | P0 |
 | GIT-02 | Push reviewed checkpoints on correct branch | VERIFIED | Scoped commit `871548b` pushed; remote ref verified at matching SHA; GitHub Actions run started | Continue checkpoint pushes | P1 |

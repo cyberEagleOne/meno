@@ -16,9 +16,9 @@
 | Layer | Choice | Status |
 |---|---|---|
 | Language | TypeScript | **Verified** — `typescript 6.0.3` |
-| Framework | React Native via Expo | **Verified** — Expo SDK 57 (`expo 57.0.27`, `react-native 0.86.3`, `react 19.2.3`) |
-| Navigation | Expo Router (file-based) | **Verified** — `expo-router 57.0.25` |
-| Local database | Expo SQLite (`expo-sqlite`) | **Verified compatible / installed** — `expo-sqlite 57.0.4`; schema + driver seam implemented (see §3.1) |
+| Framework | React Native via Expo | **Verified** — Expo SDK 57 (`expo 57.0.33`, `react-native 0.86.3`, `react 19.2.3`) |
+| Navigation | Expo Router (file-based) | **Verified** — `expo-router 57.0.31` |
+| Local database | Expo SQLite (`expo-sqlite`) | **Verified compatible / installed** — `expo-sqlite 57.0.5`; schema + driver seam implemented (see §3.1) |
 | Unit testing | Jest + `jest-expo` | **Verified** — 14 suites / 250 tests passing (2026-11-19, `docs/TESTING.md`) |
 
 ## 2. Compatibility validation (2026-10-10)

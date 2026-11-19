@@ -9,7 +9,7 @@
 
 ## Current small fix
 
-`ReadingGoalForm` already initializes in `loading`, so the effect's synchronous `setFormState("loading")` was redundant and violated the configured React hooks rule. It was removed while preserving the explicit loading state set by the retry action. Unused imports/variables were removed in adjacent changed files. The first correction accidentally changed an unrelated API catch binding; the regression test caught it (1 failed / 117 passed), and that binding has been restored. Final regression results are pending.
+`ReadingGoalForm` already initializes in `loading`, so the effect's synchronous `setFormState("loading")` was redundant and violated the configured React hooks rule. It was removed while preserving the explicit loading state set by the retry action. Unused imports/variables were removed in adjacent changed files. The first correction accidentally changed an unrelated API catch binding; the regression test caught it (1 failed / 117 passed), and that binding was restored. The restored and dependency-updated regression suite passed: 14 suites / 250 tests.
 
 ## Remaining review
 

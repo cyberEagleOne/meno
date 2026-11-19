@@ -66,9 +66,9 @@ Meno hadir mengisi celah tersebut: memberikan pengalaman membaca yang tenang, te
 | Navigation | Expo Router (file-based; routes in `src/app/`) |
 | Local database | `expo-sqlite` (schema + injectable driver seam implemented; tables created on first launch) |
 
-Verified toolchain versions (2026-10-11): `expo 57.0.27`, `react-native 0.86.3`,
-`react 19.2.3`, `expo-router 57.0.25`, `expo-sqlite 57.0.4`,
-`typescript 6.0.3`.
+Verified package patches (2026-11-19): `expo 57.0.33`, `expo-router 57.0.31`,
+`expo-sqlite 57.0.5`; SDK-compatible package alignment passed Expo Doctor (21/21).
+See `package.json` and `package-lock.json` for resolved versions.
 
 ## Prerequisites and environment
 
@@ -249,6 +249,7 @@ added until licensing is confirmed and recorded (see
 | Dokumen | Deskripsi |
 |---|---|
 | [`docs/SECURITY_AUDIT.md`](docs/SECURITY_AUDIT.md) | **Hasil Uji Security**, audit dependensi (`npm audit`), dan catatan perubahan relevan |
+| [`docs/CI_CD.md`](docs/CI_CD.md) | Status pipeline Android dan batas verifikasinya |
 | [`docs/LOGGING_AND_ERROR_HANDLING.md`](docs/LOGGING_AND_ERROR_HANDLING.md) | **Contoh Log Aman**, mitigasi data PII, penyebab error, dan tindakan perbaikannya |
 | [`docs/CHECKPOINT_EVALUATION.md`](docs/CHECKPOINT_EVALUATION.md) | Panduan pemenuhan & pembuktian Checkpoint Dosen (P1–P7) |
 | [`docs/TESTING.md`](docs/TESTING.md) | Catatan eksekusi terbaru unit test, TypeScript, lint, dan bundler |

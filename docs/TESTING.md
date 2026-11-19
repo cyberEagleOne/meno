@@ -127,7 +127,7 @@ Commands run in the project workspace using Node 24.19.0:
 npm test -- --runInBand --silent
 Test Suites: 14 passed, 14 total
 Tests:       250 passed, 250 total
-Time:        12.082 s
+Time:        14.654 s
 
 npx tsc --noEmit
 exit 0, no diagnostics
@@ -136,7 +136,13 @@ npm run lint
 exit 0, no findings
 
 npx expo export --platform android
-success; Hermes bundle entry-a33cb9e7233de8cfd9a8ee003e672809.hbc, 3.3 MB
+success after SDK patch alignment; Hermes bundle entry-86903f44c8c66242f9633e3b5e233280.hbc, 3.3 MB
+
+npx expo-doctor
+21/21 checks passed after SDK patch alignment
+
+npm audit
+6 findings remain: 3 high, 3 moderate, 0 critical; details in SECURITY_AUDIT.md
 ```
 
 The test suite rose from 118 to 250 cases by adding per-book previous/next
