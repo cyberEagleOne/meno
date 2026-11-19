@@ -49,7 +49,7 @@ A fresh CI APK from run 44517378110 was downloaded and installed on the API 37 x
 
 ## 6. Git state
 
-Current branch: `feat/assignment-completion`. Latest pushed HEAD at this report update: `fd3d6f51b909acaaf3e0c2cc9a46101ac127a295`; the remote ref matched. Eight task commits have been created and pushed in this work; three commits were already ahead at audit start and are not included. The user's initial `app.json`/`package.json` edits were preserved in `a41bf72`. Latest successful ARM64 APK workflow: `44529697756`; the physical phone remains untested. The current documentation reconciliation is the next local change to push.
+Current branch: `feat/assignment-completion`. Latest pushed HEAD at this report update: `f61d0ecb1e168fe90cf3a6678f5115c2f8e40217`; the remote ref matched. Nine task commits have been created and pushed in this work; three commits were already ahead at audit start and are not included. The user's initial `app.json`/`package.json` edits were preserved in `a41bf72`. ARM64 CI runs `44529463698` and `44529697756` succeeded; the physical phone remains untested. The final progress-log synchronization is the next documentation update.
 
 ## 7. Remaining issues
 
