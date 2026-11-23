@@ -3,8 +3,8 @@
 | Field | Value |
 |---|---|
 | Document status | Living record of **actual** test runs — update on every Verify phase |
-| Last updated | 2026-10-22 |
-| Environment | Node **v22.23.3** via fnm (`fnm exec --using=22`), jest **29.7.0**, jest-expo **~57.0.5** |
+| Last updated | 2026-11-23 |
+| Environment | Node **v22.23.3** via fnm (`fnm exec --using=22`), jest **29.7.0**, jest-expo **~57.0.6**. The system Node v20.19.2 cannot load `node:sqlite`, so the disk-SQLite suite must run under fnm's Node 22. |
 
 > Evidence policy: every result below was produced by running the printed
 > command and copying its real output. Nothing here is paraphrased or
@@ -21,7 +21,7 @@ fnm exec --using=22 -- npx tsc --noEmit    # typecheck
 fnm exec --using=22 -- npm run lint        # eslint (expo config)
 ```
 
-## 2. Test inventory (15 files; current suite)
+## 2. Test inventory (19 files; current suite)
 
 | File | Cases | What it verifies |
 |---|---|---|
@@ -31,15 +31,19 @@ fnm exec --using=22 -- npm run lint        # eslint (expo config)
 | `src/data/__tests__/dbCompletion.test.ts` | 11 | Completion/day writes through the injected in-memory driver: idempotency, multi-day history, undo semantics, simulated restart, and injected write failures |
 | `src/data/__tests__/db.test.ts` | 7 | Persistence API behavior using the injected in-memory driver: schema initialization, empty state, last-read round-trip, simulated restart, corrupt-row filtering, and missing-driver failure |
 | `src/data/__tests__/canon.test.ts` | 7 | Testament split at 39/40, canonical totals (66 books, 1189 chapters; PL 39/929, PB 27/260), unique sequential ids, `getBookById`, `booksByTestament`, `isValidChapter` bounds, `chapterKey` |
-| `src/data/__tests__/dailyVerse.test.ts` | 6 | 6 skenario REST API harian: model parsing valid, model invalid validation, HTTP 200 response, body kosong, HTTP 500 error, dan non-JSON payload error |
-| `src/domain/__tests__/settingsValidation.test.ts` | 4 | Validasi form pengaturan: target chapters (1-50 bounds, numeric type), note commitment length (5-200 chars), dan status validitas form |
+| `src/data/__tests__/dailyVerse.test.ts` | 21 | Model validation; six REST error/empty scenarios; all 66 canonical books, OSIS/USFM codes, English aliases, case and whitespace normalization; safe `undefined` for unknown/empty/null/non-string IDs; reference parsing for all 66 canonical names; malformed `book_id` payload table; alternative `book_name`/`verses[0]` shapes; invalid chapter guards |
+| `src/components/ui/__tests__/DailyVerseCard.test.tsx` | 11 | "Baca Pasal Lengkap" renders only for a canonical, in-bounds integer chapter; omitted for undefined, blank, whitespace-only, unknown, out-of-bounds, missing, fractional, or zero chapter values; exact maximum chapter renders while maximum + 1 is omitted |
+| `src/domain/__tests__/settingsValidation.test.ts` | 7 | Validasi form pengaturan: target chapters (1-50 bounds, strict integers, rejects decimals/mixed text), note commitment length (5-200 chars inclusive), dan status validitas form |
 | `src/app/reader/__tests__/readerCompletion.test.tsx` | 3 | Reader completion behavior: success feedback waits for the write, duplicate taps are suppressed while pending, and failed writes show/re-scope a retry action |
-| `src/data/__tests__/progressContext.test.tsx` | 2 | Injected write failures during completion/undo leave context consistent, and a later successful retry updates state |
+| `src/data/__tests__/progressContext.test.tsx` | 3 | Injected write failures during completion/undo leave context consistent, and a later successful retry updates state |
 | `src/components/ui/__tests__/ReadingGoalForm.test.tsx` | 5 | Goal form load, validation, success and failure behavior using a mocked repository |
 | `src/data/__tests__/goalRepository.test.ts` | 5 | Goal repository read/save behavior through the SQL driver seam |
+| `src/data/__tests__/sqlitePersistence.test.ts` | 9 | Disk-backed Node SQLite lifecycle for progress and reading-goal repositories |
+| `src/services/__tests__/authService.test.ts` | 7 | Biometric and PIN lock success, cancellation, lockout, and fallback paths |
+| `src/services/__tests__/sensorService.test.ts` | 4 | Shake navigation sensor lifecycle, cooldown, and cleanup |
 | `src/services/__tests__/logger.test.ts` | 7 | Runtime log levels, structured entries, and sensitive-value sanitization |
 | `src/utils/__tests__/formatters.test.ts` | 6 | Shared number and percentage formatting behavior |
-| `src/services/__tests__/notificationService.test.ts` | 2 | Permission result reflects post-prompt OS status; existing grant avoids another prompt |
+| `src/services/__tests__/notificationService.test.ts` | 6 | Permission result reflects post-prompt OS status; existing grant avoids another prompt; denial and scheduling paths |
 
 **How the database is tested without a device:** `src/data/db.ts` issues all
 SQL through an injected `SqlDriver` (`src/data/sqlDriver.ts`). Production
@@ -170,9 +174,48 @@ The release APK from CI run 44517378110 was installed on an API 37 x86_64 AVD. I
 
 ## 6. Deferred by design (PRD §10 — not required to pass)
 
-Correction to the runtime update above: ARM64-only CI run 44529697756 succeeded. The produced APK targets `arm64-v8a` and includes the matching Expo SQLite JNI library; its signature was verified. No supported physical phone was available to test it.
+Correction to the runtime update above: ARM64-only CI run 44529697756 succeeded. The produced APK targets `arm64-v8a` and includes the matching Expo SQLite JNI library; its signature was verified. It was later installed and started on a physical `RMX2103` (serial `a719e24d`) on 2026-11-19; see `docs/evidence/physical-android/startup-validation.md`. Feature-level physical testing remains outstanding, and the ARM64-only restriction still excludes 32-bit devices.
 
 - Streak-boundary tests (BR-3, BR-4) — streaks deferred from the MVP.
 - Reading-plan validation tests — plans out of MVP.
-- UI component tests and snapshot tests — not planned for the MVP; the domain
-  and data layers carry the automated coverage.
+- Snapshot tests — not planned. UI component tests are included in the current
+  suite: `src/components/ui/__tests__/DailyVerseCard.test.tsx`,
+  `src/components/ui/__tests__/ReadingGoalForm.test.tsx`, and
+  `src/app/reader/__tests__/readerCompletion.test.tsx`. They use mocked
+  repositories and cover navigation visibility, form behavior, and reader
+  completion flows.
+
+## 7. Milestone 2 verification (2026-11-23)
+
+Issue #14 hardening was verified with the documented Node 22 toolchain. Captured
+results:
+
+```text
+fnm exec --using=22 -- bash -c 'CI=1 npm test -- --runInBand --silent'
+Test Suites: 19 passed, 19 total
+Tests:       306 passed, 306 total
+Snapshots:   0 total
+
+fnm exec --using=22 -- npx tsc --noEmit
+exit 0, no diagnostics
+
+fnm exec --using=22 -- npm run lint
+exit 0, no findings
+
+git diff --check
+exit 0, no whitespace errors
+```
+
+Environment caveat: the system interpreter is Node v20.19.2, which predates
+`node:sqlite`. Running `npm test` or `npm run lint` with that interpreter makes
+`src/data/__tests__/sqlitePersistence.test.ts` fail to load and raises an
+`import/no-unresolved` lint error for the same module. Under Node 22.23.3
+(fnm) all 19 suites and 306 tests pass and lint is clean. This is an
+environment constraint, not a code regression.
+
+Baseline provenance: the committed baseline is **277 tests / 18 suites** at
+`00fdae2` (see `docs/DEVELOPMENT_PROGRESS.md`). The current uncommitted work
+adds 29 tests (dailyVerse 6→21, settingsValidation 4→7, new DailyVerseCard
+suite 11), giving 277 + 29 = 306. The figure 281 has no documented or
+Git-verifiable test-count source and is not used. See the “Test-count
+provenance (F5)” section in `docs/DEVELOPMENT_PROGRESS.md`.

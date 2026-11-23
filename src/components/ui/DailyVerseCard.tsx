@@ -14,6 +14,7 @@ import { Chip } from "./Chip";
 import { IconSpark } from "./Icons";
 import { DailyVerse } from "../../domain/dailyVerse";
 import { fetchDailyVerseFromApi } from "../../data/dailyVerseRepository";
+import { placeholderBible } from "../../data/placeholderBible";
 
 export function DailyVerseCard() {
   const router = useRouter();
@@ -128,7 +129,12 @@ export function DailyVerseCard() {
       <Text style={styles.verseText}>“{verse.text}”</Text>
       <Text style={styles.referenceText}>{verse.reference}</Text>
 
-      {verse.bookId && verse.chapter ? (
+      {verse.bookId &&
+      typeof verse.chapter === "number" &&
+      Number.isInteger(verse.chapter) &&
+      placeholderBible.books.some(
+        (b) => b.id === verse.bookId && verse.chapter! >= 1 && verse.chapter! <= b.chapters.length
+      ) ? (
         <Pressable
           style={({ pressed }) => [styles.readButton, pressed && styles.buttonPressed]}
           onPress={() => {
