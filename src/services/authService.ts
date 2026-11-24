@@ -13,6 +13,17 @@ export interface AuthResult {
   cancelled?: boolean;
 }
 
+export interface DeviceAuthCapability extends BiometricCheckResult {
+  securityLevel: number;
+  canAuthenticate: boolean;
+}
+
+async function enrolledLevel(): Promise<number> {
+  const getLevel = LocalAuthentication.getEnrolledLevelAsync;
+  if (typeof getLevel !== "function") return 0;
+  return getLevel();
+}
+
 /**
  * Checks hardware capability and enrolled biometric credentials (Fingerprint/FaceID/PIN).
  */
@@ -42,19 +53,39 @@ export async function checkBiometricSupport(): Promise<BiometricCheckResult> {
 }
 
 /**
- * Authenticates user using biometric or device PIN.
+ * Reports whether the device can authenticate with biometrics or its secure
+ * screen lock (PIN/pattern/password). App Lock uses the OS credential and never
+ * stores a separate plaintext PIN.
+ */
+export async function checkDeviceAuthCapability(): Promise<DeviceAuthCapability> {
+  const [base, securityLevel] = await Promise.all([
+    checkBiometricSupport(),
+    enrolledLevel(),
+  ]);
+  return {
+    ...base,
+    securityLevel,
+    canAuthenticate: base.hasHardware || securityLevel >= 1,
+  };
+}
+
+/**
+ * Authenticates user using biometrics, falling back to the device credential
+ * when the platform supports it.
  */
 export async function authenticateUser(prompt: string = "Konfirmasi identitasmu untuk membuka Meno"): Promise<AuthResult> {
   const hasHardware = await LocalAuthentication.hasHardwareAsync();
-  if (!hasHardware) {
+  const isEnrolled = hasHardware ? await LocalAuthentication.isEnrolledAsync() : false;
+  const securityLevel = await enrolledLevel();
+
+  if (!hasHardware && securityLevel < 1) {
     return {
       success: false,
-      error: "Perangkat ini tidak memiliki sensor biometrik.",
+      error: "Perangkat ini tidak memiliki sensor biometrik atau kunci layar.",
     };
   }
 
-  const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-  if (!isEnrolled) {
+  if (hasHardware && !isEnrolled && securityLevel < 1) {
     return {
       success: false,
       error: "Belum ada sidik jari atau PIN yang terdaftar di perangkat ini.",
@@ -69,7 +100,7 @@ export async function authenticateUser(prompt: string = "Konfirmasi identitasmu 
   });
 
   if (result.success) {
-    logger.info("SECURITY_AUTH", "biometric_auth_success", { hasHardware: true });
+    logger.info("SECURITY_AUTH", "biometric_auth_success", { hasHardware, securityLevel });
     return { success: true };
   }
 

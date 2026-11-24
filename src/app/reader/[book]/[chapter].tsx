@@ -2,6 +2,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
+  ActivityIndicator,
   Animated,
   Easing,
   FlatList,
@@ -16,10 +17,9 @@ import { Button } from "../../../components/ui/Button";
 import { Chip } from "../../../components/ui/Chip";
 import { IconBack, IconCheck, IconChevron } from "../../../components/ui/Icons";
 import { Mascot } from "../../../components/ui/Mascot";
-import { PlaceholderBanner } from "../../../components/ui/PlaceholderBanner";
 import { StateMessage } from "../../../components/ui/StateMessage";
 import { VerseRow } from "../../../components/ui/VerseRow";
-import { placeholderBible } from "../../../data/placeholderBible";
+import { useBible, useBibleData } from "../../../data/bibleContext";
 import { useProgress } from "../../../data/progressContext";
 import {
   getBook,
@@ -28,7 +28,7 @@ import {
   getPreviousChapter,
 } from "../../../domain/bibleNavigation";
 import { isCompleted, restoreScrollOffset } from "../../../domain/progress";
-import type { ChapterLocation, Verse } from "../../../domain/types";
+import type { Chapter, ChapterLocation, Verse } from "../../../domain/types";
 import { colors, fonts, radius } from "../../../theme/colors";
 
 const CHEERS = ["Mantap!", "Bagus sekali!", "Satu pasal tuntas!", "Pelan tapi pasti!"];
@@ -93,18 +93,30 @@ export default function ReaderScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { completed, lastRead, openChapter, saveScroll, setCompleted } = useProgress();
+  const bible = useBibleData();
+  const { getChapter: loadChapter } = useBible();
 
   const bookId = params.book;
   const chapterNumber = Number(params.chapter);
 
-  const book = getBook(placeholderBible, bookId);
-  const chapter = getChapter(placeholderBible, bookId, chapterNumber);
-  const previous = getPreviousChapter(placeholderBible, bookId, chapterNumber);
-  const next = getNextChapter(placeholderBible, bookId, chapterNumber);
+  const book = getBook(bible, bookId);
+  const chapterMeta = getChapter(bible, bookId, chapterNumber);
+  const previous = getPreviousChapter(bible, bookId, chapterNumber);
+  const next = getNextChapter(bible, bookId, chapterNumber);
 
-  const done = book && chapter ? isCompleted(completed, bookId, chapterNumber) : false;
+  const done = book && chapterMeta ? isCompleted(completed, bookId, chapterNumber) : false;
   const cheer = CHEERS[(chapterNumber + (book?.canonicalOrder ?? 0)) % CHEERS.length];
 
+  const chapterKey = `${bookId}:${chapterNumber}`;
+  const [loadedChapter, setLoadedChapter] = useState<{
+    key: string;
+    chapter: Chapter | null;
+    status: "ready" | "empty" | "error";
+  } | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const chapter = loadedChapter?.key === chapterKey ? loadedChapter.chapter : null;
+  const chapterStatus =
+    loadedChapter?.key === chapterKey ? loadedChapter.status : "loading";
   const [fontSizeIdx, setFontSizeIdx] = useState(1);
   const activeFont = FONT_SIZES[fontSizeIdx];
 
@@ -135,12 +147,35 @@ export default function ReaderScreen() {
   }, []);
 
   useEffect(() => {
-    if (!book || !chapter) return;
+    if (!book || !chapterMeta) return;
     openChapter(bookId, chapterNumber);
     return () => {
       if (toastTimer.current) clearTimeout(toastTimer.current);
     };
-  }, [bookId, chapterNumber, book, chapter, openChapter]);
+  }, [bookId, chapterNumber, book, chapterMeta, openChapter]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!book || !chapterMeta) return;
+
+    loadChapter(bookId, chapterNumber)
+      .then((loaded) => {
+        if (cancelled) return;
+        setLoadedChapter({
+          key: chapterKey,
+          chapter: loaded,
+          status: loaded && loaded.verses.length > 0 ? "ready" : "empty",
+        });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLoadedChapter({ key: chapterKey, chapter: null, status: "error" });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [bookId, chapterNumber, chapterKey, book, chapterMeta, loadChapter, loadAttempt]);
 
   // Route replaced in place: clear the restore latch and snap to the top
   // before the new chapter lays out, so a stale offset never survives into
@@ -156,8 +191,9 @@ export default function ReaderScreen() {
   }, [currentKey]);
 
   const onContentSizeChange = useCallback(() => {
+    if (!chapter) return;
     setReadyKey(`${bookId}:${chapterNumber}`);
-  }, [bookId, chapterNumber]);
+  }, [bookId, chapterNumber, chapter]);
 
   // Reactive restoration: applies only once this chapter's content has laid
   // out AND the saved last-read actually points at it (openChapter may land
@@ -241,26 +277,31 @@ export default function ReaderScreen() {
     }
   };
 
-  if (!book || !chapter) {
+  if (!book || !chapterMeta) {
     return (
       <View style={styles.missing}>
-        <Stack.Screen options={{ title: "Not found" }} />
-        <StateMessage title="Pasal tidak ditemukan" body="Pasal ini tidak ada dalam data contoh." />
+        <Stack.Screen options={{ title: "Pasal tidak ditemukan" }} />
+        <StateMessage title="Pasal tidak ditemukan" body="Pasal ini tidak ada dalam Kitab Suci." />
       </View>
     );
   }
 
   const prevLabel = previous
-    ? `Pasal sebelumnya: ${getBook(placeholderBible, previous.bookId)?.name} ${previous.chapterNumber}`
-    : "Awal Alkitab, tidak ada pasal sebelumnya";
+    ? `Pasal sebelumnya: ${getBook(bible, previous.bookId)?.name} ${previous.chapterNumber}`
+    : "Awal Kitab Suci, tidak ada pasal sebelumnya";
   const nextLabel = next
-    ? `Pasal berikutnya: ${getBook(placeholderBible, next.bookId)?.name} ${next.chapterNumber}`
-    : "Akhir Alkitab, tidak ada pasal berikutnya";
+    ? `Pasal berikutnya: ${getBook(bible, next.bookId)?.name} ${next.chapterNumber}`
+    : "Akhir Kitab Suci, tidak ada pasal berikutnya";
   const endNote = !next
-    ? "Akhir Alkitab"
+    ? "Akhir Kitab Suci"
     : next.bookId !== bookId
-      ? `Akhir ${book.name}. Berikutnya: ${getBook(placeholderBible, next.bookId)?.name} ${next.chapterNumber}`
+      ? `Akhir ${book.name}. Berikutnya: ${getBook(bible, next.bookId)?.name} ${next.chapterNumber}`
       : `Akhir pasal ${chapterNumber}`;
+  const canComplete = chapterStatus === "ready";
+  const retryChapter = () => {
+    setLoadedChapter(null);
+    setLoadAttempt((n) => n + 1);
+  };
 
   return (
     <View style={styles.screen}>
@@ -298,15 +339,11 @@ export default function ReaderScreen() {
         <View style={[styles.progressFill, { width: `${Math.round(readRatio * 100)}%` }]} />
       </View>
 
-      <View style={styles.bannerWrap}>
-        <PlaceholderBanner />
-      </View>
-
       <FlatList
         ref={scrollRef}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
-        data={chapter.verses}
+        data={chapter?.verses ?? []}
         keyExtractor={(verse) => String(verse.number)}
         renderItem={({ item }) => (
           <View style={styles.verseLine}>
@@ -321,7 +358,32 @@ export default function ReaderScreen() {
           <>
             <Chip tone="lavender" label={book.name} />
             <Text style={styles.chapterTitle}>Pasal {chapterNumber}</Text>
+            <Text style={styles.translationCredit}>
+              {bible.translation.shortName} · {bible.translation.longName}
+              {bible.translation.copyright ? ` · © ${bible.translation.copyright}` : ""}
+            </Text>
           </>
+        }
+        ListEmptyComponent={
+          chapterStatus === "loading" ? (
+            <View style={styles.chapterState} accessibilityRole="progressbar" accessibilityLabel="Memuat pasal">
+              <ActivityIndicator size="large" color={colors.indigo} />
+              <Text style={styles.chapterStateText}>Memuat pasal…</Text>
+            </View>
+          ) : chapterStatus === "error" ? (
+            <StateMessage
+              tone="error"
+              title="Pasal gagal dimuat"
+              body="Terjemahan belum bisa dibaca. Periksa penyimpanan aplikasi lalu coba lagi."
+              action={<Button onPress={retryChapter}>Coba lagi</Button>}
+            />
+          ) : (
+            <StateMessage
+              title="Pasal belum tersedia"
+              body="Data terjemahan untuk pasal ini kosong. Coba pasal lain atau muat ulang."
+              action={<Button onPress={retryChapter}>Muat ulang</Button>}
+            />
+          )
         }
         ListFooterComponent={
           <View style={styles.end}>
@@ -429,7 +491,7 @@ export default function ReaderScreen() {
             {done ? (
               <Button
                 variant="secondary"
-                disabled={completionPending}
+                disabled={completionPending || !canComplete}
                 onPress={() => void performCompletion(false)}
               >
                 {completionPending ? "Menyimpan..." : "Batalkan penandaan"}
@@ -437,12 +499,12 @@ export default function ReaderScreen() {
             ) : (
               <Button
                 variant="gold"
-                disabled={completionPending}
+                disabled={completionPending || !canComplete}
                 onPress={() => void performCompletion(true)}
                 accessibilityLabel={`Tandai selesai ${book.name} ${chapterNumber}`}
                 icon={<IconCheck size={20} color={colors.indigo} />}
               >
-                {completionPending ? "Menyimpan..." : "Tandai selesai"}
+                {completionPending ? "Menyimpan..." : canComplete ? "Tandai selesai" : "Memuat pasal..."}
               </Button>
             )}
           </View>
@@ -545,11 +607,6 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: colors.lavender,
   },
-  bannerWrap: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
   scroll: {
     flex: 1,
   },
@@ -557,6 +614,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 32,
+  },
+  translationCredit: {
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.inkMuted,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  chapterState: {
+    paddingVertical: 40,
+    alignItems: "center",
+    gap: 12,
+  },
+  chapterStateText: {
+    fontFamily: fonts.semibold,
+    fontSize: 15,
+    color: colors.inkMuted,
   },
   chapterTitle: {
     fontFamily: fonts.extrabold,

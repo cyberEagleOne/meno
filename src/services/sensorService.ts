@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 import { Accelerometer } from "expo-sensors";
-import { placeholderBible } from "../data/placeholderBible";
+import { canonicalBible } from "../data/canonicalBible";
+import type { Book } from "../domain/types";
 
 export interface RandomVerseDestination {
   bookId: string;
@@ -11,8 +12,9 @@ export interface RandomVerseDestination {
 /**
  * Returns a random book and chapter from the canon for the shake feature.
  */
-export function getRandomChapter(): RandomVerseDestination {
-  const books = placeholderBible.books;
+export function getRandomChapter(
+  books: readonly Book[] = canonicalBible.books,
+): RandomVerseDestination {
   const randomBookIndex = Math.floor(Math.random() * books.length);
   const book = books[randomBookIndex];
   const randomChapter = Math.floor(Math.random() * book.chapters.length) + 1;
@@ -32,7 +34,8 @@ export function getRandomChapter(): RandomVerseDestination {
  */
 export function subscribeToShakeGesture(
   onShake: (destination: RandomVerseDestination) => void,
-  threshold: number = 2.0
+  threshold: number = 2.0,
+  books: readonly Book[] = canonicalBible.books,
 ): () => void {
   let lastShakeTime = 0;
 
@@ -52,7 +55,7 @@ export function subscribeToShakeGesture(
 
         if (magnitude > threshold && now - lastShakeTime > 1500) {
           lastShakeTime = now;
-          onShake(getRandomChapter());
+          onShake(getRandomChapter(books));
         }
       };
 
@@ -81,7 +84,7 @@ export function subscribeToShakeGesture(
         // Debounce shakes by 1.5 seconds so rapid movements trigger once
         if (magnitude > threshold && now - lastShakeTime > 1500) {
           lastShakeTime = now;
-          const destination = getRandomChapter();
+          const destination = getRandomChapter(books);
           onShake(destination);
         }
       });

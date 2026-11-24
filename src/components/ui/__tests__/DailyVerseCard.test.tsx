@@ -19,6 +19,10 @@ jest.mock("expo-router", () => ({
     push: mockPush,
   }),
 }));
+jest.mock("../../../data/bibleContext", () => {
+  const { placeholderBible } = jest.requireActual("../../../data/placeholderBible");
+  return { useBibleData: () => placeholderBible };
+});
 
 describe("DailyVerseCard Component (Issue #14 UI Safety)", () => {
   let renderer: ReactTestRenderer;

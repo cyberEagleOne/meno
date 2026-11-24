@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "../../components/ui/Button";
@@ -11,9 +12,10 @@ import { Mascot } from "../../components/ui/Mascot";
 import { InteractiveMascot } from "../../components/ui/InteractiveMascot";
 import { ProgressRing } from "../../components/ui/ProgressRing";
 import { getBookById, TOTAL_CHAPTERS } from "../../data/canon";
-import { placeholderBible } from "../../data/placeholderBible";
+import { useBibleData } from "../../data/bibleContext";
 import { useProgress } from "../../data/progressContext";
 import { completedCount, nextMilestone } from "../../domain/progress";
+import { getRandomChapter, subscribeToShakeGesture, type RandomVerseDestination } from "../../services/sensorService";
 import { colors, fonts, radius } from "../../theme/colors";
 import { formatNumber as fmt, formatPercent } from "../../utils/formatters";
 
@@ -34,11 +36,34 @@ function relDate(iso: string): string {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const bible = useBibleData();
   const { lastRead, completed } = useProgress();
   const doneCount = completedCount(completed);
-  const book = lastRead ? getBookById(placeholderBible, lastRead.bookId) : null;
+  const book = lastRead ? getBookById(bible, lastRead.bookId) : null;
   const next = nextMilestone(doneCount);
   const pct = formatPercent(doneCount, TOTAL_CHAPTERS);
+
+  const openRandomChapter = useCallback((destination: RandomVerseDestination) => {
+    Alert.alert(
+      "Pasal acak untukmu",
+      `${destination.bookName} pasal ${destination.chapter}. Mau dibaca sekarang?`,
+      [
+        { text: "Nanti saja", style: "cancel" },
+        {
+          text: "Buka pasal",
+          onPress: () =>
+            router.push({
+              pathname: "/reader/[book]/[chapter]",
+              params: { book: destination.bookId, chapter: String(destination.chapter) },
+            }),
+        },
+      ],
+    );
+  }, [router]);
+
+  useEffect(() => {
+    return subscribeToShakeGesture(openRandomChapter, 2.0, bible.books);
+  }, [bible.books, openRandomChapter]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -51,7 +76,7 @@ export default function HomeScreen() {
             accessibilityLabel="Buka Pengaturan dan Fitur Lanjutan"
           >
             <IconGear size={16} color={colors.indigo} />
-            <Text style={styles.settingsButtonText}>Fitur & Pengaturan (P4 / P7)</Text>
+            <Text style={styles.settingsButtonText}>Fitur & Pengaturan</Text>
           </Pressable>
         </View>
 
@@ -120,6 +145,24 @@ export default function HomeScreen() {
 
         <DailyVerseCard />
 
+        <Card tone="gold" style={styles.randomCard}>
+          <View style={styles.randomIcon}>
+            <IconSpark size={26} color={colors.goldText} />
+          </View>
+          <View style={styles.randomText}>
+            <Text style={styles.randomTitle}>Pasal Acak</Text>
+            <Text style={styles.randomBody}>Buka satu pasal secara spontan, atau kocok HP-mu.</Text>
+          </View>
+          <Button
+            variant="gold"
+            full={false}
+            onPress={() => openRandomChapter(getRandomChapter(bible.books))}
+            accessibilityLabel="Pilih pasal acak"
+          >
+            Pilih
+          </Button>
+        </Card>
+
         <Pressable
           onPress={() => router.navigate("/progress")}
           accessibilityRole="button"
@@ -147,7 +190,7 @@ export default function HomeScreen() {
                 ? "Tandai pasal pertama yang kamu selesaikan."
                 : next
                   ? `Tinggal ${fmt(next.at - doneCount)} pasal menuju “${next.label}”.`
-                  : "Seluruh Alkitab sudah kamu selesaikan."}
+                  : "Seluruh Kitab Suci sudah kamu selesaikan."}
             </Text>
           </View>
           <IconChevron size={22} color={colors.mintInk} />
@@ -165,7 +208,7 @@ export default function HomeScreen() {
           <View style={styles.libraryText}>
             <Text style={styles.libraryTitle}>Pilih kitab</Text>
             <Text style={styles.libraryMeta}>
-              {placeholderBible.books.length} kitab · {fmt(TOTAL_CHAPTERS)} pasal
+              {bible.books.length} kitab · {fmt(TOTAL_CHAPTERS)} pasal
             </Text>
           </View>
           <IconChevron size={22} color={colors.lavenderInk} />
@@ -214,6 +257,38 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: colors.inkMuted,
     marginTop: 6,
+  },
+  randomCard: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderBottomWidth: 4,
+    borderBottomColor: colors.goldDeep,
+  },
+  randomIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  randomText: {
+    flex: 1,
+  },
+  randomTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 17,
+    color: colors.indigo,
+  },
+  randomBody: {
+    fontFamily: fonts.regular,
+    fontSize: 12,
+    lineHeight: 17,
+    color: colors.inkMuted,
+    marginTop: 2,
   },
   chunkyIndigo: {
     borderBottomWidth: 4,

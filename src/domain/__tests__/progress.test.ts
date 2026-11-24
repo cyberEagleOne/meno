@@ -46,6 +46,11 @@ describe("withCompletion (explicit completion, idempotent)", () => {
     const again = withCompletion(undone, "yohanes", 3, false);
     expect(again).toBe(undone);
   });
+
+  it("uses Indonesian 'Seluruh Kitab Suci' for milestone 1189", () => {
+    const finalMilestone = MILESTONES.find((m) => m.at === 1189);
+    expect(finalMilestone?.label).toBe("Seluruh Kitab Suci");
+  });
 });
 
 describe("completedCount / doneInBook", () => {

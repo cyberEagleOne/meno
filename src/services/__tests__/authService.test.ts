@@ -1,16 +1,20 @@
 import * as LocalAuthentication from "expo-local-authentication";
-import { authenticateUser, checkBiometricSupport } from "../authService";
+import { authenticateUser, checkBiometricSupport, checkDeviceAuthCapability } from "../authService";
 
 jest.mock("expo-local-authentication", () => ({
   AuthenticationType: { FINGERPRINT: 1, FACIAL_RECOGNITION: 2, IRIS: 3 },
   hasHardwareAsync: jest.fn(),
   isEnrolledAsync: jest.fn(),
+  getEnrolledLevelAsync: jest.fn(),
   supportedAuthenticationTypesAsync: jest.fn(),
   authenticateAsync: jest.fn(),
 }));
 
 describe("biometric authentication service", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (LocalAuthentication.getEnrolledLevelAsync as jest.Mock).mockResolvedValue(0);
+  });
 
   it("reports actual hardware, enrollment, and supported authentication types", async () => {
     (LocalAuthentication.hasHardwareAsync as jest.Mock).mockResolvedValue(true);
@@ -28,6 +32,19 @@ describe("biometric authentication service", () => {
     await expect(authenticateUser()).resolves.toMatchObject({ success: false, error: expect.stringContaining("tidak memiliki") });
     expect(LocalAuthentication.authenticateAsync).not.toHaveBeenCalled();
     expect(LocalAuthentication.isEnrolledAsync).not.toHaveBeenCalled();
+  });
+
+  it("supports a device screen-lock credential when no biometric hardware exists", async () => {
+    (LocalAuthentication.hasHardwareAsync as jest.Mock).mockResolvedValue(false);
+    (LocalAuthentication.getEnrolledLevelAsync as jest.Mock).mockResolvedValue(1);
+    (LocalAuthentication.authenticateAsync as jest.Mock).mockResolvedValue({ success: true });
+    await expect(checkDeviceAuthCapability()).resolves.toMatchObject({
+      hasHardware: false,
+      securityLevel: 1,
+      canAuthenticate: true,
+    });
+    await expect(authenticateUser()).resolves.toEqual({ success: true });
+    expect(LocalAuthentication.authenticateAsync).toHaveBeenCalled();
   });
 
   it("does not prompt when no biometric credential is enrolled", async () => {

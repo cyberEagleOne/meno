@@ -3,10 +3,12 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  getAppSetting,
   initProgressDb,
   loadProgress,
   markCompleted,
   saveLastRead,
+  setAppSetting,
   unmarkCompleted,
 } from "../db";
 import { deleteReadingGoal, getReadingGoal, saveReadingGoal } from "../goalRepository";
@@ -72,7 +74,7 @@ describe("disk-backed SQLite repository integration", () => {
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
     );
     expect(rows.map(({ name }) => name)).toEqual([
-      "completed", "last_read", "reading_day", "reading_goal",
+      "app_settings", "completed", "last_read", "reading_day", "reading_goal",
     ]);
   });
 
@@ -146,6 +148,17 @@ describe("disk-backed SQLite repository integration", () => {
     await driver!.exec("CREATE TRIGGER reject_reading_day BEFORE INSERT ON reading_day BEGIN SELECT RAISE(ABORT, 'test failure'); END;");
     await expect(markCompleted("kejadian", 4, "2026-11-19T08:00:00.000Z", "2026-11-19")).rejects.toThrow("test failure");
     await expect(loadProgress()).resolves.toMatchObject({ completed: {}, readingDays: [] });
+  });
+
+  it("persists a non-sensitive app setting after reopening", async () => {
+    await initProgressDb();
+    await expect(getAppSetting("app_lock_enabled")).resolves.toBeNull();
+    await setAppSetting("app_lock_enabled", "true");
+    reopen();
+    await expect(getAppSetting("app_lock_enabled")).resolves.toBe("true");
+    await setAppSetting("app_lock_enabled", "false");
+    await expect(getAppSetting("app_lock_enabled")).resolves.toBe("false");
+    await expect(driver!.getAll("SELECT key FROM app_settings")).resolves.toHaveLength(1);
   });
 
   it("reports schema initialization errors instead of silently continuing", async () => {

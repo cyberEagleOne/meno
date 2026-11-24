@@ -1,5 +1,5 @@
 import { DailyVerse, validateDailyVerse } from "../domain/dailyVerse";
-import { placeholderBible } from "./placeholderBible";
+import { canonicalBible } from "./canonicalBible";
 import { logger } from "../services/logger";
 
 export class ApiHttpError extends Error {
@@ -167,6 +167,12 @@ const EXTERNAL_BOOK_TO_CANON_ID: Record<string, string> = {
   revelation: "wahyu",
 };
 
+export function normalizeTranslationLabel(rawTranslation: string | undefined): string {
+  if (!rawTranslation || !rawTranslation.trim()) return "Terjemahan online";
+  if (/world english/i.test(rawTranslation)) return "World English Bible (Inggris)";
+  return rawTranslation.trim();
+}
+
 export function normalizeApiBookId(rawBook: unknown): string | undefined {
   if (typeof rawBook !== "string") {
     return undefined;
@@ -180,7 +186,7 @@ export function normalizeApiBookId(rawBook: unknown): string | undefined {
     return EXTERNAL_BOOK_TO_CANON_ID[clean];
   }
   const formatted = trimmed.toLowerCase().replace(/\s+/g, "-");
-  const directMatch = placeholderBible.books.find(
+  const directMatch = canonicalBible.books.find(
     (b) =>
       b.id === formatted ||
       b.name.toLowerCase() === trimmed.toLowerCase() ||
@@ -356,7 +362,7 @@ export async function fetchDailyVerseFromApi(
   } = {
     reference: rawReference,
     text: ((rawObj.text as string) || "").replace(/\n/g, " ").trim(),
-    translation: (rawObj.translation_name as string) || (rawObj.translation as string) || "Alkitab Digital",
+    translation: normalizeTranslationLabel((rawObj.translation_name as string) || (rawObj.translation as string)),
   };
 
   if (resolvedBookId) {

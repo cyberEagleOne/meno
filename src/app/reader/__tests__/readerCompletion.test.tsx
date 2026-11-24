@@ -14,6 +14,27 @@ jest.mock("expo-router", () => ({
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
+jest.mock("../../../data/bibleContext", () => {
+  const { placeholderBible } = jest.requireActual("../../../data/placeholderBible");
+  const bible = {
+    ...placeholderBible,
+    translation: {
+      shortName: "ILT3",
+      longName: "Indonesian Literal Translation 3",
+      description: "Copyright Yayasan Lentera Bangsa.",
+      locale: "in",
+      copyright: "Yayasan Lentera Bangsa",
+    },
+  };
+  const getChapter = async (bookId: string, chapter: number) => {
+    const book = placeholderBible.books.find((candidate: { id: string }) => candidate.id === bookId);
+    return book?.chapters[chapter - 1] ?? null;
+  };
+  return {
+    useBibleData: () => bible,
+    useBible: () => ({ getChapter }),
+  };
+});
 jest.mock("../../../data/progressContext", () => {
   const ReactActual = jest.requireActual<typeof import("react")>("react");
   return {

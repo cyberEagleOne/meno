@@ -52,7 +52,7 @@ export async function scheduleDailyReminder(hour: number = 7, minute: number = 0
 
   const id = await Notifications.scheduleNotificationAsync({
     content: {
-      title: "Meno — Waktu Membaca Alkitab",
+      title: "Meno — Waktu Membaca Kitab Suci",
       body: "Satu pasal saja sudah cukup untuk hari ini. Mari luangkan waktu sejenak.",
       sound: true,
     },

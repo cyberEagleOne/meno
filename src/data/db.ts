@@ -4,7 +4,7 @@ import {
   type ProgressState,
 } from "../domain/progress";
 import { getSqlDriver } from "./sqlDriver";
-import { placeholderBible } from "./placeholderBible";
+import { canonicalBible } from "./canonicalBible";
 import { logger } from "../services/logger";
 
 /**
@@ -39,6 +39,11 @@ export async function initProgressDb(): Promise<void> {
         id INTEGER PRIMARY KEY CHECK (id = 1),
         target INTEGER NOT NULL,
         note TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS app_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );
     `);
@@ -87,7 +92,7 @@ export async function loadProgress(): Promise<ProgressState> {
     readingDays: dayRows.map((row) => row.day),
   };
   // Validate against the dataset so stale/corrupt rows never surface in the UI.
-  return sanitizeProgress(raw, placeholderBible);
+  return sanitizeProgress(raw, canonicalBible);
 }
 
 export async function saveLastRead(lastRead: LastRead): Promise<void> {
@@ -162,4 +167,25 @@ export async function unmarkCompleted(bookId: string, chapter: number): Promise<
     logger.error("DATABASE", "unmark_completed_failed", err, { bookId, chapter });
     throw err;
   }
+}
+
+export async function getAppSetting(key: string): Promise<string | null> {
+  const sql = getSqlDriver();
+  const row = await sql.getFirst<{ value: string }>(
+    "SELECT value FROM app_settings WHERE key = ?",
+    key,
+  );
+  return row?.value ?? null;
+}
+
+export async function setAppSetting(key: string, value: string): Promise<void> {
+  const sql = getSqlDriver();
+  await sql.run(
+    `INSERT INTO app_settings (key, value, updated_at)
+     VALUES (?, ?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+    key,
+    value,
+    new Date().toISOString(),
+  );
 }

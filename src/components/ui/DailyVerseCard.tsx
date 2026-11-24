@@ -14,10 +14,11 @@ import { Chip } from "./Chip";
 import { IconSpark } from "./Icons";
 import { DailyVerse } from "../../domain/dailyVerse";
 import { fetchDailyVerseFromApi } from "../../data/dailyVerseRepository";
-import { placeholderBible } from "../../data/placeholderBible";
+import { useBibleData } from "../../data/bibleContext";
 
 export function DailyVerseCard() {
   const router = useRouter();
+  const bible = useBibleData();
   const [verse, setVerse] = useState<DailyVerse | null>(null);
   const [status, setStatus] = useState<"loading" | "success" | "empty" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -60,7 +61,7 @@ export function DailyVerseCard() {
       <Card tone="surface" style={styles.card}>
         <View style={styles.headerRow}>
           <Chip
-            label="Ayat Harian (API)"
+            label="Ayat Harian (Online)"
             tone="gold"
             icon={<IconSpark size={12} color={colors.goldText} />}
           />
@@ -79,7 +80,7 @@ export function DailyVerseCard() {
       <Card tone="surface" style={styles.card}>
         <View style={styles.headerRow}>
           <Chip
-            label="Ayat Harian (API)"
+            label="Ayat Harian (Online)"
             tone="coral"
             icon={<IconSpark size={12} color={colors.coralInk} />}
           />
@@ -104,7 +105,7 @@ export function DailyVerseCard() {
       <Card tone="surface" style={styles.card}>
         <View style={styles.headerRow}>
           <Chip
-            label="Ayat Harian (API)"
+            label="Ayat Harian (Online)"
             tone="gold"
             icon={<IconSpark size={12} color={colors.goldText} />}
           />
@@ -123,7 +124,7 @@ export function DailyVerseCard() {
           tone="gold"
           icon={<IconSpark size={12} color={colors.goldText} />}
         />
-        <Text style={styles.translationBadge}>{verse.translation}</Text>
+        <Text style={styles.translationBadge}>Terjemahan: {verse.translation}</Text>
       </View>
 
       <Text style={styles.verseText}>“{verse.text}”</Text>
@@ -132,7 +133,7 @@ export function DailyVerseCard() {
       {verse.bookId &&
       typeof verse.chapter === "number" &&
       Number.isInteger(verse.chapter) &&
-      placeholderBible.books.some(
+      bible.books.some(
         (b) => b.id === verse.bookId && verse.chapter! >= 1 && verse.chapter! <= b.chapters.length
       ) ? (
         <Pressable

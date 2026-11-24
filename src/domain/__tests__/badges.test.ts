@@ -111,6 +111,16 @@ describe("Badge calculation", () => {
     expect(badges7.find((b) => b.id === "habit_7days")?.unlocked).toBe(true);
   });
 
+  it("uses Indonesian 'Kitab Suci' in habit badges descriptions", () => {
+    const badges = calculateBadges({}, []);
+    expect(badges.find((b) => b.id === "habit_3days")?.description).toBe(
+      "Membaca Kitab Suci di 3 hari yang berbeda.",
+    );
+    expect(badges.find((b) => b.id === "habit_7days")?.description).toBe(
+      "Membaca Kitab Suci di 7 hari yang berbeda.",
+    );
+  });
+
   it("unlocks milestone 10 and 25 badges", () => {
     const map: Record<string, boolean> = {};
     for (let i = 1; i <= 25; i++) {

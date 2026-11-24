@@ -1,5 +1,5 @@
 import type { Bible, Book } from "../domain/types";
-import { placeholderBible } from "./placeholderBible";
+import { canonicalBible } from "./canonicalBible";
 
 export type Testament = "PL" | "PB";
 
@@ -13,7 +13,7 @@ export function testamentOf(book: Book): Testament {
   return book.canonicalOrder <= 39 ? "PL" : "PB";
 }
 
-export const TOTAL_CHAPTERS = placeholderBible.books.reduce(
+export const TOTAL_CHAPTERS = canonicalBible.books.reduce(
   (n, book) => n + book.chapters.length,
   0,
 );
@@ -22,7 +22,7 @@ export const TESTAMENT_TOTALS: Record<Testament, { books: number; chapters: numb
   PL: { books: 0, chapters: 0 },
   PB: { books: 0, chapters: 0 },
 };
-for (const book of placeholderBible.books) {
+for (const book of canonicalBible.books) {
   const t = testamentOf(book);
   TESTAMENT_TOTALS[t].books += 1;
   TESTAMENT_TOTALS[t].chapters += book.chapters.length;

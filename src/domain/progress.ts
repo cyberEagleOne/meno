@@ -111,7 +111,7 @@ export const MILESTONES: Milestone[] = [
   { at: 100, label: "100 pasal" },
   { at: 250, label: "250 pasal" },
   { at: 500, label: "500 pasal" },
-  { at: 1189, label: "Seluruh Alkitab" },
+  { at: 1189, label: "Seluruh Kitab Suci" },
 ];
 
 export function nextMilestone(total: number): Milestone | null {
