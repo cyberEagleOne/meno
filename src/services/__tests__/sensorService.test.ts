@@ -62,4 +62,23 @@ describe("accelerometer shake service", () => {
     expect(destination.chapter).toBeGreaterThanOrEqual(1);
     expect(Number.isInteger(destination.chapter)).toBe(true);
   });
+
+  it("selects only from the supplied local Bible metadata and respects its chapter bounds", () => {
+    const localBooks = [
+      { id: "yohanes", name: "Yohanes", canonicalOrder: 1, chapters: [{ number: 1, verses: [] }] },
+      {
+        id: "filemon",
+        name: "Filemon",
+        canonicalOrder: 2,
+        chapters: Array.from({ length: 4 }, (_, index) => ({ number: index + 1, verses: [] })),
+      },
+    ];
+    jest.spyOn(Math, "random").mockReturnValueOnce(0.999).mockReturnValueOnce(0.999);
+
+    expect(getRandomChapter(localBooks)).toEqual({
+      bookId: "filemon",
+      bookName: "Filemon",
+      chapter: 4,
+    });
+  });
 });

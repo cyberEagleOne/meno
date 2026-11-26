@@ -2,12 +2,14 @@ import * as SQLite from "expo-sqlite";
 import { importDatabaseFromAssetAsync } from "expo-sqlite";
 
 import type { Bible, Book, Chapter, Verse } from "../domain/types";
+import type { DailyVerse } from "../domain/dailyVerse";
 import { logger } from "../services/logger";
 import {
   BIBLE_BOOK_IDS,
   canonicalIdForDatabaseId,
   databaseIdForCanonicalId,
 } from "./bibleBookMap";
+import { getDailyVerseOffset } from "./dailyVerseRepository";
 
 export const BIBLE_DATABASE_NAME = "ilt3";
 function bibleDatabaseAsset(): number {
@@ -45,6 +47,18 @@ interface TranslationRow {
 }
 
 interface VerseRow {
+  verse: number;
+  text: string;
+}
+
+interface VerseCountRow {
+  count: number;
+}
+
+interface DailyVerseRow {
+  book_id: number;
+  book_name: string;
+  chapter: number;
   verse: number;
   text: string;
 }
@@ -164,6 +178,42 @@ export async function loadChapter(
   const verses = await loadChapterVerses(db, bookId, chapterNumber);
   if (verses === null) return null;
   return { number: chapterNumber, verses };
+}
+
+/** Selects a deterministic verse for a local date from the bundled ILT3 DB. */
+export async function loadDailyVerse(
+  db: SQLite.SQLiteDatabase,
+  localDateKey: string,
+): Promise<DailyVerse | null> {
+  const countRow = await db.getFirstAsync<VerseCountRow>(
+    "SELECT COUNT(*) AS count FROM verses",
+  );
+  const verseCount = countRow?.count ?? 0;
+  if (verseCount <= 0) return null;
+
+  const offset = getDailyVerseOffset(localDateKey, verseCount);
+  const row = await db.getFirstAsync<DailyVerseRow>(
+    `SELECT v.book_id, b.name AS book_name, v.chapter, v.verse, v.text
+     FROM verses v
+     JOIN books b ON b.book_id = v.book_id
+     ORDER BY v.book_id, v.chapter, v.verse
+     LIMIT 1 OFFSET ?`,
+    offset,
+  );
+  if (!row) return null;
+
+  const bookId = canonicalIdForDatabaseId(row.book_id);
+  if (!bookId || !row.text?.trim()) {
+    throw new Error("The selected ILT3 verse has invalid book or text data.");
+  }
+
+  return {
+    reference: `${row.book_name} ${row.chapter}:${row.verse}`,
+    text: row.text.trim(),
+    translation: "ILT3",
+    bookId,
+    chapter: row.chapter,
+  };
 }
 
 export function isKnownBibleBookId(bookId: string): boolean {

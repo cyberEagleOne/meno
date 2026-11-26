@@ -31,7 +31,7 @@ export function BadgeUnlockModal({ badge, visible, onClose }: BadgeUnlockModalPr
 
           <Text style={styles.badgeIcon}>{badge.icon}</Text>
           <Text style={styles.headerTitle}>
-            {badge.unlocked ? "Lencana Terbuka! ✦" : "Detail Lencana"}
+            {badge.unlocked ? "★ Lencana Terbuka" : "Detail Lencana"}
           </Text>
 
           <Text style={styles.badgeTitle}>{badge.title}</Text>
@@ -45,7 +45,7 @@ export function BadgeUnlockModal({ badge, visible, onClose }: BadgeUnlockModalPr
                 badge.unlocked ? styles.statusUnlocked : styles.statusLocked,
               ]}
             >
-              {badge.unlocked ? "✓ Berhasil Didapatkan" : badge.progressText}
+              {badge.unlocked ? "★ Bintang pencapaian diperoleh" : badge.progressText}
             </Text>
           </View>
 

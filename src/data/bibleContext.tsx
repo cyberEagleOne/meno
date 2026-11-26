@@ -11,8 +11,9 @@ import {
 } from "react";
 
 import type { Chapter } from "../domain/types";
+import type { DailyVerse } from "../domain/dailyVerse";
 import { logger } from "../services/logger";
-import { loadBibleMetadata, loadChapter, openBibleDatabase, type LoadedBible } from "./bibleRepository";
+import { loadBibleMetadata, loadChapter, loadDailyVerse, openBibleDatabase, type LoadedBible } from "./bibleRepository";
 
 export type BibleStatus = "loading" | "ready" | "error";
 
@@ -22,6 +23,7 @@ interface BibleValue {
   error: string | null;
   retry: () => void;
   getChapter: (bookId: string, chapterNumber: number) => Promise<Chapter | null>;
+  getDailyVerse: (localDateKey: string) => Promise<DailyVerse | null>;
 }
 
 const BibleContext = createContext<BibleValue | null>(null);
@@ -84,9 +86,15 @@ export function BibleProvider({ children }: { children: ReactNode }) {
     return loadChapter(db, bookId, chapterNumber);
   }, []);
 
+  const getDailyVerse = useCallback(async (localDateKey: string) => {
+    const db = dbRef.current;
+    if (!db) throw new Error("Bible database is not ready.");
+    return loadDailyVerse(db, localDateKey);
+  }, []);
+
   const value = useMemo<BibleValue>(
-    () => ({ bible, status, error, retry, getChapter }),
-    [bible, status, error, retry, getChapter],
+    () => ({ bible, status, error, retry, getChapter, getDailyVerse }),
+    [bible, status, error, retry, getChapter, getDailyVerse],
   );
 
   return <BibleContext.Provider value={value}>{children}</BibleContext.Provider>;

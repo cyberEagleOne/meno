@@ -1,6 +1,5 @@
 import { useRouter } from "expo-router";
-import { useCallback, useEffect } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "../../components/ui/Button";
@@ -8,14 +7,12 @@ import { Card } from "../../components/ui/Card";
 import { Chip } from "../../components/ui/Chip";
 import { DailyVerseCard } from "../../components/ui/DailyVerseCard";
 import { IconBook, IconChevron, IconGear, IconPlay, IconSpark } from "../../components/ui/Icons";
-import { Mascot } from "../../components/ui/Mascot";
 import { InteractiveMascot } from "../../components/ui/InteractiveMascot";
 import { ProgressRing } from "../../components/ui/ProgressRing";
 import { getBookById, TOTAL_CHAPTERS } from "../../data/canon";
 import { useBibleData } from "../../data/bibleContext";
 import { useProgress } from "../../data/progressContext";
 import { completedCount, nextMilestone } from "../../domain/progress";
-import { getRandomChapter, subscribeToShakeGesture, type RandomVerseDestination } from "../../services/sensorService";
 import { colors, fonts, radius } from "../../theme/colors";
 import { formatNumber as fmt, formatPercent } from "../../utils/formatters";
 
@@ -42,28 +39,6 @@ export default function HomeScreen() {
   const book = lastRead ? getBookById(bible, lastRead.bookId) : null;
   const next = nextMilestone(doneCount);
   const pct = formatPercent(doneCount, TOTAL_CHAPTERS);
-
-  const openRandomChapter = useCallback((destination: RandomVerseDestination) => {
-    Alert.alert(
-      "Pasal acak untukmu",
-      `${destination.bookName} pasal ${destination.chapter}. Mau dibaca sekarang?`,
-      [
-        { text: "Nanti saja", style: "cancel" },
-        {
-          text: "Buka pasal",
-          onPress: () =>
-            router.push({
-              pathname: "/reader/[book]/[chapter]",
-              params: { book: destination.bookId, chapter: String(destination.chapter) },
-            }),
-        },
-      ],
-    );
-  }, [router]);
-
-  useEffect(() => {
-    return subscribeToShakeGesture(openRandomChapter, 2.0, bible.books);
-  }, [bible.books, openRandomChapter]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -104,7 +79,6 @@ export default function HomeScreen() {
                 <Text style={styles.heroChapter}>Pasal {lastRead.chapter}</Text>
                 <Text style={styles.heroMeta}>Terakhir dibuka {relDate(lastRead.openedAt)}</Text>
               </View>
-              <Mascot pose="readyToRead" size={96} />
             </View>
             <Button
               variant="gold"
@@ -131,7 +105,6 @@ export default function HomeScreen() {
                   Pilih kitab mana pun. Tempat terakhirmu tersimpan otomatis.
                 </Text>
               </View>
-              <Mascot pose="readyToRead" size={96} />
             </View>
             <Button
               variant="gold"
@@ -156,7 +129,7 @@ export default function HomeScreen() {
           <Button
             variant="gold"
             full={false}
-            onPress={() => openRandomChapter(getRandomChapter(bible.books))}
+            onPress={() => router.push("/random-chapter")}
             accessibilityLabel="Pilih pasal acak"
           >
             Pilih
@@ -259,7 +232,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   randomCard: {
-    marginHorizontal: 20,
     marginBottom: 16,
     flexDirection: "row",
     alignItems: "center",
@@ -293,6 +265,7 @@ const styles = StyleSheet.create({
   chunkyIndigo: {
     borderBottomWidth: 4,
     borderBottomColor: colors.indigoDeep,
+    marginBottom: 16,
   },
   circleLavender: {
     position: "absolute",
@@ -313,10 +286,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(182,154,87,0.2)",
   },
   cardTop: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 8,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   cardText: {
     flex: 1,
@@ -359,7 +329,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.mintTint,
     borderRadius: radius.lg,
     padding: 16,
-    marginTop: 20,
     borderBottomWidth: 4,
     borderBottomColor: colors.mint,
   },

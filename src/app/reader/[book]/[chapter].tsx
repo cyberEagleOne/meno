@@ -21,6 +21,7 @@ import { StateMessage } from "../../../components/ui/StateMessage";
 import { VerseRow } from "../../../components/ui/VerseRow";
 import { useBible, useBibleData } from "../../../data/bibleContext";
 import { useProgress } from "../../../data/progressContext";
+import { triggerSuccessHaptic } from "../../../services/hapticService";
 import {
   getBook,
   getChapter,
@@ -243,8 +244,10 @@ export default function ReaderScreen() {
     setCompletionPending(true);
     setCompletionError(null);
     const targetKey = `${targetBookId}:${targetChapter}`;
+    const wasCompleted = isCompleted(completed, targetBookId, targetChapter);
     try {
       await setCompleted(targetBookId, targetChapter, done);
+      if (done && !wasCompleted) triggerSuccessHaptic();
       if (done) {
         if (currentRouteKey.current !== targetKey) return;
         setToastKey(targetKey);
