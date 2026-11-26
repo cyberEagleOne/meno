@@ -1,0 +1,13 @@
+﻿Tested artifact: artifacts/android/meno-release.apk
+SHA-256: CD388C88CD1119782B802CC1F03D8BD6765FA88AD12DD3B1DCC4486435C0C128
+Package: com.meno.app
+Version: 1.0.0 (versionCode 1)
+Architecture: arm64-v8a only
+Signing: Android Debug certificate; apksigner verified
+Device serial: redacted
+Device model: RMX2103
+Android: 11 / API 30
+Device ABI: arm64-v8a
+Prior package state: com.meno.app was not installed
+Test date: 2026-11-19
+Artifact origin: local verified APK previously inspected from CI run 44529697756. It is not asserted identical to CI run 44558937344 artifact (digest 1d918bb58905bc4772fd8f4e3683f0084f4bc7813cd51e3e3475ea7cb273d544).

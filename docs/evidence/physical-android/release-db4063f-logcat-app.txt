@@ -1,0 +1,19 @@
+11-24 00:00:48.233  1678  5176 D ColorAppListInterceptManager: shouldFilterTask::packageName = com.meno.app
+11-24 00:00:52.544  1678  1713 D BiometricService: canAuthenticate: User=0, Caller=0, Authenticators=255
+11-24 00:00:52.545  1678  1713 D BiometricService: Package: com.meno.app Authenticator ID: 0 Modality: 2 Reported Modality: 2 Status: 1
+11-24 00:00:52.586  1678  1713 D BiometricService: canAuthenticate: User=0, Caller=0, Authenticators=255
+11-24 00:00:52.587  1678  1713 D BiometricService: Package: com.meno.app Authenticator ID: 0 Modality: 2 Reported Modality: 2 Status: 1
+11-24 00:00:53.453  1678  1678 D BiometricService: Package: com.meno.app Authenticator ID: 0 Modality: 2 Reported Modality: 2 Status: 1
+11-24 00:00:53.453  1678  1678 D BiometricService: Creating auth session. Modality: 2, cookie: 304776508, authenticators: 33023
+11-24 00:00:53.457  1678  1678 D BiometricService: New AuthSession, mSysUiSessionId: -1834621848
+11-24 00:00:53.498  1678  2708 V FingerprintService: startAuthentication(com.meno.app)
+11-24 00:00:53.498  1678  2708 V FingerprintService: Returning cookie: 304776508
+11-24 00:00:54.534  1678  1678 D BiometricService: Matched cookie: 304776508, 0 remaining
+11-24 00:00:54.534  1678  1678 V FingerprintService: starting client AuthenticationClientImpl(com.meno.app) targetUserId: 0 currentUserId: 0 cookie: 304776508/304776508
+11-24 00:00:54.728  1678  4828 V WindowManager: Changing focus from Window{bbb8432 u0 com.meno.app/com.meno.app.MainActivity} to Window{e9c4a1f u0 ColorBiometricPrompt},diplayid=0
+11-24 00:00:54.754  1678  5316 I InputDispatcher: Focus left window: Window{bbb8432 u0 com.meno.app/com.meno.app.MainActivity} in display 0
+11-24 00:00:55.199  1678  2708 V FingerprintService: onAuthenticated(true), ID:286199352, Owner: com.meno.app, isBP: true, listener: com.android.server.biometrics.fingerprint.FingerprintService$BiometricPromptServiceListenerImpl@32d40a3, requireConfirmation: false, user: 0
+11-24 00:00:55.213  1678  2708 V FingerprintService: Done with client: com.meno.app
+11-24 00:00:56.184 20055 20055 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-24 00:00:56.216 20055 20055 I AndroidRuntime: Using default boot image
+11-24 00:00:56.216 20055 20055 I AndroidRuntime: Leaving lock profiling enabled

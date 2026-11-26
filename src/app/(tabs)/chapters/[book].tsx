@@ -15,7 +15,7 @@ import {
   getBookById,
   testamentOf,
 } from "../../../data/canon";
-import { placeholderBible } from "../../../data/placeholderBible";
+import { useBibleData } from "../../../data/bibleContext";
 import { useProgress } from "../../../data/progressContext";
 import { doneInBook, isCompleted } from "../../../domain/progress";
 import { colors, fonts } from "../../../theme/colors";
@@ -23,16 +23,17 @@ import { calculatePercentNumber as pctNum } from "../../../utils/formatters";
 
 export default function ChaptersScreen() {
   const router = useRouter();
+  const bible = useBibleData();
   const params = useLocalSearchParams<{ book: string }>();
   const bookId = params.book;
-  const book = getBookById(placeholderBible, bookId);
+  const book = getBookById(bible, bookId);
   const { completed, lastRead } = useProgress();
 
   if (!book) {
     return (
       <SafeAreaView style={styles.safeArea} edges={["top"]}>
         <ScreenHeader backLabel="Kembali ke daftar kitab" />
-        <StateMessage title="Kitab tidak ditemukan" body="Kitab ini tidak ada dalam data contoh." />
+        <StateMessage title="Kitab tidak ditemukan" body="Kitab ini tidak ada dalam Kitab Suci." />
       </SafeAreaView>
     );
   }

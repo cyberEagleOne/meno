@@ -13,8 +13,11 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, type ReactNode } from "react";
 
+import { AppLockScreen } from "../components/ui/AppLockScreen";
 import { Button } from "../components/ui/Button";
 import { StateMessage } from "../components/ui/StateMessage";
+import { AppLockProvider, useAppLock } from "../data/appLockContext";
+import { BibleProvider, useBible } from "../data/bibleContext";
 import { ProgressProvider, useProgress } from "../data/progressContext";
 import { logger } from "../services/logger";
 import { colors, fonts } from "../theme/colors";
@@ -65,12 +68,21 @@ export default function RootLayout() {
   return (
     <ProgressProvider>
       <ProgressGate>
-        <StatusBar style="dark" />
-        <Stack screenOptions={{ contentStyle: { backgroundColor: colors.ivory }, headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="reader/[book]/[chapter]" />
-          <Stack.Screen name="settings" />
-        </Stack>
+        <BibleProvider>
+          <BibleGate>
+            <AppLockProvider>
+              <AppLockGate>
+                <StatusBar style="dark" />
+                <Stack screenOptions={{ contentStyle: { backgroundColor: colors.ivory }, headerShown: false }}>
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="reader/[book]/[chapter]" />
+                  <Stack.Screen name="random-chapter" />
+                  <Stack.Screen name="settings" />
+                </Stack>
+              </AppLockGate>
+            </AppLockProvider>
+          </BibleGate>
+        </BibleProvider>
       </ProgressGate>
     </ProgressProvider>
   );
@@ -115,6 +127,73 @@ function ProgressGate({ children }: { children: ReactNode }) {
       </View>
     </SafeAreaView>
   );
+}
+
+/** Blocks the app until the bundled ILT3 metadata is validated and ready. */
+function BibleGate({ children }: { children: ReactNode }) {
+  const { status, error, retry } = useBible();
+
+  if (status === "ready") {
+    return children;
+  }
+
+  if (status === "error") {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+        <View style={styles.centre}>
+          <StateMessage
+            tone="error"
+            title="Kitab Suci belum bisa dimuat"
+            body={error || "Database terjemahan tidak dapat dibuka. Coba lagi."}
+            action={<Button onPress={retry}>Coba lagi</Button>}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+      <View style={styles.centre} accessibilityRole="progressbar" accessibilityLabel="Menyiapkan Kitab Suci">
+        <ActivityIndicator size="large" color={colors.indigo} />
+        <Text style={styles.loadingText}>Menyiapkan Kitab Suci…</Text>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+/** Shows the lock screen after cold start or when the grace period expires. */
+function AppLockGate({ children }: { children: ReactNode }) {
+  const { status, locked, retry } = useAppLock();
+
+  if (status === "error") {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+        <View style={styles.centre}>
+          <StateMessage
+            tone="error"
+            title="Kunci aplikasi gagal dimuat"
+            body="Pengaturan kunci belum bisa dibaca. Coba lagi."
+            action={<Button onPress={retry}>Coba lagi</Button>}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (status === "loading") {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+        <View style={styles.centre} accessibilityRole="progressbar" accessibilityLabel="Menyiapkan kunci aplikasi">
+          <ActivityIndicator size="large" color={colors.indigo} />
+          <Text style={styles.loadingText}>Menyiapkan kunci aplikasi…</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (locked) return <AppLockScreen />;
+  return children;
 }
 
 const styles = StyleSheet.create({

@@ -12,6 +12,7 @@ export type LogCategory =
   | "APP_LIFECYCLE"
   | "API_INTEGRATION"
   | "DATABASE"
+  | "BIBLE"
   | "SECURITY_AUTH"
   | "FORM_VALIDATION"
   | "SENSOR"

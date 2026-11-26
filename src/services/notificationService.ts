@@ -48,13 +48,29 @@ export async function scheduleDailyReminder(hour: number = 7, minute: number = 0
   }
 
   // Cancel any existing reminders first
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  const scheduledNotifications =
+    await Notifications.getAllScheduledNotificationsAsync();
+
+  const existingReminders = scheduledNotifications.filter(
+    ({ content }) =>
+      content.data?.menoNotificationType === "daily-reading-reminder" ||
+      (content.title === "Meno — Waktu Membaca Kitab Suci" &&
+        content.body ===
+          "Satu pasal saja sudah cukup untuk hari ini. Mari luangkan waktu sejenak."),
+  );
+
+  await Promise.all(
+    existingReminders.map(({ identifier }) =>
+      Notifications.cancelScheduledNotificationAsync(identifier),
+    ),
+  );
 
   const id = await Notifications.scheduleNotificationAsync({
     content: {
-      title: "Meno — Waktu Membaca Alkitab",
+      title: "Meno — Waktu Membaca Kitab Suci",
       body: "Satu pasal saja sudah cukup untuk hari ini. Mari luangkan waktu sejenak.",
       sound: true,
+      data: { menoNotificationType: "daily-reading-reminder" },
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DAILY,

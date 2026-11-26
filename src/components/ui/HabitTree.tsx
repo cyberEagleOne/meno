@@ -72,10 +72,10 @@ export function HabitTree({ totalChapters }: HabitTreeProps) {
           <View style={styles.speechBubble}>
             <Text style={styles.speechText}>
               {currentStage.stage === 0
-                ? "🌱 'Beri aku air dengan membaca 1 pasal!'"
+                ? "Beri aku air dengan membaca 1 pasal."
                 : currentStage.stage >= 4
-                  ? "🌳 'Pohon firmanmu berbuah lebat! Luar biasa!'"
-                  : "🌿 'Terima kasih telah menyiramiku dengan firman hari ini!'"}
+                  ? "Pohon firmanmu berbuah lebat. Luar biasa!"
+                  : "Terima kasih telah menyiramiku dengan firman hari ini."}
             </Text>
           </View>
         ) : null}
@@ -88,20 +88,28 @@ export function HabitTree({ totalChapters }: HabitTreeProps) {
 
       {nextStage ? (
         <View style={styles.progressSection}>
+          <Text style={styles.progressEyebrow}>PROGRES PERTUMBUHAN</Text>
           <View style={styles.progressLabels}>
             <Text style={styles.progressLabel}>Menuju {nextStage.name}</Text>
             <Text style={styles.progressPercent}>{percentToNext}%</Text>
           </View>
-          <View style={styles.progressBarTrack}>
+          <View
+            style={styles.progressBarTrack}
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityLabel={`Pertumbuhan menuju ${nextStage.name}`}
+            accessibilityValue={{ min: 0, max: 100, now: percentToNext }}
+          >
             <View style={[styles.progressBarFill, { width: `${percentToNext}%` }]} />
           </View>
           <Text style={styles.remainingText}>
-            Tinggal <Text style={styles.countBold}>{remainingChapters}</Text> pasal lagi untuk bertumbuh!
+            <Text style={styles.countBold}>{remainingChapters}</Text> pasal lagi menuju tahap ini
           </Text>
         </View>
       ) : (
         <View style={styles.maxStageNotice}>
-          <Text style={styles.maxStageText}>🌟 Tingkat Tertinggi Tercapai! Terus rawat kebiasaan muliamu.</Text>
+          <Text style={styles.maxStageTitle}>Tahap tertinggi tercapai</Text>
+          <Text style={styles.maxStageText}>Terus rawat kebiasaan membaca yang sudah kamu bangun.</Text>
         </View>
       )}
     </View>
@@ -304,10 +312,17 @@ const styles = StyleSheet.create({
   },
   progressSection: {
     backgroundColor: colors.ivory,
-    padding: space.md,
+    padding: space.lg,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.divider,
+  },
+  progressEyebrow: {
+    fontFamily: fonts.bold,
+    fontSize: 9,
+    letterSpacing: 1,
+    color: colors.inkMuted,
+    marginBottom: space.sm,
   },
   progressLabels: {
     flexDirection: "row",
@@ -326,11 +341,11 @@ const styles = StyleSheet.create({
     color: colors.mintInk,
   },
   progressBarTrack: {
-    height: 8,
+    height: 12,
     backgroundColor: colors.divider,
     borderRadius: radius.full,
     overflow: "hidden",
-    marginVertical: space.xs,
+    marginBottom: space.sm,
   },
   progressBarFill: {
     height: "100%",
@@ -338,22 +353,27 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
   },
   remainingText: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
+    fontFamily: fonts.medium,
+    fontSize: 12,
     color: colors.inkMuted,
-    textAlign: "right",
-    marginTop: space.xs,
   },
   maxStageNotice: {
     backgroundColor: colors.goldTint,
     padding: space.md,
     borderRadius: radius.md,
     alignItems: "center",
+    gap: space.xs,
+  },
+  maxStageTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 14,
+    color: colors.goldText,
   },
   maxStageText: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.regular,
     fontSize: 12,
-    color: colors.goldDeep,
+    lineHeight: 17,
+    color: colors.inkMuted,
     textAlign: "center",
   },
 });

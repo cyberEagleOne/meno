@@ -1,0 +1,16 @@
+Meno SQLite restart observation — 2026-11-19
+
+Environment: Android Virtual Device emulator-5554, API 37, product sdk_gphone64_x86_64, ABI x86_64/arm64-v8a. App JS ran in Expo Go (host.exp.exponent) through the local Metro development server; this was not the standalone Meno APK and not a physical phone.
+
+Sequence performed:
+1. Opened Meno through Expo Go and waited for the app bundle and SQLite initialization.
+2. Opened Kejadian chapter 1 and explicitly selected “Tandai selesai”.
+3. Opened Kemajuan and observed “1 pasal selesai” and 0.1%.
+4. Force-stopped Expo Go with adb shell am force-stop host.exp.exponent.
+5. Relaunched Expo Go and reopened the local Meno project.
+6. Waited for Metro bundle completion and SQLite initialization, then reopened Kemajuan.
+7. Observed “1 pasal selesai” and 0.1% still present.
+
+Screenshot: ../ui-review/03-progress-expo-go-avd.png (progress view) and 07-progress-after-expogo-restart.png (view after restart).
+
+Scope: This is a successful app-process force-stop/relaunch observation using the Expo Go host and Meno's expo-sqlite production adapter. It verifies one create/read persistence path for that runtime. It does not verify all CRUD, native standalone APK behavior, uninstall/reinstall behavior, or physical-device behavior. The disk-backed Node SQLite suite separately exercises application repository functions and transaction semantics.

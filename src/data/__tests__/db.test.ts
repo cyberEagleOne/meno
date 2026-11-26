@@ -14,6 +14,7 @@ describe("db persistence round-trip", () => {
     expect(sql).toMatch(/CREATE TABLE IF NOT EXISTS last_read/i);
     expect(sql).toMatch(/CREATE TABLE IF NOT EXISTS completed/i);
     expect(sql).toMatch(/CREATE TABLE IF NOT EXISTS reading_day/i);
+    expect(sql).toMatch(/CREATE TABLE IF NOT EXISTS app_settings/i);
   });
 
   it("an empty database loads as empty progress", async () => {

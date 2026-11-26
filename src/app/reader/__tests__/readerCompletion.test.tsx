@@ -3,6 +3,11 @@ import { act, create, type ReactTestRenderer } from "react-test-renderer";
 
 import { Button } from "../../../components/ui/Button";
 import ReaderScreen from "../[book]/[chapter]";
+import { triggerSuccessHaptic } from "../../../services/hapticService";
+
+jest.mock("../../../services/hapticService", () => ({
+  triggerSuccessHaptic: jest.fn(),
+}));
 
 let mockSetCompleted: jest.Mock;
 let mockRouteParams = { book: "kejadian", chapter: "1" };
@@ -14,6 +19,27 @@ jest.mock("expo-router", () => ({
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
+jest.mock("../../../data/bibleContext", () => {
+  const { placeholderBible } = jest.requireActual("../../../data/placeholderBible");
+  const bible = {
+    ...placeholderBible,
+    translation: {
+      shortName: "ILT3",
+      longName: "Indonesian Literal Translation 3",
+      description: "Copyright Yayasan Lentera Bangsa.",
+      locale: "in",
+      copyright: "Yayasan Lentera Bangsa",
+    },
+  };
+  const getChapter = async (bookId: string, chapter: number) => {
+    const book = placeholderBible.books.find((candidate: { id: string }) => candidate.id === bookId);
+    return book?.chapters[chapter - 1] ?? null;
+  };
+  return {
+    useBibleData: () => bible,
+    useBible: () => ({ getChapter }),
+  };
+});
 jest.mock("../../../data/progressContext", () => {
   const ReactActual = jest.requireActual<typeof import("react")>("react");
   return {
@@ -75,11 +101,13 @@ describe("reader completion feedback", () => {
     expect(mockSetCompleted).toHaveBeenCalledTimes(1);
     expect(renderer.root.findAllByType(Button).some((button) => button.props.disabled)).toBe(true);
     expect(renderer.root.findAll((node) => node.props.accessibilityLabel?.includes("ditandai selesai."))).toHaveLength(0);
+    expect(triggerSuccessHaptic).not.toHaveBeenCalled();
 
     await act(async () => {
       resolveWrite();
       await Promise.resolve();
     });
+    expect(triggerSuccessHaptic).toHaveBeenCalledTimes(1);
     expect(
       renderer.root.findAll((node) => node.props.accessibilityLabel?.includes("ditandai selesai.")).length,
     ).toBeGreaterThan(0);
@@ -103,6 +131,7 @@ describe("reader completion feedback", () => {
     ).toBeGreaterThan(0);
     const retry = renderer.root.findAllByType(Button).find((button) => button.props.children === "Coba lagi");
     expect(retry).toBeDefined();
+    expect(triggerSuccessHaptic).not.toHaveBeenCalled();
   });
 
   it("clears a failed chapter's retry action after navigating elsewhere", async () => {
@@ -132,5 +161,6 @@ describe("reader completion feedback", () => {
       await Promise.resolve();
     });
     expect(mockSetCompleted).toHaveBeenLastCalledWith("kejadian", 2, true);
+    expect(triggerSuccessHaptic).toHaveBeenCalledTimes(1);
   });
 });

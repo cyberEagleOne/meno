@@ -11,12 +11,18 @@ interface BadgeCardProps {
 
 export function BadgeCard({ badge, onPress }: BadgeCardProps) {
   const { title, description, icon, unlocked, progressText } = badge;
+  const categoryLabel = {
+    habits: "KEBIASAAN",
+    milestones: "PENCAPAIAN",
+    scripture: "JELAJAH KITAB",
+  }[badge.category];
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Lencana: ${title}. ${unlocked ? "Sudah terbuka." : "Masih terkunci: " + progressText}`}
+      accessibilityLabel={`Lencana ${title}. ${description} ${unlocked ? "Sudah terbuka, bintang diperoleh." : `Masih terkunci. ${progressText}`}`}
+      accessibilityHint="Ketuk untuk melihat rincian lencana"
       style={({ pressed }) => [
         styles.card,
         unlocked ? styles.cardUnlocked : styles.cardLocked,
@@ -28,33 +34,29 @@ export function BadgeCard({ badge, onPress }: BadgeCardProps) {
       </View>
 
       <View style={styles.content}>
-        <View style={styles.titleRow}>
-          <Text style={[styles.title, !unlocked && styles.textMuted]} numberOfLines={1}>
-            {title}
-          </Text>
-          {unlocked ? <Text style={styles.unlockedStar}>✦</Text> : null}
+        <View style={styles.metaRow}>
+          <Text style={styles.category}>{categoryLabel}</Text>
+          <View style={[styles.statePill, unlocked ? styles.statePillUnlocked : styles.statePillLocked]}>
+            <Text style={[styles.stateStar, unlocked ? styles.stateStarUnlocked : styles.stateStarLocked]}>
+              {unlocked ? "★" : "☆"}
+            </Text>
+            <Text style={[styles.stateText, unlocked ? styles.stateTextUnlocked : styles.stateTextLocked]}>
+              {unlocked ? "TERBUKA" : "TERKUNCI"}
+            </Text>
+          </View>
         </View>
 
-        <Text style={[styles.desc, !unlocked && styles.textMuted]} numberOfLines={2}>
+        <Text style={styles.title} numberOfLines={2}>
+          {title}
+        </Text>
+        <Text style={styles.desc} numberOfLines={3}>
           {description}
         </Text>
 
         <View style={styles.statusRow}>
-          <View
-            style={[
-              styles.statusPill,
-              unlocked ? styles.statusPillUnlocked : styles.statusPillLocked,
-            ]}
-          >
-            <Text
-              style={[
-                styles.statusText,
-                unlocked ? styles.statusTextUnlocked : styles.statusTextLocked,
-              ]}
-            >
-              {unlocked ? "✓ " + progressText : progressText}
-            </Text>
-          </View>
+          <Text style={[styles.progressText, unlocked && styles.progressTextUnlocked]}>
+            {progressText}
+          </Text>
         </View>
       </View>
     </Pressable>
@@ -83,7 +85,6 @@ const styles = StyleSheet.create({
   cardLocked: {
     borderColor: colors.divider,
     backgroundColor: colors.ivory,
-    opacity: 0.82,
   },
   cardPressed: {
     transform: [{ scale: 0.98 }],
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
     borderColor: colors.gold,
   },
   iconCircleLocked: {
-    backgroundColor: colors.divider,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.stone,
   },
@@ -115,57 +116,85 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    minWidth: 0,
   },
-  titleRow: {
+  metaRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 2,
+    gap: space.xs,
+    marginBottom: space.xs,
+  },
+  category: {
+    fontFamily: fonts.bold,
+    fontSize: 9,
+    letterSpacing: 0.8,
+    color: colors.inkMuted,
+    flexShrink: 1,
+  },
+  statePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: space.sm,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    borderWidth: 1,
+  },
+  statePillUnlocked: {
+    backgroundColor: colors.goldTint,
+    borderColor: colors.gold,
+  },
+  statePillLocked: {
+    backgroundColor: colors.surface,
+    borderColor: colors.divider,
+  },
+  stateStar: {
+    fontSize: 13,
+    lineHeight: 15,
+  },
+  stateStarUnlocked: {
+    color: colors.goldText,
+  },
+  stateStarLocked: {
+    color: colors.inkMuted,
+  },
+  stateText: {
+    fontFamily: fonts.bold,
+    fontSize: 9,
+    letterSpacing: 0.4,
+  },
+  stateTextUnlocked: {
+    color: colors.goldText,
+  },
+  stateTextLocked: {
+    color: colors.inkMuted,
   },
   title: {
     fontFamily: fonts.bold,
-    fontSize: 14,
+    fontSize: 15,
+    lineHeight: 20,
     color: colors.indigo,
-    flex: 1,
-  },
-  unlockedStar: {
-    color: colors.gold,
-    fontSize: 14,
-    marginLeft: space.xs,
+    marginBottom: 2,
   },
   desc: {
     fontFamily: fonts.regular,
     fontSize: 12,
     color: colors.inkMuted,
-    lineHeight: 16,
-    marginBottom: space.xs,
-  },
-  textMuted: {
-    color: colors.stone,
+    lineHeight: 17,
+    marginBottom: space.sm,
   },
   statusRow: {
     flexDirection: "row",
     alignItems: "center",
   },
-  statusPill: {
-    paddingHorizontal: space.sm,
-    paddingVertical: 2,
-    borderRadius: radius.full,
-  },
-  statusPillUnlocked: {
-    backgroundColor: colors.mintTint,
-  },
-  statusPillLocked: {
-    backgroundColor: colors.divider,
-  },
-  statusText: {
+  progressText: {
     fontFamily: fonts.semibold,
-    fontSize: 10,
+    fontSize: 11,
+    lineHeight: 16,
+    color: colors.inkMuted,
   },
-  statusTextUnlocked: {
+  progressTextUnlocked: {
     color: colors.mintInk,
-  },
-  statusTextLocked: {
-    color: colors.stone,
   },
 });

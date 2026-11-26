@@ -1,21 +1,17 @@
-# UI/UX Review
+# UI/UX Runtime Review
 
-## Current review status
+**Evidence date:** 2026-11-19. These are genuine screenshots from the Meno JavaScript bundle running in Expo Go on the API 37 `sdk_gphone64_x86_64` Android Virtual Device (1080 × 2400). They are emulator preview evidence, not screenshots from the standalone ARM64 APK or a physical phone. The Expo development overlay is visible in the captures.
 
-Source inspection confirms Indonesian labels, shared UI components, safe-area use in main routes, form labels/accessibility labels in several controls, loading/error/empty/success feedback, and scrollable screen layouts. This is a source review only.
+| Screenshot | Screen/state | Review notes |
+|---|---|---|
+| `evidence/ui-review/01-home-expo-go-avd.png` | Home and online daily verse | Main action and bottom navigation are visible; page scrolls vertically. Daily verse loaded in this session. |
+| `evidence/ui-review/02-library-expo-go-avd.png` | Book/chapter selection | Chapter grid is scrollable and book progress is shown. |
+| `evidence/ui-review/02-reader-expo-go-avd.png` | Reader | Sample text is explicitly labeled as not Scripture; completion action is available. |
+| `evidence/ui-review/03-progress-expo-go-avd.png` | Progress after a completed chapter | Shows completion count and overall progress after a real interaction. |
+| `evidence/ui-review/04-settings-expo-go-avd.png` | Settings and notification feature | Goal form and reminder controls render; screen is vertically scrollable. |
 
-An API 37 x86_64 AVD screenshot is at `docs/evidence/android/02-x86_64-storage-error.png`, with Logcat and install metadata alongside. It shows the real APK's SQLite bootstrap error because `libexpo-sqlite.so` was packaged only for ARM64. This is failure evidence, not a successful dashboard/UI review. No home, reader, or form success screenshot has been captured. Screen-size comparison, keyboard walkthrough, TalkBack, font scaling, touch-target, and contrast checks remain outstanding.
+The emulator screenshots show no visible clipping at the captured viewport. A keyboard-open form, TalkBack traversal, font scaling, contrast audit, and physical-device layout remain unverified. Notification delivery, sensor behavior, and biometric prompts also require native hardware/runtime validation; the screen capture alone does not verify those actions.
 
-## Outstanding review checklist
+## Reproduction
 
-- [ ] Capture home/dashboard from a running build.
-- [x] Capture a meaningful SQLite startup error from a running APK (not a passing UI state).
-- [ ] Capture an active reader chapter.
-- [ ] Capture form validation with keyboard open and submit reachable.
-- [ ] Capture a meaningful loading/error/success state.
-- [ ] Check compact and larger device dimensions for clipping/overflow.
-- [ ] Check keyboard focus, scrolling, submit visibility, and dismissal.
-- [ ] Check TalkBack labels/order, font scaling, contrast, and touch targets.
-- [ ] Exercise all key actions and confirm immediate feedback.
-
-Do not treat generated/mockup images as runtime screenshots. The current reader's synthetic verse text must remain visibly labelled as a placeholder.
+The project was started with `npx expo start --localhost`; `adb reverse tcp:8081 tcp:8081` connected the emulator to Metro, then Expo Go opened `exp://127.0.0.1:8081`. This test path verifies the current JS application in Expo Go only. The AVD is x86_64, while the release APK contains ARM64 native libraries.

@@ -205,14 +205,16 @@ npx tsc --noEmit
 npm run lint
 ```
 
-**Verifikasi lokal (2026-11-19)**:
-- ✅ **Unit Tests**: 15 test suites / 252 tests lulus (`npm test -- --runInBand --silent`).
-- ✅ **TypeScript**: `npx tsc --noEmit` lulus.
-- ✅ **Linter**: `npm run lint` lulus setelah perbaikan aturan React hooks.
-- ✅ **Android bundle**: `npx expo export --platform android` lulus (bundle Hermes 3.3 MB). Ini bukan build APK native.
-- ⚠️ **APK/perangkat**: APK yang ada adalah artefak Gradle lokal 15 Nov 2026; build ulang dan instalasi pada perangkat belum diverifikasi di lingkungan audit ini.
+**Verifikasi lokal (2026-11-24)**:
+- ✅ **Unit Tests**: 22 test suites / 327 tests lulus (`npm test -- --runInBand`).
+- ✅ **TypeScript**: `npx tsc --noEmit` lulus tanpa error.
+- ✅ **Linter**: `EXPO_NO_TELEMETRY=1 npm run lint` lulus tanpa warning/error.
+- ✅ **Real Bible Database**: Database lokal ILT3 SQLite (31.167 ayat, 1.189 pasal, 66 kitab) terintegrasi dengan pemetaan ID kanonikal eksplisit dan status loading/empty/error.
+- ✅ **App Lock**: Keamanan opt-in dengan autentikasi biometrik/kunci layar perangkat, 10-minute background grace period, auto-prompt terproteksi dari re-render, dan safe recovery flow.
+- ✅ **Pasal Acak**: Kartu & tombol di Beranda tersinkronisasi dengan sensor accelerometer (debounce 1,5 detik).
+- ✅ **Indonesian UI & Branding**: Terminologi baku "Kitab Suci" pada seluruh antarmuka pengguna, pembersihan anotasi tugas (P4/P7), launcher icon & splash screen bertema indigo Meno (`#272A55`).
 
-Rincian inventaris dan batas verifikasi tercatat di [`docs/TESTING.md`](docs/TESTING.md).
+Rincian inventaris dan batas verifikasi tercatat di [`docs/TESTING.md`](docs/TESTING.md) dan [`docs/DEVELOPMENT_PROGRESS.md`](docs/DEVELOPMENT_PROGRESS.md).
 
 ---
 
@@ -220,10 +222,10 @@ Rincian inventaris dan batas verifikasi tercatat di [`docs/TESTING.md`](docs/TES
 
 Per [`docs/PRD.md`](docs/PRD.md), MVP mencakup fitur utama yang telah diimplementasikan penuh:
 
-1. **Bible Reader** — navigasi kitab (PL & PB), grid nomor pasal, tampilan teks ayat, navigasi lintas kitab (*cross-book boundaries*), pemulihan posisi bacaan terakhir (*last-read restore*).
+1. **Bible Reader** — navigasi kitab (PL & PB), grid nomor pasal, tampilan teks ayat nyata dari database ILT3 SQLite lokal, navigasi lintas kitab (*cross-book boundaries*), pemulihan posisi bacaan terakhir (*last-read restore*), dan atribusi terjemahan resmi.
 2. **Persistent Reading Progress** — pencatatan progres per pasal idempotent berbasis SQLite (bertahan saat restart), pelacakan posisi scroll, kalkulasi persentase dan hari membaca (*reading days*), layar Kemajuan.
-3. **Daily Verse Integration** — integrasi REST API online untuk ayat inspirasi harian dengan penanganan loading, error, retry, dan validasi model data.
-4. **Hardware & Advanced OS Features** — notifikasi harian lokal (`expo-notifications`), sensor goyang ganti pasal acak (`expo-sensors`), dan proteksi privasi biometrik/PIN (`expo-local-authentication`).
+3. **Daily Verse Integration** — integrasi REST API online untuk ayat inspirasi harian dengan normalisasi ID kitab ke 66 kanonikal Meno, label terjemahan akurat, penanganan loading, error, retry, dan validasi model data.
+4. **Hardware & Advanced OS Features** — notifikasi harian lokal (`expo-notifications`), sensor goyang ganti pasal acak (`expo-sensors`) terintegrasi dengan tombol Beranda, dan proteksi privasi biometrik/PIN (`expo-local-authentication`).
 5. **Gentle Gamification & Usability** — Pohon Pertumbuhan Kebiasaan (*The Habit Tree* 6 tahap interaktif), sistem Lencana Prestasi Koleksi (*Collectible Badges*), Maskot Meno Interaktif (*Tap-to-Talk Companion*), serta pengatur ukuran huruf pembaca dinamis (`A±`).
 
 ### Explicitly out of scope (for now)
@@ -236,11 +238,7 @@ Per [`docs/PRD.md`](docs/PRD.md), MVP mencakup fitur utama yang telah diimplemen
 
 ## Bible content and licensing caveat
 
-No Bible text is bundled in this repository. The intended embedded source is
-the **ILT3** translation, and its **redistribution/embedding permission is
-unresolved**. Permission must not be assumed granted, and no Bible text will be
-added until licensing is confirmed and recorded (see
-[`docs/PRD.md`](docs/PRD.md) §5.4).
+Proyek Meno mengintegrasikan database **Indonesian Literal Translation 3 (ILT3)** SQLite lokal untuk menampilkan seluruh 66 kitab dan 1.189 pasal Kitab Suci. Sesuai hak cipta Yayasan Lentera Bangsa, database ILT3 ini **hanya disimpan secara lokal** untuk pengujian aplikasi dan pembelajaran, serta **tidak didistribusikan secara publik tanpa izin tertulis**. Di dalam aplikasi, atribusi hak cipta ditampilkan secara jujur pada layar pembaca pasal.
 
 ---
 

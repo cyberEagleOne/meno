@@ -24,7 +24,7 @@ import {
   testamentOf,
   type Testament,
 } from "../../data/canon";
-import { placeholderBible } from "../../data/placeholderBible";
+import { useBibleData } from "../../data/bibleContext";
 import { useProgress } from "../../data/progressContext";
 import { doneInBook } from "../../domain/progress";
 import type { Book } from "../../domain/types";
@@ -83,20 +83,21 @@ function BookRow({ book, doneCount, isLast, onPress }: BookRowProps) {
 
 export default function LibraryScreen() {
   const router = useRouter();
+  const bible = useBibleData();
   const { completed, lastRead } = useProgress();
   const [query, setQuery] = useState("");
 
   const sections = useMemo(() => {
     const q = query.trim().toLowerCase();
     const filter = (t: Testament) =>
-      booksByTestament(placeholderBible, t).filter((b) => b.name.toLowerCase().includes(q));
+      booksByTestament(bible, t).filter((b) => b.name.toLowerCase().includes(q));
     const pl = filter("PL");
     const pb = filter("PB");
     const list: { title: Testament; data: Book[] }[] = [];
     if (pl.length > 0) list.push({ title: "PL", data: pl });
     if (pb.length > 0) list.push({ title: "PB", data: pb });
     return list;
-  }, [query]);
+  }, [query, bible]);
 
   const hasResults = sections.length > 0;
   const searching = query.trim().length > 0;

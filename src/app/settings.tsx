@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { DateTimePicker } from "@expo/ui/community/datetime-picker";
 import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
   StyleSheet,
+  Switch,
   Text,
   View,
-  ScrollView,
-  Pressable,
-  Alert,
-  Switch,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -16,264 +18,273 @@ import { Card } from "../components/ui/Card";
 import { Chip } from "../components/ui/Chip";
 import { IconChevron, IconSpark } from "../components/ui/Icons";
 import { ReadingGoalForm } from "../components/ui/ReadingGoalForm";
-import {
-  scheduleDailyReminder,
-  triggerTestNotification,
-} from "../services/notificationService";
-import {
-  subscribeToShakeGesture,
-  getRandomChapter,
-  RandomVerseDestination,
-} from "../services/sensorService";
-import {
-  checkBiometricSupport,
-  authenticateUser,
-  BiometricCheckResult,
-} from "../services/authService";
+import { useAppLock } from "../data/appLockContext";
+import { scheduleDailyReminder } from "../services/notificationService";
+import { getAppSetting, setAppSetting } from "../data/db";
+
+type ReminderFeedback = {
+  tone: "success" | "error";
+  message: string;
+};
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { enabled, busy, capability, authError, updateEnabled } = useAppLock();
 
-  // ==========================================
-  // P7: Advanced Feature 1 - Local Notifications
-  // ==========================================
-  const [notificationMsg, setNotificationMsg] = useState<string>("");
+  const [reminderFeedback, setReminderFeedback] = useState<ReminderFeedback | null>(null);
   const [isScheduling, setIsScheduling] = useState<boolean>(false);
+  const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
+  const [reminderTime, setReminderTime] = useState<Date>(() => {
+    const defaultTime = new Date();
+    defaultTime.setHours(7, 0, 0, 0);
+    return defaultTime;
+  });
+  const [lockMsg, setLockMsg] = useState<string>("");
 
-  const handleScheduleReminder = async () => {
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadReminderTime = async () => {
+      try {
+        const savedTime = await getAppSetting("daily_reminder_time");
+        const match = savedTime?.match(/^(\d{2}):(\d{2})$/);
+        if (!match) return;
+
+        const hour = Number(match[1]);
+        const minute = Number(match[2]);
+        if (hour > 23 || minute > 59) return;
+
+        const time = new Date();
+        time.setHours(hour, minute, 0, 0);
+        if (isMounted) setReminderTime(time);
+      } catch {
+        if (isMounted) {
+          setReminderFeedback({
+            tone: "error",
+            message: "Waktu tersimpan tidak dapat dibaca. Waktu awal 07:00 digunakan.",
+          });
+        }
+      }
+    };
+
+    void loadReminderTime();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleScheduleReminder = async (time: Date) => {
     setIsScheduling(true);
-    setNotificationMsg("");
+    setReminderFeedback(null);
+    const hour = time.getHours();
+    const minute = time.getMinutes();
+    const formattedTime = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+
     try {
-      await scheduleDailyReminder(7, 0);
-      setNotificationMsg("Pengingat harian dijadwalkan setiap pukul 07:00 WIB.");
+      await setAppSetting("daily_reminder_time", formattedTime);
+      setReminderTime(time);
+      await scheduleDailyReminder(hour, minute);
+      setReminderFeedback({
+        tone: "success",
+        message: `Pengingat harian dijadwalkan setiap hari pukul ${formattedTime}.`,
+      });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Gagal mengatur notifikasi.";
-      setNotificationMsg(`Error: ${msg}`);
+      const permissionDenied = msg.includes("Izin notifikasi tidak diberikan");
+      setReminderFeedback({
+        tone: "error",
+        message: permissionDenied
+          ? "Izin notifikasi belum diberikan. Aktifkan notifikasi Meno di Pengaturan Android, lalu pilih waktu lagi."
+          : `Pengingat tidak dapat dijadwalkan. ${msg}`,
+      });
     } finally {
       setIsScheduling(false);
     }
   };
 
-  const handleTestNotification = async () => {
-    try {
-      await triggerTestNotification();
-      setNotificationMsg("Notifikasi uji coba berhasil dikirim ke perangkat!");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Izin notifikasi ditolak.";
-      setNotificationMsg(`Error: ${msg}`);
-    }
-  };
-
-  // ==========================================
-  // P7: Advanced Feature 2 - Shake Sensor
-  // ==========================================
-  const [shakeEnabled, setShakeEnabled] = useState<boolean>(false);
-  const [lastShakenVerse, setLastShakenVerse] = useState<RandomVerseDestination | null>(null);
-
-  useEffect(() => {
-    if (!shakeEnabled) return;
-
-    const unsubscribe = subscribeToShakeGesture((destination) => {
-      setLastShakenVerse(destination);
-      Alert.alert(
-        "Kocokan Sensor Terdeteksi! 📱",
-        `Kamu mendapatkan ayat acak dari ${destination.bookName} Pasal ${destination.chapter}. Ingin membacanya sekarang?`,
-        [
-          { text: "Nanti saja", style: "cancel" },
-          {
-            text: "Buka Pasal",
-            onPress: () => {
-              router.push({
-                pathname: "/reader/[book]/[chapter]",
-                params: { book: destination.bookId, chapter: String(destination.chapter) },
-              });
-            },
-          },
-        ]
-      );
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [shakeEnabled, router]);
-
-  const handleSimulateShake = () => {
-    const destination = getRandomChapter();
-    setLastShakenVerse(destination);
-    Alert.alert(
-      "Simulasi Kocokan Sensor! 📱",
-      `Kitab acak terpilih: ${destination.bookName} Pasal ${destination.chapter}.`,
-      [
-        { text: "Batal", style: "cancel" },
-        {
-          text: "Buka Pasal",
-          onPress: () => {
-            router.push({
-              pathname: "/reader/[book]/[chapter]",
-              params: { book: destination.bookId, chapter: String(destination.chapter) },
-            });
-          },
-        },
-      ]
-    );
-  };
-
-  // ==========================================
-  // P7: Advanced Feature 3 - Biometric Auth
-  // ==========================================
-  const [biometricInfo, setBiometricInfo] = useState<BiometricCheckResult | null>(null);
-  const [authStatus, setAuthStatus] = useState<string>("");
-
-  useEffect(() => {
-    checkBiometricSupport().then(setBiometricInfo).catch(() => {});
-  }, []);
-
-  const handleAuthenticate = async () => {
-    setAuthStatus("Menunggu konfirmasi sidik jari / Face ID / PIN...");
-    const result = await authenticateUser("Verifikasi identitasmu untuk membuka fitur privat Meno");
+  const handleToggleLock = async (next: boolean) => {
+    setLockMsg("");
+    const result = await updateEnabled(next);
     if (result.success) {
-      setAuthStatus("Autentikasi Berhasil! Identitas terverifikasi.");
-    } else if (result.cancelled) {
-      setAuthStatus("Autentikasi Dibatalkan oleh pengguna.");
-    } else {
-      setAuthStatus(`Autentikasi Gagal: ${result.error}`);
+      setLockMsg(
+        next
+          ? "Kunci aplikasi aktif. Kamu akan diminta verifikasi saat membuka Meno."
+          : "Kunci aplikasi nonaktif.",
+      );
+    } else if (!result.cancelled) {
+      setLockMsg(`Gagal: ${result.error ?? "autentikasi tidak berhasil"}`);
     }
   };
+
+  const lockUnavailable = capability !== null && !capability.canAuthenticate;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Header Navigation */}
-        <View style={styles.navHeader}>
-          <Pressable
-            onPress={() => router.back()}
-            style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
-            accessibilityRole="button"
-            accessibilityLabel="Kembali ke Beranda"
-          >
-            <View style={{ transform: [{ rotate: "180deg" }] }}>
-              <IconChevron size={22} color={colors.indigo} />
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.navHeader}>
+            <Pressable
+              onPress={() => router.back()}
+              style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+              accessibilityRole="button"
+              accessibilityLabel="Kembali ke Beranda"
+            >
+              <View style={{ transform: [{ rotate: "180deg" }] }}>
+                <IconChevron size={22} color={colors.indigo} />
+              </View>
+              <Text style={styles.backText}>Kembali</Text>
+            </Pressable>
+            <Text style={styles.pageTitle}>Pengaturan</Text>
+          </View>
+
+          <ReadingGoalForm />
+
+          <Card tone="surface" style={styles.sectionCard}>
+            <View style={styles.cardHeaderRow}>
+              <Chip
+                label="Pengingat Harian"
+                tone="lavender"
+                icon={<IconSpark size={12} color={colors.lavenderInk} />}
+              />
             </View>
-            <Text style={styles.backText}>Kembali</Text>
-          </Pressable>
-          <Text style={styles.pageTitle}>Pengaturan & Fitur</Text>
-        </View>
-
-        {/* ======================================================== */}
-        {/* P4: SEPARATED READING GOAL FORM COMPONENT               */}
-        {/* ======================================================== */}
-        <ReadingGoalForm />
-
-        {/* ======================================================== */}
-        {/* P7: ADVANCED FEATURE 1 - NOTIFIKASI LOKAL               */}
-        {/* ======================================================== */}
-        <Card tone="surface" style={styles.sectionCard}>
-          <View style={styles.cardHeaderRow}>
-            <Chip label="P7: Advanced 1 (Notifikasi)" tone="lavender" icon={<IconSpark size={12} color={colors.lavenderInk} />} />
-          </View>
-          <Text style={styles.sectionTitle}>Pengingat Bacaan Harian</Text>
-          <Text style={styles.sectionDesc}>
-            Manfaat: Membangun kebiasaan membaca Alkitab secara konsisten melalui notifikasi pengingat lokal di jam tenang pagi hari.
-          </Text>
-
-          <View style={styles.btnRow}>
-            <Pressable
-              style={({ pressed }) => [styles.actionButton, isScheduling && styles.submitButtonDisabled, pressed && styles.pressed]}
-              onPress={handleScheduleReminder}
-              disabled={isScheduling}
-            >
-              <Text style={styles.actionButtonText}>Jadwalkan Jam 07:00</Text>
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
-              onPress={handleTestNotification}
-            >
-              <Text style={styles.secondaryButtonText}>Uji Notifikasi Sekarang</Text>
-            </Pressable>
-          </View>
-
-          {notificationMsg ? <Text style={styles.serviceFeedbackText}>{notificationMsg}</Text> : null}
-        </Card>
-
-        {/* ======================================================== */}
-        {/* P7: ADVANCED FEATURE 2 - SENSOR GERAK (ACCELEROMETER)    */}
-        {/* ======================================================== */}
-        <Card tone="surface" style={styles.sectionCard}>
-          <View style={styles.cardHeaderRow}>
-            <Chip label="P7: Advanced 2 (Sensor)" tone="mint" icon={<IconSpark size={12} color={colors.mintInk} />} />
-          </View>
-          <Text style={styles.sectionTitle}>Kocok HP untuk Ayat Acak (Shake)</Text>
-          <Text style={styles.sectionDesc}>
-            Manfaat: Memberikan pengalaman interaktif menjelajah Alkitab secara spontan menggunakan sensor gerak Accelerometer saat perangkat diguncang.
-          </Text>
-
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Aktifkan Sensor Gerak:</Text>
-            <Switch
-              value={shakeEnabled}
-              onValueChange={setShakeEnabled}
-              trackColor={{ false: colors.divider, true: colors.mint }}
-              thumbColor={shakeEnabled ? colors.mintInk : colors.stone}
-            />
-          </View>
-
-          <Pressable
-            style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
-            onPress={handleSimulateShake}
-          >
-            <Text style={styles.secondaryButtonText}>Simulasi Gerakan Goyang (Emulator)</Text>
-          </Pressable>
-
-          {lastShakenVerse ? (
-            <Text style={styles.serviceFeedbackText}>
-              Terakhir digoyang: {lastShakenVerse.bookName} Pasal {lastShakenVerse.chapter}
+            <Text style={styles.sectionTitle}>Pengingat Bacaan</Text>
+            <Text style={styles.sectionDesc}>
+              Pilih waktu untuk satu pengingat lokal yang berulang setiap hari. Meno akan meminta izin notifikasi saat kamu menyimpan jadwal.
             </Text>
-          ) : null}
-        </Card>
-
-        {/* ======================================================== */}
-        {/* P7: ADVANCED FEATURE 3 - AUTENTIKASI BIOMETRIK / PIN    */}
-        {/* ======================================================== */}
-        <Card tone="surface" style={styles.sectionCard}>
-          <View style={styles.cardHeaderRow}>
-            <Chip label="P7: Advanced 3 (Autentikasi)" tone="gold" icon={<IconSpark size={12} color={colors.goldText} />} />
-          </View>
-          <Text style={styles.sectionTitle}>Kunci Privasi Aplikasi (Biometrik)</Text>
-          <Text style={styles.sectionDesc}>
-            Manfaat: Melindungi catatan refleksi pribadi dan riwayat bacaan pengguna menggunakan sensor sidik jari (Fingerprint), Face ID, atau PIN perangkat.
-          </Text>
-
-          {biometricInfo ? (
-            <View style={styles.biometricInfoBox}>
-              <Text style={styles.biometricInfoText}>
-                Sensor Tersedia: {biometricInfo.hasHardware ? "Ya (Aktif)" : "Tidak"}
-              </Text>
-              <Text style={styles.biometricInfoText}>
-                Tipe Biometrik: {biometricInfo.supportedTypes.length > 0 ? biometricInfo.supportedTypes.join(", ") : "PIN Perangkat"}
+            <View style={styles.timeSelectionCard}>
+              <View style={styles.timeSelectionCopy}>
+                <Text style={styles.timeSelectionLabel}>WAKTU HARIAN</Text>
+                <Text style={styles.timeSelectionHint}>Berulang setiap hari</Text>
+              </View>
+              <Text style={styles.reminderTimeText} accessibilityLabel={`Waktu pilihan ${formatReminderTime(reminderTime)}`}>
+                {formatReminderTime(reminderTime)}
               </Text>
             </View>
-          ) : null}
+            <Pressable
+              style={({ pressed }) => [
+                styles.actionButton,
+                isScheduling && styles.disabled,
+                pressed && !isScheduling && styles.pressed,
+              ]}
+              onPress={() => setShowTimePicker(true)}
+              disabled={isScheduling}
+              accessibilityRole="button"
+              accessibilityLabel={`Ubah waktu pengingat, saat ini ${formatReminderTime(reminderTime)}`}
+            >
+              <Text style={styles.actionButtonText}>
+                {isScheduling ? "Menjadwalkan..." : "Pilih Waktu Pengingat"}
+              </Text>
+            </Pressable>
+            {showTimePicker ? (
+              <DateTimePicker
+                value={reminderTime}
+                mode="time"
+                is24Hour
+                accentColor={colors.indigo}
+                positiveButton={{ label: "Pilih" }}
+                negativeButton={{ label: "Batal" }}
+                onValueChange={(_event, selectedTime) => {
+                  setShowTimePicker(false);
+                  void handleScheduleReminder(selectedTime);
+                }}
+                onDismiss={() => setShowTimePicker(false)}
+              />
+            ) : null}
+            {reminderFeedback ? (
+              <View
+                style={[
+                  styles.reminderFeedback,
+                  reminderFeedback.tone === "error"
+                    ? styles.reminderFeedbackError
+                    : styles.reminderFeedbackSuccess,
+                ]}
+                accessibilityLiveRegion="polite"
+              >
+                <Text
+                  style={[
+                    styles.reminderFeedbackTitle,
+                    reminderFeedback.tone === "error"
+                      ? styles.reminderFeedbackTitleError
+                      : styles.reminderFeedbackTitleSuccess,
+                  ]}
+                >
+                  {reminderFeedback.tone === "error" ? "Jadwal belum aktif" : "Pengingat aktif"}
+                </Text>
+                <Text style={styles.reminderFeedbackMessage}>{reminderFeedback.message}</Text>
+              </View>
+            ) : null}
+          </Card>
 
-          <Pressable
-            style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}
-            onPress={handleAuthenticate}
-          >
-            <Text style={styles.actionButtonText}>Uji Autentikasi Biometrik / PIN</Text>
-          </Pressable>
+          <Card tone="surface" style={styles.sectionCard}>
+            <View style={styles.cardHeaderRow}>
+              <Chip
+                label="Privasi"
+                tone="gold"
+                icon={<IconSpark size={12} color={colors.goldText} />}
+              />
+            </View>
+            <Text style={styles.sectionTitle}>Kunci Aplikasi</Text>
+            <Text style={styles.sectionDesc}>
+              Minta biometrik atau PIN/pola perangkat saat Meno dibuka. Setelah aplikasi
+              ditinggalkan lebih dari 10 menit, verifikasi diminta lagi. Meno tidak
+              menyimpan PIN terpisah.
+            </Text>
 
-          {authStatus ? <Text style={styles.serviceFeedbackText}>{authStatus}</Text> : null}
-        </Card>
-      </ScrollView>
+            <View style={styles.switchRow}>
+              <View style={styles.switchText}>
+                <Text style={styles.switchLabel}>Aktifkan kunci aplikasi</Text>
+                <Text style={styles.switchHint}>
+                  {capability === null
+                    ? "Memeriksa keamanan perangkat..."
+                    : capability.canAuthenticate
+                      ? "Biometrik atau kunci layar tersedia."
+                      : "Perangkat belum memiliki biometrik atau kunci layar."}
+                </Text>
+              </View>
+              <Switch
+                value={enabled}
+                onValueChange={(next) => void handleToggleLock(next)}
+                disabled={busy || lockUnavailable}
+                trackColor={{ false: colors.divider, true: colors.mint }}
+                thumbColor={enabled ? colors.mintInk : colors.stone}
+                accessibilityLabel="Aktifkan kunci aplikasi"
+              />
+            </View>
+
+            {lockMsg ? (
+              <Text style={styles.serviceFeedbackText} accessibilityLiveRegion="polite">
+                {lockMsg}
+              </Text>
+            ) : null}
+            {authError ? (
+              <Text style={styles.errorText} accessibilityRole="alert">
+                {authError}
+              </Text>
+            ) : null}
+          </Card>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
+}
+
+function formatReminderTime(time: Date): string {
+  return `${String(time.getHours()).padStart(2, "0")}:${String(time.getMinutes()).padStart(2, "0")}`;
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.ivory,
+  },
+  flex: {
+    flex: 1,
   },
   content: {
     padding: 20,
@@ -328,133 +339,39 @@ const styles = StyleSheet.create({
     color: colors.inkMuted,
     marginBottom: 14,
   },
-  inlineLoading: {
+  timeSelectionCard: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: 8,
-    paddingVertical: 10,
+    gap: 12,
+    backgroundColor: colors.ivory,
+    borderWidth: 1,
+    borderColor: colors.divider,
+    borderRadius: radius.md,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 12,
   },
-  helperText: {
+  timeSelectionCopy: {
+    flex: 1,
+  },
+  timeSelectionLabel: {
+    fontFamily: fonts.bold,
+    fontSize: 10,
+    letterSpacing: 0.8,
+    color: colors.inkMuted,
+  },
+  timeSelectionHint: {
     fontFamily: fonts.regular,
     fontSize: 12,
     color: colors.inkMuted,
+    marginTop: 3,
   },
-  errorBox: {
-    backgroundColor: colors.coralTint,
-    padding: 12,
-    borderRadius: radius.md,
-    marginBottom: 12,
-  },
-  errorTitle: {
-    fontFamily: fonts.semibold,
-    fontSize: 13,
-    color: colors.error,
-    marginBottom: 6,
-  },
-  retryBtn: {
-    backgroundColor: colors.error,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: radius.md,
-    alignSelf: "flex-start",
-  },
-  retryBtnText: {
-    fontFamily: fonts.semibold,
-    fontSize: 12,
-    color: "#FFFFFF",
-  },
-  emptyBox: {
-    backgroundColor: colors.goldTint,
-    padding: 10,
-    borderRadius: radius.md,
-    marginBottom: 12,
-  },
-  emptyText: {
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    color: colors.goldText,
-  },
-  savedGoalBox: {
-    backgroundColor: colors.mintTint,
-    padding: 12,
-    borderRadius: radius.md,
-    marginBottom: 14,
-  },
-  savedGoalTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 13,
-    color: colors.mintInk,
-    marginBottom: 4,
-  },
-  savedGoalBody: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: colors.mintInk,
-  },
-  inputGroup: {
-    marginBottom: 12,
-  },
-  label: {
-    fontFamily: fonts.semibold,
-    fontSize: 13,
+  reminderTimeText: {
+    fontFamily: fonts.extrabold,
+    fontSize: 26,
+    lineHeight: 32,
     color: colors.indigo,
-    marginBottom: 6,
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.divider,
-    borderRadius: radius.md,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: colors.indigo,
-  },
-  inputError: {
-    borderColor: colors.error,
-  },
-  textArea: {
-    height: 70,
-    textAlignVertical: "top",
-  },
-  fieldErrorText: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
-    color: colors.error,
-    marginTop: 4,
-  },
-  feedbackSuccessText: {
-    fontFamily: fonts.semibold,
-    fontSize: 13,
-    color: colors.mintInk,
-    marginVertical: 8,
-  },
-  submitButton: {
-    backgroundColor: colors.indigo,
-    paddingVertical: 12,
-    borderRadius: radius.md,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  submitButtonText: {
-    fontFamily: fonts.bold,
-    fontSize: 14,
-    color: "#FFFFFF",
-  },
-  btnRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginTop: 6,
   },
   actionButton: {
     backgroundColor: colors.indigo,
@@ -468,42 +385,30 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#FFFFFF",
   },
-  secondaryButton: {
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.divider,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: radius.md,
-    alignItems: "center",
-  },
-  secondaryButtonText: {
-    fontFamily: fonts.semibold,
-    fontSize: 13,
-    color: colors.indigo,
+  disabled: {
+    opacity: 0.6,
   },
   switchRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 8,
-    marginBottom: 8,
+    gap: 12,
+  },
+  switchText: {
+    flex: 1,
   },
   switchLabel: {
     fontFamily: fonts.semibold,
     fontSize: 13,
     color: colors.indigo,
   },
-  biometricInfoBox: {
-    backgroundColor: colors.goldTint,
-    padding: 10,
-    borderRadius: radius.md,
-    marginBottom: 12,
-  },
-  biometricInfoText: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: colors.goldText,
+  switchHint: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    lineHeight: 16,
+    color: colors.inkMuted,
+    marginTop: 2,
   },
   serviceFeedbackText: {
     fontFamily: fonts.medium,
@@ -511,6 +416,47 @@ const styles = StyleSheet.create({
     color: colors.indigo,
     marginTop: 10,
     backgroundColor: colors.ivory,
+    padding: 8,
+    borderRadius: radius.md,
+  },
+  reminderFeedback: {
+    padding: 12,
+    borderRadius: radius.md,
+    marginTop: 12,
+    borderWidth: 1,
+  },
+  reminderFeedbackSuccess: {
+    backgroundColor: colors.mintTint,
+    borderColor: colors.mint,
+  },
+  reminderFeedbackError: {
+    backgroundColor: colors.coralTint,
+    borderColor: colors.coral,
+  },
+  reminderFeedbackTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 12,
+    marginBottom: 3,
+  },
+  reminderFeedbackTitleSuccess: {
+    color: colors.mintInk,
+  },
+  reminderFeedbackTitleError: {
+    color: colors.coralInk,
+  },
+  reminderFeedbackMessage: {
+    fontFamily: fonts.regular,
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.inkMuted,
+  },
+  errorText: {
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.error,
+    marginTop: 10,
+    backgroundColor: colors.coralTint,
     padding: 8,
     borderRadius: radius.md,
   },

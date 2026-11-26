@@ -22,7 +22,7 @@ import {
   testamentOf,
   type Testament,
 } from "../../data/canon";
-import { placeholderBible } from "../../data/placeholderBible";
+import { useBibleData } from "../../data/bibleContext";
 import { useProgress } from "../../data/progressContext";
 import {
   MILESTONES,
@@ -84,6 +84,7 @@ function MilestonePath({ total }: { total: number }) {
 
 export default function ProgressScreen() {
   const router = useRouter();
+  const bible = useBibleData();
   const { completed, readingDays } = useProgress();
   const total = completedCount(completed);
   const days = readingDays.length;
@@ -93,13 +94,13 @@ export default function ProgressScreen() {
   const badges = calculateBadges(completed, readingDays);
 
   const byTestament = (t: Testament) => {
-    const done = booksByTestament(placeholderBible, t).reduce(
+    const done = booksByTestament(bible, t).reduce(
       (n, b) => n + doneInBook(completed, b.id, b.chapters.length),
       0,
     );
     return { done, all: TESTAMENT_TOTALS[t].chapters };
   };
-  const started = placeholderBible.books
+  const started = bible.books
     .map((b) => ({ b, n: doneInBook(completed, b.id, b.chapters.length) }))
     .filter((x) => x.n > 0);
   const finishedBooks = started.filter((x) => x.n === x.b.chapters.length).length;
@@ -144,7 +145,7 @@ export default function ProgressScreen() {
                 stroke={11}
                 trackColor="rgba(247,241,229,0.2)"
                 barColor={colors.gold}
-                accessibilityLabel="Pasal selesai dari seluruh Alkitab"
+                accessibilityLabel="Pasal selesai dari seluruh Kitab Suci"
               >
                 <Text style={styles.totalPct}>{pct(total, TOTAL_CHAPTERS)}%</Text>
               </ProgressRing>
@@ -158,7 +159,7 @@ export default function ProgressScreen() {
             <View style={styles.cheer}>
               <Mascot pose={total >= 10 ? "proud" : "happy"} size={72} />
               <Text style={styles.cheerText}>
-                {pct(total, TOTAL_CHAPTERS)}% dari seluruh Alkitab · {finishedBooks} kitab tuntas.{" "}
+                {pct(total, TOTAL_CHAPTERS)}% dari seluruh Kitab Suci · {finishedBooks} kitab tuntas.{" "}
                 {next ? "Terus lanjut, pelan-pelan saja." : "Luar biasa."}
               </Text>
             </View>

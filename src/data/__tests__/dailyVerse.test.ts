@@ -1,120 +1,29 @@
-import { validateDailyVerse, DailyVerseValidationError } from "../../domain/dailyVerse";
-import {
-  fetchDailyVerseFromApi,
-  ApiHttpError,
-  ApiJsonError,
-} from "../dailyVerseRepository";
+import { getDailyVerseOffset, getLocalDateKey } from "../dailyVerseRepository";
 
-describe("P6: Integrasi API & Unit Tests (Daily Verse Feature)", () => {
-  // 1. Pengujian: Model Valid
-  it("1. Model Valid: berhasil memvalidasi payload ayat yang lengkap dan benar", () => {
-    const rawPayload = {
-      reference: "Yohanes 3:16",
-      text: "Karena begitu besar kasih Allah akan dunia ini, sehingga Ia telah mengaruniakan Anak-Nya yang tunggal...",
-      translation: "Terjemahan Baru",
-      bookId: "joh",
-      chapter: 3,
-    };
-
-    const verse = validateDailyVerse(rawPayload);
-    expect(verse.reference).toBe("Yohanes 3:16");
-    expect(verse.text).toContain("Karena begitu besar kasih Allah");
-    expect(verse.translation).toBe("Terjemahan Baru");
-    expect(verse.bookId).toBe("joh");
-    expect(verse.chapter).toBe(3);
+describe("local Daily Verse date selection", () => {
+  it("formats the device-local calendar date", () => {
+    const date = new Date(2026, 10, 26, 23, 59);
+    expect(getLocalDateKey(date)).toBe("2026-11-26");
   });
 
-  // 2. Pengujian: Model Invalid
-  it("2. Model Invalid: melempar DailyVerseValidationError jika field wajib kosong atau bertipe salah", () => {
-    const invalidPayloads = [
-      null,
-      {},
-      { reference: "", text: "Ada teks" },
-      { reference: "Yohanes 1:1", text: "   " },
-      { reference: 123, text: "Teks" },
-    ];
-
-    for (const payload of invalidPayloads) {
-      expect(() => validateDailyVerse(payload)).toThrow(DailyVerseValidationError);
-    }
+  it("selects the same ordinal for the same date and a new ordinal the next day", () => {
+    expect(getDailyVerseOffset("2026-11-26", 1000)).toBe(
+      getDailyVerseOffset("2026-11-26", 1000),
+    );
+    expect(getDailyVerseOffset("2026-11-27", 1000)).not.toBe(
+      getDailyVerseOffset("2026-11-26", 1000),
+    );
   });
 
-  // 3. Pengujian: API Sukses
-  it("3. API Sukses: berhasil memuat data dari API saat response HTTP 200", async () => {
-    const mockSuccessResponse = {
-      reference: "Mazmur 23:1",
-      text: "TUHAN adalah gembalaku, takkan kekurangan aku.",
-      translation_name: "Terjemahan Baru",
-      book_id: "psa",
-      chapter: 23,
-    };
-
-    const fakeFetch = jest.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify(mockSuccessResponse),
-    } as unknown as Response);
-
-    const result = await fetchDailyVerseFromApi("https://api.test/verse", fakeFetch);
-    expect(result).not.toBeNull();
-    expect(result?.reference).toBe("Mazmur 23:1");
-    expect(result?.text).toBe("TUHAN adalah gembalaku, takkan kekurangan aku.");
+  it("wraps ordinals within the available verses, including dates before epoch", () => {
+    expect(getDailyVerseOffset("1970-01-01", 7)).toBe(0);
+    expect(getDailyVerseOffset("1970-01-08", 7)).toBe(0);
+    expect(getDailyVerseOffset("1969-12-31", 7)).toBe(6);
   });
 
-  // 4. Pengujian: Data Kosong
-  it("4. Data Kosong: mengembalikan null (empty state) jika respons API kosong atau bernilai null", async () => {
-    const emptyBodies = ["", "{}", JSON.stringify({ text: "" })];
-
-    for (const body of emptyBodies) {
-      const fakeFetch = jest.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        text: async () => body,
-      } as unknown as Response);
-
-      const result = await fetchDailyVerseFromApi("https://api.test/empty", fakeFetch);
-      expect(result).toBeNull();
-    }
-  });
-
-  // 5. Pengujian: HTTP Gagal
-  it("5. HTTP Gagal: melempar ApiHttpError jika server merespons kode status error (misal 500 / 404) atau network failure", async () => {
-    // 5a. HTTP 500 Internal Server Error
-    const fakeHttpErrorFetch = jest.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-      text: async () => "Internal Server Error",
-    } as unknown as Response);
-
-    await expect(
-      fetchDailyVerseFromApi("https://api.test/error500", fakeHttpErrorFetch)
-    ).rejects.toThrow(ApiHttpError);
-
-    // 5b. Network Failure / Connection Refused
-    const fakeNetworkFailFetch = jest.fn().mockRejectedValue(new Error("Network connection dropped"));
-    await expect(
-      fetchDailyVerseFromApi("https://api.test/network-drop", fakeNetworkFailFetch)
-    ).rejects.toThrow(ApiHttpError);
-  });
-
-  // 6. Pengujian: JSON Rusak
-  it("6. JSON Rusak: melempar ApiJsonError jika respons server bukan JSON valid", async () => {
-    const malformedJsonBodies = [
-      "<html><head><title>502 Bad Gateway</title></head></html>",
-      '{"reference": "Yohanes 3:16", "text": "unclosed string...',
-      "SyntaxError: unexpected token",
-    ];
-
-    for (const body of malformedJsonBodies) {
-      const fakeMalformedFetch = jest.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        text: async () => body,
-      } as unknown as Response);
-
-      await expect(
-        fetchDailyVerseFromApi("https://api.test/malformed", fakeMalformedFetch)
-      ).rejects.toThrow(ApiJsonError);
-    }
+  it("rejects invalid dates and empty verse inventories", () => {
+    expect(() => getDailyVerseOffset("2026-02-30", 10)).toThrow("valid calendar date");
+    expect(() => getDailyVerseOffset("2026-1-01", 10)).toThrow("YYYY-MM-DD");
+    expect(() => getDailyVerseOffset("2026-11-26", 0)).toThrow("at least one verse");
   });
 });

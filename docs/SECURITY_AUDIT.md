@@ -49,3 +49,18 @@ This audit did not perform penetration testing, device filesystem inspection, na
 |---|---|---|
 | 2026-11-19 | Updated compatible SDK 57 patches and applied non-breaking audit fixes; added notification permission and SQLite bootstrap logging coverage | Expo Doctor 21/21; 253 tests passed; 6 dependency advisories remain |
 | 2026-11-19 | Replaced stale 2026-10-30 summary that reported 22/18 findings and unverified low-risk conclusions | Current npm audit and source review |
+
+## Continuation re-check — 2026-11-19
+
+Fresh `npm audit` remains at 6 findings: 3 high, 3 moderate, 0 critical. The lockfile paths and exact package versions were inspected with `npm explain` and `package-lock.json`:
+
+| Package | Resolved version | Severity | Dependency path / disposition |
+|---|---:|---|---|
+| `expo-router` | 57.0.31 | High | Direct dependency; through `query-string` and `decode-uri-component`; audit's fix moves to SDK 58. |
+| `query-string` | 7.1.3 | High | Transitive from Expo Router; URL/query decoding is in the production dependency tree. |
+| `decode-uri-component` | 0.2.2 | High aggregate | Transitive from `query-string`; [GHSA-vcc3-ghjq-m6fr](https://github.com/SamVerschueren/decode-uri-component/security/advisories/GHSA-vcc3-ghjq-m6fr) and [GHSA-qr28-fpjm-wq7f](https://github.com/advisories/GHSA-qr28-fpjm-wq7f); malformed input can cause excessive CPU use. |
+| `expo` | 57.0.33 | Moderate | Direct dependency; finding inherited from fingerprint/minimatch tooling chain. |
+| `@expo/fingerprint` | 0.20.16 | Moderate | Transitive Expo project fingerprint/build tooling. |
+| `minimatch` | 10.2.6 | Moderate | Transitive fingerprint tooling; [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249), affected range below 11.0.1. |
+
+No force upgrade was performed. npm's suggested fixes cross the SDK 57 compatibility boundary (Expo downgrade to 52 or Router upgrade to 58.0.32). The Router/query parsing chain is the higher-priority production dependency concern; the fingerprint/minimatch chain is associated with build/config tooling and no application runtime reachability has been demonstrated. This chain assessment does not prove exploitability or non-exploitability in Meno. Keep all six findings open pending an SDK-compatible patch or a fully tested Expo SDK migration.

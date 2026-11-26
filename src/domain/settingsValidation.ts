@@ -15,14 +15,20 @@ export function validateReadingGoal(input: GoalValidationInput): GoalValidationR
   let targetError: string | undefined;
   let noteError: string | undefined;
 
-  const targetNum = parseInt(input.targetChapters, 10);
-  if (isNaN(targetNum) || targetNum < 1 || targetNum > 50) {
+  const trimmedTarget = (input.targetChapters || "").trim();
+  const isPositiveInteger = /^\d+$/.test(trimmedTarget);
+  const targetNum = isPositiveInteger ? parseInt(trimmedTarget, 10) : NaN;
+  if (!isPositiveInteger || isNaN(targetNum) || targetNum < 1 || targetNum > 50) {
     targetError = "Target wajib diisi angka antara 1 sampai 50 pasal.";
     valid = false;
   }
 
-  if (!input.reflectionNote || input.reflectionNote.trim().length < 5) {
+  const trimmedNote = (input.reflectionNote || "").trim();
+  if (!input.reflectionNote || trimmedNote.length < 5) {
     noteError = "Catatan komitmen wajib diisi minimal 5 karakter.";
+    valid = false;
+  } else if (trimmedNote.length > 200) {
+    noteError = "Catatan komitmen maksimal 200 karakter.";
     valid = false;
   }
 

@@ -1,0 +1,25 @@
+# Captured 2026-11-24T00:02:11+07:00
+## Device
+List of devices attached
+Connected Android test device: state device, model RMX2103 (product RMX2103T2, device code RE50C1)
+
+serial: redacted
+model: RMX2103
+android: 11 (API 30)
+abi: arm64-v8a
+## Installed package
+    versionCode=1 minSdk=24 targetSdk=36
+    versionName=1.0.0
+    firstInstallTime=2026-11-19 23:30:58
+    lastUpdateTime=2026-11-23 23:55:53
+## Installed base.apk SHA-256
+package:/data/app/~~WlEs9rPGebZAfkQhuq6lPQ==/com.meno.app-eICOL0iyzSV1a_YY_EriPw==/base.apk
+d9a0735b374af2d53849cfdb39413b04445060d5f1c8a6eafb8c9efef062868c  /tmp/installed-meno.apk
+## New local APK
+APK: android/app/build/outputs/apk/release/app-release.apk (49,739,427 bytes)
+d9a0735b374af2d53849cfdb39413b04445060d5f1c8a6eafb8c9efef062868c  android/app/build/outputs/apk/release/app-release.apk
+## Launch state
+pid: 19060
+    mResumedActivity: ActivityRecord{4e400ab u0 com.meno.app/.MainActivity t2996}
+  mCurrentFocus=Window{bbb8432 u0 com.meno.app/com.meno.app.MainActivity}
+  mFocusedApp=ActivityRecord{4e400ab u0 com.meno.app/.MainActivity t2996}

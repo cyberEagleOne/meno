@@ -119,11 +119,11 @@ export function ReadingGoalForm({ onGoalSaved }: ReadingGoalFormProps) {
   return (
     <Card tone="surface" style={styles.sectionCard}>
       <View style={styles.cardHeaderRow}>
-        <Chip label="P4: State & Form" tone="gold" icon={<IconSpark size={12} color={colors.goldText} />} />
+        <Chip label="Target Bacaan" tone="gold" icon={<IconSpark size={12} color={colors.goldText} />} />
       </View>
       <Text style={styles.sectionTitle}>Target Bacaan & Komitmen Pribadi</Text>
       <Text style={styles.sectionDesc}>
-        Fitur ini mengimplementasikan form dengan validasi, loading, empty state, error handling, serta proteksi anti-double tap.
+        Tentukan target harian dan catatan komitmenmu. Perubahan disimpan di perangkat ini.
       </Text>
 
       {/* 1. Initial Loading State */}

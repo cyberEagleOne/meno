@@ -50,4 +50,41 @@ describe("P4: Form Input Validation & Reading Goal Rules", () => {
       expect(result.noteError).toBe("Catatan komitmen wajib diisi minimal 5 karakter.");
     }
   });
+
+  it("menolak target berupa angka desimal atau teks campuran (Issue #15)", () => {
+    const malformedTargets = ["3.5", "5.0", "10abc", "2 chapters", " 1.2 "];
+
+    for (const target of malformedTargets) {
+      const result = validateReadingGoal({
+        targetChapters: target,
+        reflectionNote: "Komitmen membaca Alkitab harian.",
+      });
+
+      expect(result.valid).toBe(false);
+      expect(result.targetError).toBe("Target wajib diisi angka antara 1 sampai 50 pasal.");
+    }
+  });
+
+  it("menolak catatan refleksi yang melebihi batas maksimal 200 karakter (Issue #15)", () => {
+    const longNote = "A".repeat(201);
+    const result = validateReadingGoal({
+      targetChapters: "3",
+      reflectionNote: longNote,
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.noteError).toBe("Catatan komitmen maksimal 200 karakter.");
+  });
+
+  it("menerima catatan refleksi tepat pada batas maksimum 200 karakter (Issue #15)", () => {
+    const boundaryNote = "A".repeat(200);
+    const result = validateReadingGoal({
+      targetChapters: "3",
+      reflectionNote: boundaryNote,
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.parsedTarget).toBe(3);
+    expect(result.noteError).toBeUndefined();
+  });
 });

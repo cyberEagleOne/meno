@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import {
+  AppState,
   StyleSheet,
   Text,
   View,
@@ -13,19 +14,45 @@ import { Card } from "./Card";
 import { Chip } from "./Chip";
 import { IconSpark } from "./Icons";
 import { DailyVerse } from "../../domain/dailyVerse";
-import { fetchDailyVerseFromApi } from "../../data/dailyVerseRepository";
+import { getLocalDateKey } from "../../data/dailyVerseRepository";
+import { useBible } from "../../data/bibleContext";
+import { logger } from "../../services/logger";
 
 export function DailyVerseCard() {
   const router = useRouter();
+  const { bible, getDailyVerse } = useBible();
   const [verse, setVerse] = useState<DailyVerse | null>(null);
   const [status, setStatus] = useState<"loading" | "success" | "empty" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [retryTrigger, setRetryTrigger] = useState<number>(0);
+  const [dateKey, setDateKey] = useState(() => getLocalDateKey());
+
+  // Recompute on local midnight and whenever Android resumes the app. The
+  // foreground check also covers time-zone or clock changes while suspended.
+  useEffect(() => {
+    const refreshDate = () => {
+      const nextDateKey = getLocalDateKey();
+      if (nextDateKey !== dateKey) setStatus("loading");
+      setDateKey(nextDateKey);
+    };
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") refreshDate();
+    });
+
+    const nextMidnight = new Date();
+    nextMidnight.setHours(24, 0, 0, 50);
+    const timeout = setTimeout(refreshDate, Math.max(50, nextMidnight.getTime() - Date.now()));
+
+    return () => {
+      subscription.remove();
+      clearTimeout(timeout);
+    };
+  }, [dateKey]);
 
   useEffect(() => {
     let isMounted = true;
 
-    fetchDailyVerseFromApi()
+    getDailyVerse(dateKey)
       .then((data) => {
         if (!isMounted) return;
         if (!data) {
@@ -36,16 +63,16 @@ export function DailyVerseCard() {
         }
       })
       .catch((err: unknown) => {
-        if (!isMounted) return;
-        setStatus("error");
-        const msg = err instanceof Error ? err.message : "Gagal memuat ayat harian.";
-        setErrorMessage(msg);
+          if (!isMounted) return;
+          logger.error("BIBLE", "daily_verse_load_failed", err, { localDateKey: dateKey });
+          setStatus("error");
+          setErrorMessage("Ayat dari database ILT3 belum dapat dimuat. Silakan coba lagi.");
       });
 
     return () => {
       isMounted = false;
     };
-  }, [retryTrigger]);
+  }, [dateKey, getDailyVerse, retryTrigger]);
 
   const handleRetry = useCallback(() => {
     setStatus("loading");
@@ -59,14 +86,14 @@ export function DailyVerseCard() {
       <Card tone="surface" style={styles.card}>
         <View style={styles.headerRow}>
           <Chip
-            label="Ayat Harian (API)"
+            label="Ayat Harian"
             tone="gold"
             icon={<IconSpark size={12} color={colors.goldText} />}
           />
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color={colors.gold} />
-          <Text style={styles.loadingText}>Menghubungkan ke API ayat harian...</Text>
+          <Text style={styles.loadingText}>Memuat ayat dari ILT3...</Text>
         </View>
       </Card>
     );
@@ -78,7 +105,7 @@ export function DailyVerseCard() {
       <Card tone="surface" style={styles.card}>
         <View style={styles.headerRow}>
           <Chip
-            label="Ayat Harian (API)"
+            label="Ayat Harian"
             tone="coral"
             icon={<IconSpark size={12} color={colors.coralInk} />}
           />
@@ -103,7 +130,7 @@ export function DailyVerseCard() {
       <Card tone="surface" style={styles.card}>
         <View style={styles.headerRow}>
           <Chip
-            label="Ayat Harian (API)"
+            label="Ayat Harian"
             tone="gold"
             icon={<IconSpark size={12} color={colors.goldText} />}
           />
@@ -118,7 +145,7 @@ export function DailyVerseCard() {
     <Card tone="surface" style={styles.card}>
       <View style={styles.headerRow}>
         <Chip
-          label="Ayat Hari Ini (Online)"
+          label="Ayat Hari Ini"
           tone="gold"
           icon={<IconSpark size={12} color={colors.goldText} />}
         />
@@ -128,7 +155,12 @@ export function DailyVerseCard() {
       <Text style={styles.verseText}>“{verse.text}”</Text>
       <Text style={styles.referenceText}>{verse.reference}</Text>
 
-      {verse.bookId && verse.chapter ? (
+      {verse.bookId &&
+      typeof verse.chapter === "number" &&
+      Number.isInteger(verse.chapter) &&
+      bible?.books.some(
+        (b) => b.id === verse.bookId && verse.chapter! >= 1 && verse.chapter! <= b.chapters.length
+      ) ? (
         <Pressable
           style={({ pressed }) => [styles.readButton, pressed && styles.buttonPressed]}
           onPress={() => {
@@ -149,7 +181,6 @@ export function DailyVerseCard() {
 
 const styles = StyleSheet.create({
   card: {
-    marginHorizontal: 20,
     marginBottom: 16,
     borderWidth: 1.5,
     borderColor: colors.divider,
@@ -159,12 +190,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    gap: 8,
+    marginBottom: 16,
   },
   translationBadge: {
     fontFamily: fonts.medium,
     fontSize: 12,
     color: colors.inkMuted,
+    textAlign: "right",
+    flexShrink: 1,
   },
   loadingContainer: {
     paddingVertical: 16,
@@ -179,8 +213,8 @@ const styles = StyleSheet.create({
   },
   verseText: {
     fontFamily: fonts.medium,
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 16,
+    lineHeight: 25,
     color: colors.indigo,
     fontStyle: "italic",
     marginBottom: 8,

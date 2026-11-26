@@ -65,4 +65,20 @@ The CI APK from run 44517378110 installed on API 37 x86_64 but failed SQLite boo
 
 ## 9. Lecturer demonstration
 
+### Continuation acceptance update — 2026-11-19
+
+This update supersedes earlier counts and device-evidence statements where they differ. Meno remains **not complete** and is not ready for v1.0.
+
+| Requirement | Implementation | Automated Test | Emulator | Physical Android |
+|---|---|---|---|---|
+| App startup/navigation | Implemented | Component/navigation coverage passes | Current app JS opened in Expo Go; screens navigated | Local APK installed/launched on RMX2103; resumed MainActivity and current capture shows book chooser. App navigation not tested yet. |
+| SQLite progress persistence | Expo SQLite driver and schema implemented | Disk-backed SQLite integration suite covers init, create/read, update, delete, reopen, rollback and errors | Completion survived Expo Go force-stop/relaunch; evidence recorded | Physical APK Logcat confirms `sqlite_init_success`; CRUD and restart persistence not tested yet |
+| Daily notification | Local reminder/test notification implemented | Permission, denial, scheduling/replacement and trigger-request tests pass | UI visible; OS delivery/permission prompt not verified | Not verified |
+| Shake navigation | Accelerometer subscription, threshold, debounce and cleanup implemented | Sensor service tests pass | Sensor input not tested | Not verified |
+| Biometric/device auth | Native local-auth integration implemented | Hardware/enrollment/success/cancel/failure paths tested with mocks | Native prompt not tested | Not verified |
+| UI evidence | Screens render in current app | UI suite passes | Five real Expo Go AVD screenshots captured | Not verified |
+| ARM64 APK | Local run 44529697756 APK metadata/signature checked; separate artifact listed by run 44558937344 | Earlier CI build passed; latest CI artifact not downloaded/inspected | ARM64 artifact incompatible with x86_64 AVD | Local APK from run 44529697756 installed/launched; signature and SHA are recorded; newer CI artifact was not used |
+
+Fresh verification after adding goal-repository lifecycle cases: **277 tests passed across 18 suites, 0 failed/skipped; TypeScript passed; lint passed; Android JS/Hermes export passed.** `npm audit` remains at 6 findings (3 high, 3 moderate). Test checkpoints `3c98cf8` and `00fdae2`, documentation/evidence checkpoint `6ef2fbe`, and progress sync `b1be6d4` were pushed to `feat/assignment-completion`. CI run `44558937344` completed successfully for `00fdae2`, including ARM64 APK build/upload; its reported digest is `1d918bb58905bc4772fd8f4e3683f0084f4bc7813cd51e3e3475ea7cb273d544`. That artifact was not downloaded or independently inspected. The local APK tested on the phone is the distinct artifact from run `44529697756` (SHA-256 `CD388C88CD1119782B802CC1F03D8BD6765FA88AD12DD3B1DCC4486435C0C128`), not the latest CI artifact. It installed and launched successfully on RMX2103; Logcat confirmed app startup, SQLite initialization and daily verse fetch. This is startup validation only; user visual confirmation and functional device tests remain pending. Physical full acceptance and Bible text rights remain blockers. Only three genuine defects/findings are evidenced; no additional defects were invented to meet the assignment target.
+
 Use `ANDROID_DEMO_GUIDE.md`. The 5–10 minute sequence covers home, library/chapter navigation, explicit completion, progress, daily verse, notification, shake navigation, app lock, and restart persistence. Explain that the current reader content is a synthetic placeholder and that native-device verification is pending.

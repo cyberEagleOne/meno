@@ -170,7 +170,7 @@ export function calculateBadges(
     {
       id: "habit_3days",
       title: "Tiga Hari Ketekunan",
-      description: "Membaca Alkitab di 3 hari yang berbeda.",
+      description: "Membaca Kitab Suci di 3 hari yang berbeda.",
       icon: "🕯️",
       category: "habits",
       unlocked: uniqueDays >= 3,
@@ -179,7 +179,7 @@ export function calculateBadges(
     {
       id: "habit_7days",
       title: "Seminggu Teduh",
-      description: "Membaca Alkitab di 7 hari yang berbeda.",
+      description: "Membaca Kitab Suci di 7 hari yang berbeda.",
       icon: "🕊️",
       category: "habits",
       unlocked: uniqueDays >= 7,
