@@ -1,4 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { SQLiteDatabase } from "expo-sqlite";
 
@@ -11,6 +12,7 @@ import {
 } from "../bibleBookMap";
 
 const DATABASE_PATH = join(process.cwd(), "assets/database/ilt3.sqlite");
+const testWithBundledDatabase = existsSync(DATABASE_PATH) ? it : it.skip;
 
 function adapter(db: DatabaseSync): SQLiteDatabase {
   return {
@@ -35,7 +37,7 @@ describe("ILT3 canonical mapping", () => {
     expect(databaseIdForCanonicalId("tidak-ada")).toBeUndefined();
   });
 
-  it("matches the bundled ILT3 book order, names, and chapter counts", () => {
+  testWithBundledDatabase("matches the bundled ILT3 book order, names, and chapter counts", () => {
     const db = new DatabaseSync(DATABASE_PATH);
     try {
       const rows = db
@@ -55,7 +57,7 @@ describe("ILT3 canonical mapping", () => {
     }
   });
 
-  it("loads validated metadata and real verses through the repository boundary", async () => {
+  testWithBundledDatabase("loads validated metadata and real verses through the repository boundary", async () => {
     const db = new DatabaseSync(DATABASE_PATH);
     try {
       const bible = await loadBibleMetadata(adapter(db));
@@ -81,7 +83,7 @@ describe("ILT3 canonical mapping", () => {
     }
   });
 
-  it("opens the real translation with integrity and Indonesian metadata", () => {
+  testWithBundledDatabase("opens the real translation with integrity and Indonesian metadata", () => {
     const db = new DatabaseSync(DATABASE_PATH);
     try {
       expect(db.prepare("PRAGMA integrity_check").get()).toEqual({ integrity_check: "ok" });

@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   verify-and-build:
-    name: Verify and build Android APK
+    name: Verify and conditionally build Android APK
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -32,6 +32,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check for local ILT3 database
+        id: ilt3-database
+        shell: bash
+        run: |
+          if [ -f assets/database/ilt3.sqlite ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "ILT3 database found; database-backed tests and Android build are enabled."
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=ILT3 database unavailable::Database-backed tests and Android APK build are skipped because the local-use database is not included in this checkout."
+            {
+              echo "### Android APK build skipped"
+              echo "The local-use ILT3 database is not present in this checkout. Database-backed tests are skipped; tests, type checking, and lint still run."
+              echo "To validate the complete APK build, run it in an authorized environment that has the database locally."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Unit tests
         run: npm test -- --runInBand --silent
 
@@ -42,21 +59,26 @@ jobs:
         run: npm run lint
 
       - name: Export Android JavaScript bundle
+        if: steps.ilt3-database.outputs.available == 'true'
         run: npx expo export --platform android
 
       - name: Generate native Android project
+        if: steps.ilt3-database.outputs.available == 'true'
         run: npx expo prebuild --platform android --no-install
 
       - name: Set up JDK 17
+        if: steps.ilt3-database.outputs.available == 'true'
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
 
       - name: Build release APK
+        if: steps.ilt3-database.outputs.available == 'true'
         run: bash android/gradlew --no-daemon -p android -PreactNativeArchitectures=arm64-v8a assembleRelease
 
       - name: Upload APK artifact
+        if: steps.ilt3-database.outputs.available == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: meno-android-release-apk
