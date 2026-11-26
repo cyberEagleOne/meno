@@ -1,0 +1,4 @@
+Extracted verbatim from docs/evidence/P11/unit-tests-restored.txt; not a new test run.
+27:PASS src/services/__tests__/logger.test.ts
+34:Test Suites: 26 passed, 26 total
+35:Tests:       316 passed, 316 total

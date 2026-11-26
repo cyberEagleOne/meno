@@ -1,0 +1,13 @@
+Default branch:
+master
+Local and tracking refs with latest local commit:
+  feat/assignment-completion                c2d9054 [origin/feat/assignment-completion] ci: skip local ILT3 checks when database is absent
+* master                                    df0f6d9 [origin/master] Merge pull request #15 from cyberEagleOne/feat/assignment-completion
+  remotes/origin/HEAD                       -> origin/master
+  remotes/origin/feat/assignment-completion c2d9054 ci: skip local ILT3 checks when database is absent
+  remotes/origin/master                     df0f6d9 Merge pull request #15 from cyberEagleOne/feat/assignment-completion
+GitHub branch head SHAs:
+feat/assignment-completion	c2d90546302171bd369bf75ab105a0175a617d3e	false
+master	df0f6d9100332eb0fa02c95cfceac2639bcf5708	false
+Local tags:
+GitHub tags:

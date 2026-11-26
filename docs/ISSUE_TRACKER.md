@@ -1,6 +1,6 @@
 # GitHub Issue Tracker
 
-Repository: [cyberEagleOne/meno](https://github.com/cyberEagleOne/meno/issues). The initial review found no existing issues or duplicates. Eleven task issues were created using the authorized repository credential.
+Repository: [cyberEagleOne/meno](https://github.com/cyberEagleOne/meno/issues). The initial review found no existing issues or duplicates. Eleven task issues were created during the initial tracking pass; two verified, fixed historical bug records were added later as #16 and #17. Final live count: 13 Issues, 5 labeled `bug`.
 
 | # | Issue | Type | Priority | Status |
 |---:|---|---|---|---|
@@ -17,8 +17,10 @@ Repository: [cyberEagleOne/meno](https://github.com/cyberEagleOne/meno/issues). 
 | 13 | [Android launch falls into SQLite bootstrap error](https://github.com/cyberEagleOne/meno/issues/13) | Verified x86_64 packaging/runtime defect | P0 for x86_64 | Open; ARM64-only build verified in CI |
 | 14 | Daily Verse "Baca Pasal Lengkap" navigation fails with missing chapter error due to unmapped external OSIS book ID | Verified bug / navigation defect (local finding) | P1 | Closed; finalized via safe `normalizeApiBookId`, reference parsing fallback, and 66-book regression tests |
 | 15 | Reading Goal validation accepts non-integer numeric strings and fails to enforce 200-character maximum note limit | Verified form validation defect (local finding) | P2 | Closed; fixed via strict integer regex and 200-char boundary check |
+| 16 | [Daily Verse did not normalize external Bible book IDs before navigation (fixed)](https://github.com/cyberEagleOne/meno/issues/16) | Historical bug | Closed; fixed in `db4063f`, regression-tested |
+| 17 | [Reading Goal accepted fractional targets and overlong notes (fixed)](https://github.com/cyberEagleOne/meno/issues/17) | Historical bug | Closed; fixed in `db4063f`, regression-tested |
 
-Rows #14 and #15 are local Milestone 2 regression findings recorded in this document; only #3–#13 correspond to issues filed in the GitHub repository. #14 and #15 are retained as stable local tracking IDs and are not counted as additional filed GitHub issues.
+Rows #14 and #15 are local Milestone 2 regression findings recorded in this document; they are now filed as GitHub Issues #16 and #17. A read-only GitHub check on 2026-11-26 confirmed GitHub numbers #14 and #15 are merged Pull Requests, so those local finding numbers must not be used as GitHub Issue numbers. GitHub Issues #16 and #17 are closed retrospective records of fixed bugs, not active defects.
 
 ### Honest Defect and Bug Count Classification
 
@@ -26,22 +28,22 @@ Reviewing defect classifications against the assignment's five-bug requirement:
 - **Verified Runtime & Packaging Defects (4 genuine bugs):**
   1. **Issue #3 (P1):** Notification denial showed stale permission guidance (`canAskAgain`).
   2. **Issue #13 (P0 for x86_64):** Pre-existing release APK advertised x86/x86_64 while packaging Expo SQLite JNI only for ARM64, causing an immediate SQLite bootstrap crash on x86_64 devices/emulators.
-  3. **Issue #14 (P1):** Daily Verse REST API returned external OSIS/USFM book IDs (`"JHN"`, `"PSA"`) which did not map to Meno's Indonesian canonical book IDs (`"yohanes"`, `"mazmur"`), causing "Baca Pasal Lengkap" navigation to fail with a missing chapter error. The prior code also defaulted missing identifiers to `"joh"` and chapter `3`; it now safely returns `undefined` (no guessed book or chapter) and the UI hides navigation when unverified.
-  4. **Issue #15 (P2):** Reading Goal form validation used loose `parseInt`, permitting non-integer numbers (e.g., `"5.8"`) and alphanumeric strings, and omitted the documented 200-character maximum limit on user reflection notes.
+  3. **GitHub Issue #16 (local finding #14, P1):** Daily Verse REST API returned external OSIS/USFM book IDs (`"JHN"`, `"PSA"`) which did not map to Meno's Indonesian canonical book IDs (`"yohanes"`, `"mazmur"`), causing "Baca Pasal Lengkap" navigation to fail with a missing chapter error. The prior code also defaulted missing identifiers to `"joh"` and chapter `3`; it now safely returns `undefined` (no guessed book or chapter) and the UI hides navigation when unverified.
+  4. **GitHub Issue #17 (local finding #15, P2):** Reading Goal form validation used loose `parseInt`, permitting non-integer numbers (e.g., `"5.8"`) and alphanumeric strings, and omitted the documented 200-character maximum limit on user reflection notes.
 
 - **Verified Build & Lint Defect (1 defect):**
   - **Issue #4 (P2):** Goal-form load effect triggered synchronous state updates causing React/ESLint failures and redundant re-renders. While a genuine defect in the repository build lifecycle, this is an internal lint/build failure rather than an observed user-facing runtime crash.
 
 **Evaluation of the 5-Bug Quota:**
-- If build/lint defects are counted alongside runtime defects, 5 authentic defects are tracked (#3, #4, #13, #14, #15).
-- If the lecturer strictly requires 5 *user-facing runtime bugs*, exactly **4 genuine bugs** are established (#3, #13, #14, #15).
-- Per project integrity guidelines, the Issue #14 fallback correction is recognized as the completion of Issue #14 rather than a separate bug, Issue #4 is not misclassified as a user-facing runtime crash, and artificial defects were not fabricated to close the gap. The remaining eight issues (#5–#12) represent genuine feature, security, or device acceptance milestones.
+- If build/lint defects are counted alongside runtime defects, 5 authentic defects are tracked as GitHub Issues (#3, #4, #13, #16, #17).
+- If the lecturer strictly requires 5 *user-facing runtime bugs*, four user-facing/runtime defects are established (#3, #13, #16, #17); #4 is an authentic build/lint defect rather than a runtime crash.
+- Per project integrity guidelines, #16 and #17 record historical defects already fixed in `db4063f`; they are not described as active failures. Issue #4 is not misclassified as a user-facing runtime crash, and artificial defects were not fabricated to close the gap. The remaining eight issues (#5–#12) represent genuine feature, security, or device acceptance milestones.
 
 ---
 
 ## Detailed Defect Records (Milestone 2 Remediation)
 
-### Issue #14: Daily Verse "Baca Pasal Lengkap" Navigation Failure
+### GitHub Issue #16 (local finding #14): Daily Verse "Baca Pasal Lengkap" Navigation Failure
 - **Affected Feature and File:** Daily Verse Integration / Navigation, `src/data/dailyVerseRepository.ts`, `src/components/ui/DailyVerseCard.tsx`
 - **Preconditions:** Daily verse is successfully fetched on the Home screen (e.g. from `https://bible-api.com/john+3:16`).
 - **Exact Reproduction Steps:**
@@ -62,7 +64,7 @@ Reviewing defect classifications against the assignment's five-bug requirement:
   - `src/data/__tests__/dailyVerse.test.ts` includes table-driven tests for all 66 canonical Bible books and their external identifiers in lowercase, uppercase, and with whitespace; boundary tests verifying `undefined` for unknown/empty/null/non-string values; `parseReference` tests covering all 66 canonical names; API integration tests; a table of malformed `book_id` payloads (missing, blank, whitespace, null, number, object, array, unknown); alternative payload shapes (`book_name`, `verses[0]`); and invalid chapter guards.
   - `src/components/ui/__tests__/DailyVerseCard.test.tsx` tests that the "Baca Pasal Lengkap" button renders for valid canonical books and is cleanly omitted for undefined, blank, whitespace-only, unknown, out-of-bounds, missing, fractional, or zero chapter values, including the exact maximum chapter (renders) and maximum + 1 (omitted).
 
-### Issue #15: Reading Goal Form Validation Incomplete
+### GitHub Issue #17 (local finding #15): Reading Goal Form Validation Incomplete
 - **Affected Feature and File:** Reading Goal Form State Management & Validation, `src/domain/settingsValidation.ts`
 - **Preconditions:** User is setting or editing reading goals in the Settings screen (`src/app/settings.tsx`).
 - **Exact Reproduction Steps:**

@@ -1,0 +1,32 @@
+
+> meno@1.0.0 test
+> jest --runInBand --runInBand --runTestsByPath src/domain/__tests__/controlled-failure.demonstration.test.ts
+
+FAIL src/domain/__tests__/controlled-failure.demonstration.test.ts
+  isolated quality-gate demonstration
+    ✕ fails when an assertion is false (7 ms)
+
+  ● isolated quality-gate demonstration › fails when an assertion is false
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "expected"
+    Received: "actual"
+
+      1 | describe("isolated quality-gate demonstration", () => {
+      2 |   it("fails when an assertion is false", () => {
+    > 3 |     expect("actual").toBe("expected");
+        |                      ^
+      4 |   });
+      5 | });
+      6 |
+
+      at Object.toBe (src/domain/__tests__/controlled-failure.demonstration.test.ts:3:22)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 1 total
+Snapshots:   0 total
+Time:        1.027 s
+Ran all test suites within paths "src/domain/__tests__/controlled-failure.demonstration.test.ts".
+
+Demonstration process exit code: 1

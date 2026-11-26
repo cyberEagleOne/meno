@@ -1,0 +1,37 @@
+
+> meno@1.0.0 test
+> jest --runInBand --runInBand --silent
+
+PASS src/app/reader/__tests__/readerCompletion.test.tsx
+PASS src/domain/__tests__/bibleNavigation.test.ts
+PASS src/app/__tests__/settingsReminder.test.tsx
+PASS src/components/ui/__tests__/AppLockScreen.test.tsx
+PASS src/app/__tests__/random-chapter.test.tsx
+(node:64645) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/data/__tests__/bibleBookMap.test.ts
+PASS src/components/ui/__tests__/ReadingGoalForm.test.tsx
+PASS src/components/ui/__tests__/DailyVerseCard.test.tsx
+PASS src/data/__tests__/bibleDailyVerse.test.ts
+PASS src/data/__tests__/sqlitePersistence.test.ts
+PASS src/data/__tests__/progressContext.test.tsx
+PASS src/domain/__tests__/progress.test.ts
+PASS src/data/__tests__/dbCompletion.test.ts
+PASS src/services/__tests__/notificationService.test.ts
+PASS src/data/__tests__/canon.test.ts
+PASS src/components/ui/__tests__/BadgeCard.test.tsx
+PASS src/data/__tests__/db.test.ts
+PASS src/data/__tests__/goalRepository.test.ts
+PASS src/domain/__tests__/badges.test.ts
+PASS src/services/__tests__/authService.test.ts
+PASS src/services/__tests__/logger.test.ts
+PASS src/domain/__tests__/settingsValidation.test.ts
+PASS src/data/__tests__/dailyVerse.test.ts
+PASS src/services/__tests__/sensorService.test.ts
+PASS src/utils/__tests__/formatters.test.ts
+PASS src/domain/__tests__/appLock.test.ts
+
+Test Suites: 26 passed, 26 total
+Tests:       316 passed, 316 total
+Snapshots:   0 total
+Time:        6.753 s
