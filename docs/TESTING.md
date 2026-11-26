@@ -174,7 +174,7 @@ The release APK from CI run 44517378110 was installed on an API 37 x86_64 AVD. I
 
 ## 6. Deferred by design (PRD §10 — not required to pass)
 
-Correction to the runtime update above: ARM64-only CI run 44529697756 succeeded. The produced APK targets `arm64-v8a` and includes the matching Expo SQLite JNI library; its signature was verified. It was later installed and started on a physical `RMX2103` (serial `a719e24d`) on 2026-11-19; see `docs/evidence/physical-android/startup-validation.md`. Feature-level physical testing remains outstanding, and the ARM64-only restriction still excludes 32-bit devices.
+Correction to the runtime update above: ARM64-only CI run 44529697756 succeeded. The produced APK targets `arm64-v8a` and includes the matching Expo SQLite JNI library; its signature was verified. It was later installed and started on a connected Android test device (RMX2103) on 2026-11-19; see `docs/evidence/physical-android/startup-validation.md`. Feature-level physical testing remains outstanding, and the ARM64-only restriction still excludes 32-bit devices.
 
 - Streak-boundary tests (BR-3, BR-4) — streaks deferred from the MVP.
 - Reading-plan validation tests — plans out of MVP.

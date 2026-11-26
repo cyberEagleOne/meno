@@ -1,8 +1,8 @@
 # Physical Android Install and Startup Validation
 
 **Date:** 2026-11-19  
-**Device:** RMX2103, Android 11 / API 30, `arm64-v8a`  
-**ADB serial:** `a719e24d`  
+**Device:** Connected Android test device, RMX2103, Android 11 / API 30, `arm64-v8a`
+**ADB serial:** redacted
 **Artifact tested:** `artifacts/android/meno-release.apk`, SHA-256 `CD388C88CD1119782B802CC1F03D8BD6765FA88AD12DD3B1DCC4486435C0C128`  
 **Artifact metadata:** `com.meno.app` version 1.0.0 / code 1; ARM64-only; signature verified; Android Debug certificate SHA-256 `fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c`.
 
@@ -10,9 +10,9 @@ This is the local APK previously inspected from CI run 44529697756. It is **not 
 
 ## Installation and launch
 
-- The target device was authorized and showed state `device`; an emulator was also connected, so commands were scoped to serial `a719e24d`.
+- The connected Android test device was authorized and showed state `device`; an emulator was also connected, so the install was explicitly targeted to the test device.
 - Before installation, `pm list packages -f com.meno.app` returned no installed Meno package. No existing app data was present to overwrite.
-- `adb -s a719e24d install -r artifacts/android/meno-release.apk` returned **Success**.
+- ADB installation of `artifacts/android/meno-release.apk` to the connected Android test device returned **Success**.
 - Explicit launcher component `com.meno.app/.MainActivity` was started with `am start -W`; it returned `Status: ok`. `dumpsys activity activities` subsequently reported `com.meno.app/.MainActivity` as the resumed activity. The app process remained alive as PID 20675.
 
 Raw command evidence is in `install-output.txt`, `launch-output.txt`, and `resumed-activity.txt`; device and artifact details are in `device-and-apk.txt`.
