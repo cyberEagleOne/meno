@@ -7,7 +7,7 @@
 | Last updated | 2026-10-22 |
 | Author | AI-assisted draft (opencode); not yet reviewed by the student |
 
-> **Integrity statement:** This document records **evidence that actually exists**. As of 2026-10-22, the current MVP implementation is uncommitted; **7 test suites / 73 tests pass**, and the Android Expo Go smoke-test observations are recorded in `docs/TESTING.md`. The smoke test was limited and is not a full acceptance-criteria demonstration. Screenshots are not in the repository; the demo video is outside the repository and submission is unconfirmed. Every remaining "[to be produced]" item must only be marked complete when the real artefact exists and can be shown to a lecturer.
+> **Current status note (2026-11-27):** the dated matrix below contains historical checkpoint results and older requirements. The repository is currently on `master`; latest captured local tests are 26 suites / 316 passed, and screenshots exist under `docs/evidence/`. Those images do not prove full acceptance. Current app facts and CI status are in `README.md`, `docs/TESTING.md`, `docs/CI_CD.md`, and `docs/P11_P12_EVIDENCE_GUIDE.md`. No artifact or result is marked complete without evidence.
 
 ---
 
@@ -19,18 +19,18 @@ Map (a) assignment requirements, (b) the Meno MVP features, (c) business rules, 
 
 | Req ID | Requirement / skill expectation | Feature | Business rule | Planned test | Evidence to produce | Status |
 |---|---|---|---|---|---|---|
-| RQ-1 | PRD-first planning with user stories & acceptance criteria | Docs | — | — | `docs/PRD.md` §6.1–§6.5 — five user stories with acceptance criteria AC-1.x–AC-5.x. Test evidence: **73 tests across seven suites** (`docs/TESTING.md`) cover domain/data rules and reader completion interactions. Expo Go smoke evidence is limited as mapped in `checklist_mvp.md`; full AC demonstration remains outstanding. | **Five stories documented; limited smoke observed; full AC demonstration outstanding** |
+| RQ-1 | PRD-first planning with user stories & acceptance criteria | Docs | — | — | `docs/PRD.md` §6.1–§6.5 — five user stories with acceptance criteria AC-1.x–AC-5.x. The latest captured 316-test run is in `docs/TESTING.md`; it covers host-side behavior, not a full device acceptance demonstration. | **Five stories documented; limited smoke observed; full AC demonstration outstanding** |
 | RQ-2 | Architecture with separation of UI/domain/repository/persistence | Docs | — | — | `docs/ARCHITECTURE.md` | Draft written |
 | RQ-3 | Bible Reader renders chapters | FR-1..FR-5 | BR-5 | Reader navigation tests (edge chapters) | Test output in `docs/TESTING.md`; limited Expo Go smoke scope there | **Tests pass (22); full demo pending** |
 | RQ-4 | Persistent progress survives restart | FR-8 | BR-1 | Persistence round-trip test + Expo Go observation | `src/data/__tests__/db.test.ts` + output in `docs/TESTING.md` | **Host test and limited Expo Go persistence observed; native APK/rollback unverified** |
 | RQ-5 | Duplicate completion is a no-op | FR-7 | BR-1 | Unit test: duplicate completion | `src/data/__tests__/dbCompletion.test.ts` + `src/domain/__tests__/progress.test.ts` | **Tests pass (21 + 11)** |
 | RQ-6 | Streak boundaries correct | FR-9 | BR-3, BR-4 | Unit tests: first day / consecutive / gap | — | **[Deferred]** per PRD §10 (conflict: listed here as requirement — confirm with lecturer) |
 | RQ-7 | Reading-plan validation | (later) | — | Unit tests: valid/invalid plan | — | **[Deferred]** (plans out of MVP) |
-| RQ-8 | Deterministic, independently testable domain | Domain layer | All | Domain unit test suite | 7 suites / 73 tests, `docs/TESTING.md` | **Passing on host (2026-10-22)** |
-| RQ-9 | Testing documented with real command/result | Docs | — | — | `docs/TESTING.md` | **Updated with captured results (2026-10-22)** |
-| RQ-10 | Calm, Scripture-first design identity | Design | — | Manual UI review checklist | `docs/DESIGN_SYSTEM.md` + screenshots | Direction drafted; **screenshots pending** |
+| RQ-8 | Deterministic, independently testable domain | Domain layer | All | Domain unit test suite | 26 suites / 316 cases in the latest captured local run, `docs/TESTING.md` | **Passing on host in captured run (2026-11-26)** |
+| RQ-9 | Testing documented with real command/result | Docs | — | — | `docs/TESTING.md` and captured output `docs/evidence/P11/unit-tests-restored.txt` | **Captured; hosted CI status is reported separately** |
+| RQ-10 | Calm, Scripture-first design identity | Design | — | Manual UI review checklist | `docs/DESIGN_SYSTEM.md`, `docs/UI_UX_REVIEW.md`, and images under `docs/evidence/` | Historical emulator/phone screenshots exist; current-build visual/accessibility review remains incomplete |
 | RQ-11 | Accessibility (touch targets, labels, contrast, motion) | UI | — | Mobile accessibility checklist (originally from the `ui-ux-pro-max` skill, since removed; mirrored in `docs/DESIGN_SYSTEM.md` §5) | Screenshots + notes | Not started |
-| RQ-12 | Focused, descriptive Git history | Process | — | — | `git log` | **4 historical commits exist; current MVP work remains uncommitted** |
+| RQ-12 | Focused, descriptive Git history | Process | — | — | `git log` | **Historical note at 2026-10-22; current branch/HEAD are recorded in `docs/DEVELOPMENT_PROGRESS.md`** |
 | RQ-13 | Scope control to 12-meeting MVP | Process | — | — | `docs/12_MEETING_PLAN.md` | Draft written |
 | RQ-14 | Content licensing respected | Content | — | Licence review | Translation licence + attribution record | **Blocked (Open Q)** |
 | RQ-15 | Student can explain architecture & decisions | Understanding | — | — | §4 explanation notes | Draft below |
@@ -40,8 +40,8 @@ Map (a) assignment requirements, (b) the Meno MVP features, (c) business rules, 
 | Evidence type | Where it lives | When to capture | Notes |
 |---|---|---|---|
 | Planning docs | `docs/*.md` | Milestone 0 | Real files (these). |
-| Test command + output | `docs/TESTING.md` | Each Verify phase | **Captured 2026-10-22** (Jest 7 suites / 73 tests; TypeScript, lint, Android Expo bundle export passed). Expo Go smoke observations and limitations are recorded separately. Re-capture after each relevant change; never paraphrase as "passing". |
-| Screenshots | `docs/evidence/` (to create later) | After each UI milestone | Mobile screenshots of reader, progress, accessibility states. |
+| Test command + output | `docs/TESTING.md` | Each Verify phase | Latest captured local run: **26 suites / 316 tests**, 2026-11-26. Latest hosted CI run #45860247144 passed tests/type/lint and skipped APK build steps because ILT3 was unavailable. Expo Go/physical startup observations and limitations are recorded separately. |
+| Screenshots | `docs/evidence/` | After each UI milestone | Historical emulator/UI and physical startup/reader screenshots exist; current GitHub/test/P12 screenshots remain listed in `docs/P11_P12_EVIDENCE_GUIDE.md`. |
 | Demo walkthrough | Meeting notes | Meetings 4, 8, 12 | Record what was demonstrated live. |
 | Git history | repository | On approved commits only | No commit without explicit approval (`meno-workflow`). |
 | Translation licence/attribution | `docs/PRD.md` §5.4 + dataset file | Before bundling content | Blocked pending decision. |
@@ -71,9 +71,9 @@ disagree with; then tick):
 - [ ] `docs/TESTING.md`, `HowToRun.md`, `checklist_mvp.md` — read; confirmed you can run every command yourself.
 - [ ] `docs/ASSIGNMENT_TRACEABILITY.md` and `docs/12_MEETING_PLAN.md` — reviewed.
 
-Code review (the working tree is AI-generated and **uncommitted**):
+Code review before a future commit:
 
-- [ ] Read the uncommitted diff (`git status`, `git diff`) and the new files; state which parts you understand and which you want explained before any commit.
+- [ ] Review any proposed diff (`git status`, `git diff`) and new files; ask for explanation of any changes you do not understand before approving a commit.
 - [ ] Decide and record the commit plan; approve explicitly before any commit is made.
 
 Lecturer questions (must be asked — do not guess the answers):

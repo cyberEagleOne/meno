@@ -24,7 +24,7 @@ Automated coverage includes the existing memory-driver contract tests and `src/d
 
 ## Native runtime observation
 
-A release APK from CI run 44517378110 was installed on the API 37 x86_64 emulator. The app displayed its local-storage bootstrap error; Logcat showed `libexpo-sqlite.so` missing for x86_64. APK inspection found the library only for ARM64. The new ARM64-only APK from run 44529697756 contains the SQLite JNI and advertises only `arm64-v8a`; `apksigner verify` passed. Its ABI is unsupported by the available x86_64 emulator, and no physical ARM64 device is attached. Native database startup and restart persistence therefore remain unverified.
+A historical APK from CI run 44517378110 was installed on the API 37 x86_64 emulator and showed the local-storage bootstrap error; Logcat showed `libexpo-sqlite.so` missing for x86_64. A later ARM64-only APK from run 44529697756 included the matching SQLite JNI and passed signature inspection. That historical ARM64 APK was subsequently installed and started on an RMX2103 physical phone, with `sqlite_init_success` in Logcat (`docs/evidence/physical-android/`). This verifies startup only; physical create/update/restart persistence remains unverified. Current Actions run #45860247144 skipped APK build because ILT3 was unavailable in CI.
 
 ## Current emulator restart evidence (2026-11-19)
 

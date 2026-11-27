@@ -22,33 +22,21 @@
 | 2026-11-23 | Phase 2/QA | Milestone 2 continuation: safe Daily Verse book normalization and regression hardening (Issue #14) | `dailyVerseRepository.ts`, `DailyVerseCard.tsx`, `settingsValidation.ts`, tests, `ISSUE_TRACKER.md`, `TESTING.md` | Node 22.23.3 via fnm: 306 tests / 19 suites passed; TypeScript and lint clean; 66-book table plus malformed-ID and UI safety cases added | Pending approval | Working tree uncommitted |
 | 2026-11-24 | Phase 2 | Real ILT3 SQLite integration, App Lock with auto-prompt & lifecycle guards, Pasal Acak Home card, branding identity, Indonesian UI "Kitab Suci" completion | `canonicalBooks.ts`, `bibleRepository.ts`, `AppLockScreen.tsx`, `appLockContext.tsx`, `badges.ts`, `progress.ts`, tests, assets | Node 22.23.3 via fnm: 327 tests / 22 suites passed; TypeScript and lint clean; 11 new tests added covering AppLockScreen, app lock lifecycle, and Indonesian UI | Working tree uncommitted | Local working tree |
 
-## Current state
+## Current state (verified 2026-11-27)
 
-- Repository: `https://github.com/cyberEagleOne/meno.git`
-- Branch: `feat/assignment-completion`
-- Latest pushed commit: `d250146` (`docs: record physical Android startup validation`).
-- Latest successful ARM64 CI artifact: run `44529697756` for `54619fd`; APK signature and ABI metadata verified. Run `44558937344` for `00fdae2` also passed full CI build and artifact upload.
-- Test suite: 22 suites, 327 passing under Node 22 via fnm; TypeScript and lint clean. Node 22 is required because the system Node 20 runtime lacks `node:sqlite`.
-- Defect findings: Four genuine user-facing runtime / packaging defects established (#3, #13, #14, #15), plus one build/lint defect (#4). Counting only runtime defects gives four; counting the build/lint defect gives five. No artificial defects were created and Issue #14's fallback correction is not double-counted.
-- Completed: Milestone 1 baseline initialization (277 tests), Milestone 2 defect remediation (306 tests), and Phase 2 full implementation:
-  1. Real ILT3 SQLite database integrated with all 66 books and 1,189 chapters, explicit ID mapping, truthful attribution, and loading/empty/error states.
-  2. Opt-in App Lock with 10-minute background grace period, auto-prompt on mount with re-render guard, manual retry, device authentication check, and safe recovery.
-  3. Consistent Meno visual branding: adaptive icon, splash screen, and App Lock screen in indigo palette (`#272A55`).
-  4. Indonesian UI finishing: completely replaced user-facing "Alkitab" with "Kitab Suci" (including milestone and badge labels), cleaned P4/P7 annotations, corrected daily verse translation label.
-  5. Pasal Acak card on Home screen with functional button, accelerometer shake integration, and 1.5s debounce.
-  6. QA & test suite expansion to 327 passing tests (22 suites) with 0 TypeScript and 0 ESLint errors.
-- Physical device: ADB deployment verified on a connected Android test device (Realme RMX2103).
-- Blockers: None for local build and verification. Bible redistribution rights remain restricted to local usage per licensing terms.
+- Repository: `https://github.com/cyberEagleOne/meno.git`; default branch `master`.
+- Current reviewed commit: `6a174c56445dbdf1117fd5aeb3748a84b8526b37` (`docs: finalize P11 and P12 evidence`), shared by local `master` and `origin/master`.
+- Other branch: `feat/assignment-completion` at `c2d9054`, behind master. No `v1.0_dev` branch and no version tags were found.
+- Package/app version: `1.0.0`; this is not a published release.
+- Latest captured local test result: 26 suites / 316 passed / 0 failed / 0 skipped, from `docs/evidence/P11/unit-tests-restored.txt` (Node 22). This is a captured result, not a run performed during this documentation update.
+- Latest checked Actions run: [45860247144](https://github.com/cyberEagleOne/meno/actions/runs/45860247144) on master/`6a174c5`, conclusion success. Unit tests, type check, and lint passed. Android export, native prebuild, APK build, and artifact upload were skipped because the public checkout has no ILT3 database. No deployment step is configured.
+- GitHub Issues snapshot verified 2026-11-26: 13 Issues, five labeled `bug`; #16 and #17 are closed historical bugs fixed in `db4063f`. See `docs/P11_AUDIT_REPORT.md` for the dated inventory.
+- Implemented features include the local ILT3 Bible reader and date-keyed Daily Verse, local reading progress, random chapter, daily reminder, haptics, app lock, badges, and progress UI. Full device acceptance is not established for every feature.
+- The app requires an authorized local copy of `assets/database/ilt3.sqlite`; it is not tracked or provided by GitHub. Redistribution rights are not established by this repository.
+- Historical physical-device evidence verifies startup and SQLite initialization on an RMX2103 using an earlier ARM64 APK; it does not verify the latest source/build or all user flows.
 
-## Test-count provenance (F5)
+The table above preserves past development notes. Rows that say “uncommitted,” 306/327 tests, or name an older current branch describe their original date only; they are not the current repository state.
 
-- Verified committed baseline: **277 tests / 18 suites** at `00fdae2`, recorded in this log as “Focused SQLite suite 9/9; complete suite 277/277”, and still the HEAD (`d250146`) state before the uncommitted Milestone 2 work. HEAD contains 18 test files.
-- Milestone 2 uncommitted state: **306 tests / 19 suites** (Node 22.23.3 via fnm). Delta from 277 was +29 tests: dailyVerse 6→21 (+15), settingsValidation 4→7 (+3), and the new DailyVerseCard suite (11).
-- Phase 2 completion state: **327 tests / 22 suites** (Node 22.23.3 via fnm). Delta from 306 is +21 tests:
-  - `src/data/__tests__/bibleBookMap.test.ts` (4 tests)
-  - `src/domain/__tests__/appLock.test.ts` (6 tests, +2 lifecycle & disable tests)
-  - `src/components/ui/__tests__/AppLockScreen.test.tsx` (7 tests)
-  - `src/app/reader/__tests__/readerCompletion.test.tsx` (11 tests, +2 real DB tests)
-  - `src/domain/__tests__/badges.test.ts` (14 tests, +1 label test)
-  - `src/domain/__tests__/progress.test.ts` (19 tests, +1 label test)
-  All 327 tests pass cleanly.
+## Test-count provenance
+
+The repository history records several successive suites (277, 306, and 327 cases) at earlier checkpoints. Those counts are historical and must not be read as current. The latest captured suite is 316 tests across 26 suites; its raw output is `docs/evidence/P11/unit-tests-restored.txt`. Use that evidence file and `docs/TESTING.md` for the current recorded total.

@@ -3,12 +3,14 @@
 | Field | Value |
 |---|---|
 | Document status | Living record of **actual** test runs — update on every Verify phase |
-| Last updated | 2026-11-23 |
+| Last updated | 2026-11-27 |
 | Environment | Node **v22.23.3** via fnm (`fnm exec --using=22`), jest **29.7.0**, jest-expo **~57.0.6**. The system Node v20.19.2 cannot load `node:sqlite`, so the disk-SQLite suite must run under fnm's Node 22. |
 
-> Evidence policy: every result below was produced by running the printed
-> command and copying its real output. Nothing here is paraphrased or
-> remembered. No test is claimed to pass unless it appears in a captured run.
+> Evidence policy: historical results below retain their original dates. The latest
+> captured local run is the 2026-11-26 output in
+> `docs/evidence/P11/unit-tests-restored.txt`; the latest GitHub Actions run is
+> separately linked below. A successful CI job and a local pass count describe
+> different environments.
 
 Related: [`../HowToRun.md`](../HowToRun.md) (setup/run),
 [`../checklist_mvp.md`](../checklist_mvp.md) (AC evidence map).
@@ -21,29 +23,36 @@ fnm exec --using=22 -- npx tsc --noEmit    # typecheck
 fnm exec --using=22 -- npm run lint        # eslint (expo config)
 ```
 
-## 2. Test inventory (19 files; current suite)
+## 2. Test inventory (26 test files in the captured local suite)
 
-| File | Cases | What it verifies |
-|---|---|---|
-| `src/domain/__tests__/bibleNavigation.test.ts` | 154 | Book/chapter lookup, prev/next within book, cross-book boundaries (Maleakhi 4 → Matius 1), `null` at canon ends, unknown locations, empty-chapter boundaries, dataset invariants |
-| `src/domain/__tests__/progress.test.ts` | 21 | `withCompletion` idempotency (same/different day), unmark, `completedCount` / `doneInBook`, milestone thresholds, `sanitizeProgress` (valid / invalid / corrupt / reading-day validation), `localDayKey` (local-date formatting, padding, local-vs-UTC), `isValidReadingDay`, `withReadingDay` (AC-2.6 day idempotency + ordering), `restoreScrollOffset` (reader scroll-restoration decision: match → offset, mismatch/missing → wait, zero/NaN → 0) |
-| `src/domain/__tests__/badges.test.ts` | 12 | Habit tree growth stages calculation (seed -> sprout -> sapling -> blooming -> fruitful -> golden oak), percentToNext progress calculation, collectible badges calculation across milestones, unique days, and scripture books |
-| `src/data/__tests__/dbCompletion.test.ts` | 11 | Completion/day writes through the injected in-memory driver: idempotency, multi-day history, undo semantics, simulated restart, and injected write failures |
-| `src/data/__tests__/db.test.ts` | 7 | Persistence API behavior using the injected in-memory driver: schema initialization, empty state, last-read round-trip, simulated restart, corrupt-row filtering, and missing-driver failure |
-| `src/data/__tests__/canon.test.ts` | 7 | Testament split at 39/40, canonical totals (66 books, 1189 chapters; PL 39/929, PB 27/260), unique sequential ids, `getBookById`, `booksByTestament`, `isValidChapter` bounds, `chapterKey` |
-| `src/data/__tests__/dailyVerse.test.ts` | 21 | Model validation; six REST error/empty scenarios; all 66 canonical books, OSIS/USFM codes, English aliases, case and whitespace normalization; safe `undefined` for unknown/empty/null/non-string IDs; reference parsing for all 66 canonical names; malformed `book_id` payload table; alternative `book_name`/`verses[0]` shapes; invalid chapter guards |
-| `src/components/ui/__tests__/DailyVerseCard.test.tsx` | 11 | "Baca Pasal Lengkap" renders only for a canonical, in-bounds integer chapter; omitted for undefined, blank, whitespace-only, unknown, out-of-bounds, missing, fractional, or zero chapter values; exact maximum chapter renders while maximum + 1 is omitted |
-| `src/domain/__tests__/settingsValidation.test.ts` | 7 | Validasi form pengaturan: target chapters (1-50 bounds, strict integers, rejects decimals/mixed text), note commitment length (5-200 chars inclusive), dan status validitas form |
-| `src/app/reader/__tests__/readerCompletion.test.tsx` | 3 | Reader completion behavior: success feedback waits for the write, duplicate taps are suppressed while pending, and failed writes show/re-scope a retry action |
-| `src/data/__tests__/progressContext.test.tsx` | 3 | Injected write failures during completion/undo leave context consistent, and a later successful retry updates state |
-| `src/components/ui/__tests__/ReadingGoalForm.test.tsx` | 5 | Goal form load, validation, success and failure behavior using a mocked repository |
-| `src/data/__tests__/goalRepository.test.ts` | 5 | Goal repository read/save behavior through the SQL driver seam |
-| `src/data/__tests__/sqlitePersistence.test.ts` | 9 | Disk-backed Node SQLite lifecycle for progress and reading-goal repositories |
-| `src/services/__tests__/authService.test.ts` | 7 | Biometric and PIN lock success, cancellation, lockout, and fallback paths |
-| `src/services/__tests__/sensorService.test.ts` | 4 | Shake navigation sensor lifecycle, cooldown, and cleanup |
-| `src/services/__tests__/logger.test.ts` | 7 | Runtime log levels, structured entries, and sensitive-value sanitization |
-| `src/utils/__tests__/formatters.test.ts` | 6 | Shared number and percentage formatting behavior |
-| `src/services/__tests__/notificationService.test.ts` | 6 | Permission result reflects post-prompt OS status; existing grant avoids another prompt; denial and scheduling paths |
+The 2026-11-26 captured run reports **26 suites / 316 tests passed / 0 failed / 0 skipped**. Test files present in the repository are:
+
+- `src/app/__tests__/random-chapter.test.tsx`
+- `src/app/__tests__/settingsReminder.test.tsx`
+- `src/app/reader/__tests__/readerCompletion.test.tsx`
+- `src/components/ui/__tests__/AppLockScreen.test.tsx`
+- `src/components/ui/__tests__/BadgeCard.test.tsx`
+- `src/components/ui/__tests__/DailyVerseCard.test.tsx`
+- `src/components/ui/__tests__/ReadingGoalForm.test.tsx`
+- `src/data/__tests__/bibleBookMap.test.ts`
+- `src/data/__tests__/bibleDailyVerse.test.ts`
+- `src/data/__tests__/canon.test.ts`
+- `src/data/__tests__/dailyVerse.test.ts`
+- `src/data/__tests__/db.test.ts`
+- `src/data/__tests__/dbCompletion.test.ts`
+- `src/data/__tests__/goalRepository.test.ts`
+- `src/data/__tests__/progressContext.test.tsx`
+- `src/data/__tests__/sqlitePersistence.test.ts`
+- `src/domain/__tests__/appLock.test.ts`
+- `src/domain/__tests__/badges.test.ts`
+- `src/domain/__tests__/bibleNavigation.test.ts`
+- `src/domain/__tests__/progress.test.ts`
+- `src/domain/__tests__/settingsValidation.test.ts`
+- `src/services/__tests__/authService.test.ts`
+- `src/services/__tests__/logger.test.ts`
+- `src/services/__tests__/notificationService.test.ts`
+- `src/services/__tests__/sensorService.test.ts`
+- `src/utils/__tests__/formatters.test.ts`
 
 **How the database is tested without a device:** `src/data/db.ts` issues all
 SQL through an injected `SqlDriver` (`src/data/sqlDriver.ts`). Production
@@ -119,8 +128,10 @@ does not verify a standalone/native APK or SQLite rollback behavior.
   recovery from a real device storage failure.
 - **Not verified:** native APK build/install behavior, native scrolling and
   performance on a standalone build.
-- **Not captured in this repository:** screenshots. The demo video is stored
-  outside the repository; submission of that video has not been confirmed.
+- **Screenshots:** historical emulator/UI and physical-device startup/reader
+  captures exist under `docs/evidence/`. They do not cover a full current-build
+  acceptance walkthrough. The demo video is outside this repository; submission
+  has not been confirmed.
 - **Not verified:** accessibility walkthrough (TalkBack, font scaling), or a
   complete live acceptance-criteria demonstration.
 
@@ -164,7 +175,7 @@ test demonstration was subsequently performed with a deliberately incorrect
 expected book name in the isolated navigation test. The controlled run failed
 as expected (1 failed / 153 passed in that file); the original expectation was
 restored immediately. Captured output is in
-`docs/evidence/testing/controlled-failure.log`. The restored suite at that checkpoint passed 252 tests after the notification permission fix; the current suite is 253 after bootstrap-error coverage. No intentionally failing test remains in the source.
+`docs/evidence/testing/controlled-failure.log`. The restored suite at that checkpoint passed 252 tests after the notification permission fix; that dated suite later reached 253 after bootstrap-error coverage. No intentionally failing test remains in the source.
 
 ## 5. Latest runtime and suite update (2026-11-19)
 
@@ -185,7 +196,7 @@ Correction to the runtime update above: ARM64-only CI run 44529697756 succeeded.
   repositories and cover navigation visibility, form behavior, and reader
   completion flows.
 
-## 7. Milestone 2 verification (2026-11-23)
+## 7. Historical Milestone 2 verification (2026-11-23)
 
 Issue #14 hardening was verified with the documented Node 22 toolchain. Captured
 results:
@@ -213,9 +224,17 @@ Environment caveat: the system interpreter is Node v20.19.2, which predates
 (fnm) all 19 suites and 306 tests pass and lint is clean. This is an
 environment constraint, not a code regression.
 
-Baseline provenance: the committed baseline is **277 tests / 18 suites** at
-`00fdae2` (see `docs/DEVELOPMENT_PROGRESS.md`). The current uncommitted work
-adds 29 tests (dailyVerse 6→21, settingsValidation 4→7, new DailyVerseCard
-suite 11), giving 277 + 29 = 306. The figure 281 has no documented or
-Git-verifiable test-count source and is not used. See the “Test-count
-provenance (F5)” section in `docs/DEVELOPMENT_PROGRESS.md`.
+Historical baseline provenance: the committed baseline at that checkpoint was
+**277 tests / 18 suites** at `00fdae2`. The then-uncommitted changes added 29
+tests to reach 306. Those are dated historical counts, not current worktree
+status. The latest captured run is documented in §8. The figure 281 has no
+documented or Git-verifiable test-count source and is not used.
+
+
+## 8. Latest captured local and hosted verification (2026-11-26)
+
+The captured local result in `docs/evidence/P11/unit-tests-restored.txt` is **26 suites / 316 passed / 0 failed / 0 skipped** (`npm test -- --runInBand --silent`, Node 22). The controlled failure and recovery captures are indexed in `docs/P11_P12_EVIDENCE_GUIDE.md`. TypeScript, lint, and `git diff --check` results are documented in the P11 audit snapshot; they were not rerun as part of this documentation review.
+
+The latest live Actions run checked during this review is [45860247144](https://github.com/cyberEagleOne/meno/actions/runs/45860247144), on `master` at `6a174c56445dbdf1117fd5aeb3748a84b8526b37`, conclusion **success**. Unit Tests, Type check, and Lint succeeded. Android bundle export, native project generation, JDK setup, APK build, and artifact upload were **skipped** because the ILT3 database is not present in the public checkout. Therefore this run did not build an APK and did not deploy the app. The current CI summary does not independently expose the exact Jest case count in the inspected run metadata; do not infer the local 316 count as its CI count.
+
+The ILT3-dependent app runtime requires an authorized local database copy. The test suite's database coverage uses both injected in-memory drivers and Node's disk SQLite; neither by itself establishes native Android SQLite behavior.

@@ -192,8 +192,8 @@ Berikut adalah katalog error riil yang dapat terjadi pada aplikasi Meno, represe
 
 #### Tindakan Perbaikan:
 1. **Pemisahan Modul Berbasis Platform Extension**:
-   - Dibuat file driver khusus web: [src/data/sqliteDriver.web.ts](file:///c:/Users/siril/Documents/AppDev/meno/src/data/sqliteDriver.web.ts) yang mengimplementasikan antarmuka `SqlDriver` berbasis `window.localStorage` murni tanpa sekalipun mengimpor modul `expo-sqlite`.
-   - File [src/data/sqliteDriver.ts](file:///c:/Users/siril/Documents/AppDev/meno/src/data/sqliteDriver.ts) dikhususkan untuk lingkungan *native* (Android & iOS).
+   - Driver khusus web berada di [`src/data/sqliteDriver.web.ts`](../src/data/sqliteDriver.web.ts); implementasinya memakai penyimpanan web tanpa mengimpor modul `expo-sqlite`.
+   - [`src/data/sqliteDriver.ts`](../src/data/sqliteDriver.ts) dikhususkan untuk lingkungan *native* (Android & iOS).
 2. **Resolusi Metro Bersih**:
    - Kompiler Metro secara otomatis mengenali ekstensi `.web.ts` saat menargetkan platform web dan melewati `sqliteDriver.ts`. Hal ini meniadakan dependensi `expo-sqlite/web/worker.ts` dari *bundle graph* web.
 3. **Verifikasi Build**:
@@ -224,12 +224,12 @@ Berikut adalah katalog error riil yang dapat terjadi pada aplikasi Meno, represe
 
 #### Tindakan Perbaikan:
 1. **Pengecekan Platform & Fallback Web API**:
-   - Pada [src/services/sensorService.ts](file:///c:/Users/siril/Documents/AppDev/meno/src/services/sensorService.ts), ditambahkan percabangan `Platform.OS === 'web'`. Di browser, fungsi memanfaatkan Web API standar `window.addEventListener('devicemotion', ...)` jika peramban mendukungnya, atau *no-op cleanup* yang aman jika peramban desktop tidak memiliki sensor fisik.
+   - Pada [`src/services/sensorService.ts`](../src/services/sensorService.ts), implementasi native memakai Expo Sensors; di web, kode menggunakan `devicemotion` bila tersedia dan selain itu mengembalikan cleanup no-op.
    - Panggilan `Accelerometer.addListener` pada platform native dibungkus dengan pengecekan ketersediaan fungsi `typeof Accelerometer.addListener === 'function'` serta blok `try...catch`.
 2. **Penyediaan Tombol Simulasi Emulator/Web**:
    - Pada layar Pengaturan, pengguna disediakan tombol *"Simulasi Gerakan Goyang (Emulator)"* yang memicu fungsi acak ayat tanpa bergantung pada sensor fisik.
 3. **Pemasangan Error Boundary Global**:
-   - Diekspor komponen `ErrorBoundary` standar pada [src/app/_layout.tsx](file:///c:/Users/siril/Documents/AppDev/meno/src/app/_layout.tsx) menggunakan komponen `StateMessage` agar setiap kegagalan *render* dapat ditangkap dengan ramah pengguna tanpa *blank screen*.
+   - Root [`ErrorBoundary`](../src/app/_layout.tsx) memakai `StateMessage` agar kegagalan render menampilkan pesan dan aksi muat ulang.
 
 ---
 

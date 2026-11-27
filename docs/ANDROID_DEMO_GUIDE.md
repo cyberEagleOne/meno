@@ -1,14 +1,14 @@
 # Android Lecturer Demonstration Guide
 
-## Status
+## Current status (checked 2026-11-27)
 
-The ARM64 APK from [successful CI run 44529697756](https://github.com/cyberEagleOne/meno/actions/runs/44529697756) is saved locally at `artifacts/android/meno-release.apk`. It has not been run on a physical phone. The earlier multi-ABI APK from run 44517378110 failed SQLite bootstrap on the API 37 x86_64 AVD because Expo SQLite JNI was absent for x86_64; this was captured at `docs/evidence/android/`. The newer APK is ARM64-only and cannot be tested on that x86_64 emulator. Windows local Gradle fails in Reanimated CMake/Ninja.
+The reader uses a local ILT3 SQLite asset for Bible chapters and Daily Verse. That asset is ignored by Git and absent from a fresh public clone and GitHub Actions. The app needs an authorized local copy at `assets/database/ilt3.sqlite`; permission to redistribute the content is not established here.
 
-The reader currently contains synthetic text labelled **TEKS CONTOH — BUKAN KITAB SUCI** because redistribution rights for the intended translation are unresolved. Disclose this limitation during the demo; do not represent sample text as Scripture.
+Historical artifacts show an earlier ARM64 APK built by [CI run 44529697756](https://github.com/cyberEagleOne/meno/actions/runs/44529697756) installed and started on an RMX2103 physical device, with SQLite startup evidence. The available screenshots/logs are under `docs/evidence/physical-android/`. This verifies startup at that historical source/build, not full current feature acceptance. The latest CI run, [45860247144](https://github.com/cyberEagleOne/meno/actions/runs/45860247144), skipped Android export/APK build/artifact upload because the database was absent; do not treat it as a new APK.
 
 ## Install and start
 
-Connect an ARM64 Android phone with USB debugging enabled and authorize the computer. The APK is already available at `artifacts/android/meno-release.apk`. Install with:
+Connect an ARM64 Android phone with USB debugging enabled and authorize the computer. Supply a locally built APK from an authorized environment; the latest GitHub Actions run did not produce one. Install with:
 
 ```powershell
 & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" devices
@@ -16,11 +16,11 @@ Connect an ARM64 Android phone with USB debugging enabled and authorize the comp
 & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" shell monkey -p com.meno.app 1
 ```
 
-If installing manually, transfer the APK to the phone, allow the package installer to install that file if Android asks, and open **Meno**. No backend or account configuration is required. Internet is only needed for the daily verse API. No demonstration account or credentials exist.
+If installing manually, transfer an APK you have built in an authorized environment, allow the package installer to install that file if Android asks, and open **Meno**. No backend or account configuration is required. Reading and Daily Verse use the local ILT3 data; internet is not needed for those features.
 
-## Current Android verification boundary
+## Historical AVD verification boundary — 2026-11-19
 
-On 2026-11-19, `adb devices -l` detected only `emulator-5554` (`sdk_gphone64_x86_64`, API 37; ABI list `x86_64,arm64-v8a`). No physical phone was detected. The release APK contains only ARM64 native libraries, so it is not compatible with that x86_64 AVD. The current JavaScript app was opened in Expo Go on the AVD for preliminary UI and SQLite process-restart observation. This is not a release APK install/run test. Screenshots and the exact restart sequence are documented in `docs/UI_UX_REVIEW.md` and `docs/evidence/android/08-avd-persistence-observation.txt`.
+At the initial AVD check on 2026-11-19, `adb devices -l` detected only `emulator-5554` (`sdk_gphone64_x86_64`, API 37; ABI list `x86_64,arm64-v8a`). The ARM64-only release APK could not run on that x86_64 AVD. The app JavaScript was opened in Expo Go for preliminary UI and SQLite process-restart observation. This was not an APK test. Later that date, a physical RMX2103 startup was recorded in the evidence cited above. AVD screenshots and the restart sequence are documented in `docs/UI_UX_REVIEW.md` and `docs/evidence/android/08-avd-persistence-observation.txt`.
 
 ### Physical phone install checklist
 
@@ -54,11 +54,11 @@ Until this checklist is run, physical Android acceptance is blocked on connectin
 
 ## 5–10 minute sequence
 
-1. **Home / Reader (1 min):** show the calm Indonesian home screen and placeholder-content notice.
+1. **Home / Reader (1 min):** show the Indonesian Home screen and open a chapter from the local ILT3 database.
 2. **Browse (1 min):** open Library, choose a book and chapter, and point out book/chapter navigation.
 3. **Read and navigate (1–2 min):** open a chapter, move to next/previous (including a book boundary if time permits), and show that merely opening a chapter does not mark it complete.
 4. **Progress state (1–2 min):** tap **Tandai selesai**, show feedback, open **Kemajuan**, and show counts/progress. Undo once to demonstrate the reversible state if useful.
-5. **Daily verse API (1 min):** show its loading/success state; if offline or provider fails, show the error and retry path.
+5. **Daily Verse (1 min):** show the date-keyed verse loaded from the local ILT3 database.
 6. **Notifications (1 min):** in Settings enable/trigger a reminder, grant notification permission, and show the local notification.
 7. **Shake navigation (30 sec):** enable the feature, shake once, and show the random destination. Avoid repeat shaking during its cooldown.
 8. **Biometric/PIN lock (1 min):** enable lock and demonstrate successful authentication plus cancellation/fallback behavior on supported hardware.
@@ -71,8 +71,7 @@ Until this checklist is run, physical Android acceptance is blocked on connectin
 - **Notification absent:** check Android notification permission/channel settings and battery restrictions; Android may delay scheduled notifications.
 - **Shake does nothing:** confirm accelerometer availability and that shake detection is enabled; use the UI fallback if offered.
 - **Biometric unavailable:** configure a device fingerprint/face and secure screen lock; use the app's PIN fallback.
-- **Daily verse error:** check internet and use Retry; the provider is an external service.
-- **Unexpected content:** the local reader is synthetic sample content, explicitly not a Bible translation.
+- **Reader/Daily Verse unavailable:** verify that an authorized `assets/database/ilt3.sqlite` exists locally and matches the expected ILT3 schema; do not replace it with a fabricated database.
 
 ## Physical Android startup update — 2026-11-19
 
@@ -80,4 +79,4 @@ The local APK (`artifacts/android/meno-release.apk`, SHA-256 `CD388C88CD1119782B
 
 Physical evidence is under `docs/evidence/physical-android/`. The screenshot captured after launch shows the **Pilih kitab** screen. The later CI artifact from run 44558937344 has a different reported digest and was not used for this install; do not describe the tested local APK as that artifact. The separate crash buffer contains a ColorOS Phone Manager `DeadObjectException`, which is not from Meno.
 
-Startup and SQLite initialization are verified on this physical phone. Stop at this point until the user confirms that the screen currently shown on the phone matches the captured book chooser. Core interactions, persistence after force-stop, notifications, shake, and biometrics have not been tested on the phone yet.
+Startup and SQLite initialization were verified on this physical phone on 2026-11-19. Core interactions, persistence after force-stop, notifications, shake, and biometrics were not included in that captured phone verification; follow the acceptance checklist above for a full walkthrough.

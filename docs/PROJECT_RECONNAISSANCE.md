@@ -8,7 +8,7 @@
 
 Meno is an Android-first, Indonesian-language Bible reading habit app for readers who want a calm way to resume reading and track progress. It is a React Native application built with Expo and TypeScript. This is a university assignment project, not a production service.
 
-The main value proposition is local, private reading progress with a low-pressure reading experience. A critical content limitation remains: the reader currently displays explicitly labelled synthetic placeholder text. The intended Indonesian translation's redistribution rights are unresolved; the placeholder must not be presented as Scripture.
+At the reconnaissance checkpoint, the reader displayed explicitly labelled synthetic placeholder text. This was later replaced by local ILT3 SQLite integration. The current local database is excluded from Git, and redistribution rights remain to be confirmed before distributing content or a database-bearing build.
 
 ## Technology and structure
 

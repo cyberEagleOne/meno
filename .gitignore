@@ -61,3 +61,6 @@ example
 /ios
 /android
 /artifacts/android/*.apk
+
+# Local ILT3 Bible database (content must not be committed or distributed)
+/assets/database/*.sqlite

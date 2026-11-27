@@ -2,6 +2,8 @@
 
 **Status:** planning only; not a release declaration. V1.1 work must remain separate from a verified v1.0 release. No `v1.0` or `v1.0_dev` branch is declared ready while the mandatory v1.0 gates remain unmet.
 
+> **Current snapshot (2026-11-27):** app/package version is `1.0.0`, but no version tags or `v1.0_dev` branch exist and no release has been declared. ILT3 is integrated locally but its database is excluded from Git and distribution rights remain to be confirmed. Latest captured local tests are 316/316. Latest CI run #45860247144 passed tests/type/lint but skipped Android APK build/upload because the database was absent. This roadmap remains proposed work, not a record of a released V1.1.
+
 ## Proposed improvements
 
 | Priority | Improvement | Acceptance evidence |
@@ -17,7 +19,7 @@
 ## Completed after the initial audit
 
 - Lint violation in goal form fixed and verified.
-- Navigation boundary coverage expanded; current suite has 253 tests.
+- Navigation boundary coverage expanded; the current captured local suite has 316 tests (see `docs/TESTING.md`).
 - SDK 57 compatible patch updates applied; Expo Doctor 21/21.
 - Safe npm remediation reduced audit findings from 18 to 6; remaining dependency findings are documented in `SECURITY_AUDIT.md`.
 - CI configured to prebuild Android before Gradle after the first runner revealed that `/android` is ignored.
@@ -28,4 +30,4 @@
 
 - Planned: licensed Bible content, verified native Android workflow, advanced-feature test coverage, accessibility improvements, and dependency-advisory remediation.
 - Completed so far in the development line: SDK patch alignment, lint cleanup, exhaustive chapter-boundary tests, CI prebuild correction.
-- Regression evidence: 15 suites / 253 tests passed after source fixes; Expo Doctor 21/21; Android bundle export passed. A previous CI APK failed SQLite bootstrap on x86_64; ARM64-only CI rebuild and physical-device regression remain pending.
+- Historical regression evidence: 15 suites / 253 tests passed after the 2026-11-19 source fixes; Expo Doctor 21/21; Android bundle export passed. The later historical ARM64 APK was started on a physical test device. Latest CI run #45860247144 passed tests/type/lint but skipped Android export/APK build/upload. Full current device acceptance remains pending.

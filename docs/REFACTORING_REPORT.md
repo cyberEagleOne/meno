@@ -1,5 +1,7 @@
 # Refactoring Report
 
+> **Historical report:** this refactoring audit describes changes through 2026-11-19. Its references to 253 tests and “latest suite” are for that dated checkpoint. Current captured suite: 26 suites / 316 tests; see `docs/TESTING.md`. Daily Verse has since moved from the REST module described by some examples to local ILT3 in `bibleRepository.ts`.
+
 ## Verified work already present
 
 - `src/utils/formatters.ts` centralizes number/percentage formatting previously duplicated across reader, home and progress routes; formatter tests were added.

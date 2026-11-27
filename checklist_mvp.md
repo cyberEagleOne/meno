@@ -7,30 +7,32 @@ merely exist.
 
 | Legend | Meaning |
 |---|---|
-| **VERIFIED (automated)** | Covered by a passing test in the captured 2026-10-22 run (`docs/TESTING.md` §3.1). |
+| **VERIFIED (automated)** | Covered by tests in the captured 2026-11-26 run (`docs/evidence/P11/unit-tests-restored.txt`). |
 | **PARTIAL** | Automated host coverage exists for the underlying rule, but the on-device/UI half of the criterion is **NOT YET VERIFIED**. |
 | **OBSERVED (Expo Go)** | Directly observed in the Android emulator Expo Go smoke test; this does not mean native APK behavior was tested. |
-| **NOT YET VERIFIED** | Implemented (or believed implemented) but **no captured evidence** exists. |
+| **NOT YET VERIFIED** | Implemented (or believed implemented), but no evidence sufficient to verify this criterion on the current app/data path exists. Historical screenshots may exist without proving current behavior. |
 | **DEFERRED** | Explicitly out of MVP scope per `docs/PRD.md` §10. |
 
-> **Evidence note:** A limited Android emulator Expo Go smoke test was observed:
+> **Current evidence note (2026-11-27):** A limited Android emulator Expo Go smoke test was observed:
 > Home, chapter open, completion/undo, Progress, and completion/progress still
-> present after force-stop/relaunch. This was not a full acceptance-criteria
-> walkthrough. Screenshots are not in the repository; the demo video is outside
-> the repository and submission is unconfirmed. Native APK behavior, native
+> present after force-stop/relaunch. Physical ARM64 APK startup was also captured,
+> but this was not a full acceptance-criteria walkthrough. Screenshots exist under
+> `docs/evidence/android/`, `docs/evidence/ui-review/`, and
+> `docs/evidence/physical-android/`; they are historical captures and do not prove
+> every interaction. Native APK feature behavior, native
 > SQLite rollback, and real storage-failure recovery remain unverified.
 
 ## Feature 1 — Bible Reader
 
 | AC | Criterion (summary) | Type | Status | Evidence / gap |
 |---|---|---|---|---|
-| AC-1.1 | Book list for the (single) translation is displayed | Manual device | **NOT YET VERIFIED** | Implemented: `src/app/(tabs)/library.tsx`. No screenshot/walkthrough captured. |
+| AC-1.1 | Book list for the (single) translation is displayed | Manual device | **NOT YET VERIFIED** | Implemented in `src/app/(tabs)/library.tsx`. A historical book-list screenshot exists at `docs/evidence/ui-review/02-library-expo-go-avd.png`, but it predates ILT3 integration and does not verify the current database-backed list. |
 | AC-1.2 | Selecting a book + chapter renders all verses in canonical order | Manual + dataset rule | **PARTIAL** | Canonical ordering guarded on host: `src/data/__tests__/canon.test.ts` (sequential `canonicalOrder`, unique ids) and dataset invariants in `bibleNavigation.test.ts`. Verse rendering itself **NOT YET VERIFIED** on device. |
-| AC-1.3 | "Next" at a book's last chapter steps to the next book; disabled at the Bible's final chapter | Automated rule + manual UI | **PARTIAL** | Host-verified: `bibleNavigation.test.ts` cross-book boundary and `null`-at-canon-end cases (part of the 73/73 run, 2026-10-22). UI disabled-state of the footer button **NOT YET VERIFIED** on device. |
+| AC-1.3 | "Next" at a book's last chapter steps to the next book; disabled at the Bible's final chapter | Automated rule + manual UI | **PARTIAL** | Host-verified: `bibleNavigation.test.ts` covers cross-book boundary and `null`-at-canon-end cases (included in the captured 316-test run). UI disabled-state of the footer button **NOT YET VERIFIED** on device. |
 | AC-1.4 | "Previous" disabled at Genesis 1 (no crash, no negative navigation) | Automated rule + manual UI | **PARTIAL** | Host-verified: `bibleNavigation.test.ts` first-chapter/`null` cases. UI disabled-state **NOT YET VERIFIED** on device. |
 | AC-1.5 | Long chapters stay scroll-performant via virtualization | Manual device | **NOT YET VERIFIED** | Implemented with `FlatList` + memoized `VerseRow` in `src/app/reader/[book]/[chapter].tsx`. No performance measurement captured. |
 | AC-1.6 | App closed/reopened → reader returns to last-read book/chapter | Automated (simulated) + device restart | **PARTIAL** | Host-verified simulated restart: `src/data/__tests__/db.test.ts` ("state written before a simulated restart is still readable"). **Real device kill/relaunch NOT YET VERIFIED** (TESTING.md §4, RQ-4). |
-| AC-1.7 | Shell shows exactly two tabs (Baca, Kemajuan) and no others | Manual device | **NOT YET VERIFIED** | Implemented: `src/app/(tabs)/_layout.tsx` (custom `MenoTabBar`; `library` and `chapters/[book]` registered with `href: null`). Not observed on device. |
+| AC-1.7 | Shell shows exactly two tabs (Baca, Kemajuan) and no others | Manual device | **NOT YET VERIFIED** | Implemented in `src/app/(tabs)/_layout.tsx`. Historical Expo Go screenshots show the earlier tab shell; the current database-backed build has not been rechecked against this criterion. |
 | AC-1.7a | Android Back from the reader returns to the originating screen | Manual device | **NOT YET VERIFIED** | Implemented via Expo Router stack structure (reader outside the tab group). Not exercised on device. |
 | AC-1.7b | Prev/next replaces the reader route (no back-stack growth) | Manual device | **NOT YET VERIFIED** | Implemented (router replace in the reader). Not exercised on device. |
 
@@ -38,7 +40,7 @@ merely exist.
 
 | AC | Criterion (summary) | Type | Status | Evidence / gap |
 |---|---|---|---|---|
-| AC-3.1 | Book list grouped by testament (PL/PB); each row shows the book name and its completed-chapter count | Manual device | **NOT YET VERIFIED** | Implemented in `src/app/(tabs)/library.tsx` (PL/PB section headers; per-row `N selesai` via `doneInBook`). UI-only; no screenshot/walkthrough captured. |
+| AC-3.1 | Book list grouped by testament (PL/PB); each row shows the book name and its completed-chapter count | Manual device | **NOT YET VERIFIED** | Implemented in `src/app/(tabs)/library.tsx` (PL/PB section headers; per-row `N selesai` via `doneInBook`). Historical library screenshots exist, but do not verify all row details against the current ILT3-backed app. |
 | AC-3.2 | A search term filters the book list to matching names, still grouped by testament | Manual device | **NOT YET VERIFIED** | Implemented in `src/app/(tabs)/library.tsx` (query filter over PL/PB sections). UI-only; no captured evidence. |
 | AC-3.3 | A search matching no book shows an explanatory empty state with a way to clear the search; no crash | Manual device | **NOT YET VERIFIED** | Implemented in `src/app/(tabs)/library.tsx` ("Tidak ada kitab yang cocok…" + "Hapus pencarian"). UI-only; no captured evidence. |
 
@@ -48,14 +50,14 @@ merely exist.
 |---|---|---|---|---|
 | AC-4.1 | "Tandai selesai" on an incomplete chapter records it complete and the control switches to "Batalkan penandaan" | Manual device | **OBSERVED (Expo Go)** | Completion was marked in the Android emulator Expo Go smoke test; persisted completion was still present after force-stop/relaunch. Not a native APK test. |
 | AC-4.2 | "Batalkan penandaan" on a completed chapter removes it from the completed set and the control reverts to "Tandai selesai" | Manual device | **OBSERVED (Expo Go)** | Completion was undone in the Android emulator Expo Go smoke test. Not a native APK test. |
-| AC-4.3 | The placeholder notice is visible so the synthetic text is not mistaken for Scripture | Manual device | **NOT YET VERIFIED** | Implemented: `PlaceholderBanner` rendered in the reader (`PLACEHOLDER_NOTICE` = "TEKS CONTOH — BUKAN KITAB SUCI"; every verse carries the `not Scripture` marker, test-guarded). On-device visibility **NOT YET VERIFIED**. |
+| AC-4.3 | The translation attribution is visible in the reader | Manual device | **PARTIAL** | Reader renders copyright attribution from local ILT3 translation metadata (`src/data/bibleRepository.ts`, reader route). Real Bible text and attribution are visible in the historical physical-device capture `docs/evidence/physical-android/release-fdf056c-02-reader-real-bible.png`; current-build/device rendering has not been re-verified. Confirm redistribution rights separately before distribution. |
 
 ## Feature 2 — Persistent Reading Progress
 
 | AC | Criterion (summary) | Type | Status | Evidence / gap |
 |---|---|---|---|---|
 | AC-2.1 | Marking a chapter complete reflects it in the completed set | Automated + manual UI | **PARTIAL** | Host-verified data path: `dbCompletion.test.ts` (row written; `loadProgress` returns the key) and `progress.test.ts` (map update). On-device toggle **NOT YET VERIFIED**. |
-| AC-2.2 | Same-day double completion is a no-op; count unchanged | Automated | **VERIFIED (automated)** | `progress.test.ts` + `dbCompletion.test.ts` (one row per chapter; idempotent repeated completion). Verified in the 73/73 run, 2026-10-22. |
+| AC-2.2 | Same-day double completion is a no-op; count unchanged | Automated | **VERIFIED (automated)** | `progress.test.ts` + `dbCompletion.test.ts` (one row per chapter; idempotent repeated completion); included in the captured 316-test run. |
 | AC-2.3 | Completion records survive app restart; stats unchanged | Automated (simulated) + device restart | **PARTIAL** | Host-verified simulated restart: `db.test.ts`. Expo Go smoke test observed completion/progress still present after force-stop/relaunch. Native APK behavior, native SQLite rollback, and real storage-failure recovery remain unverified. |
 | AC-2.4 | Streak boundary behaviour | — | **DEFERRED** | Out of MVP scope per PRD §8 (BR-3/BR-4) and §10. **Unresolved conflict:** `docs/ASSIGNMENT_TRACEABILITY.md` RQ-6 still lists streak tests as a requirement row — confirm with the lecturer; do not silently treat either way. |
 | AC-2.5 | Empty progress shows zeros, no crash | Automated + manual UI | **PARTIAL** | Host-verified: `db.test.ts` ("an empty database loads as empty progress" → `{ lastRead: null, completed: {}, readingDays: [] }`). Kemajuan empty-state UI (incl. "0 hari membaca" line) **NOT YET VERIFIED**. |
@@ -81,8 +83,9 @@ merely exist.
 | NOT YET VERIFIED | 12 | AC-1.1, AC-1.5, AC-1.7, AC-1.7a, AC-1.7b (1.7a/b are sub-checks of AC-1.7); AC-3.1, AC-3.2, AC-3.3, AC-4.3, AC-5.2, AC-5.3, AC-5.4 |
 | DEFERRED (unresolved RQ-6) | 1 | AC-2.4 |
 
-**Overall:** automated coverage of the domain/data rules passes (7 suites / 73
-tests, 2026-10-22). A limited Expo Go smoke test was observed, but the full MVP
+**Overall:** the latest captured local suite passes (26 suites / 316 tests,
+2026-11-26). A limited Expo Go smoke test and historical physical startup were
+observed, but the full MVP
 acceptance checklist, native APK behavior, accessibility, native SQLite
 rollback, and storage-failure recovery are not verified. Next evidence steps
 are listed in `docs/TESTING.md` §4 and the student-review section of

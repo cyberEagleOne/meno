@@ -9,6 +9,8 @@
 
 > **Scope control (`meno-workflow`):** do not implement the whole app at once; keep it runnable at each milestone; ask before adding a backend, auth, paid service, or major dependency. This plan is a proposal and can be re-sequenced with the student's approval.
 
+> **Historical plan note (2026-11-27):** this is the original meeting plan, not a current task-status checklist. Some planned placeholder/licensing steps were superseded when local ILT3 SQLite content was integrated. The current database is excluded from Git; distribution rights remain to be confirmed. See `README.md` and `docs/DEVELOPMENT_PROGRESS.md` for current implementation facts.
+
 ---
 
 ## Milestone overview
@@ -102,7 +104,7 @@
 
 ## Sequencing notes & dependencies
 
-- M1 is **blocked** until the Bible translation/licence decision (PRD §5.4) is made; a placeholder dataset may be used temporarily **only if clearly marked as placeholder**.
+- At the time this plan was drafted, M1 was **blocked** pending the Bible translation/licence decision. The placeholder-dataset proposal is historical; the implemented app now reads local ILT3 SQLite. Redistribution permission still needs confirmation before distribution (PRD §5.4).
 - M2 depends on the Expo SQLite persistence decision (Architecture ADR-003).
 - Scaffolding (Meeting 3) is **blocked** until the Node engine issue is resolved (ADR-007 / Architecture §2.2).
 - New dependencies, backend, or auth require explicit approval (`meno-workflow`).

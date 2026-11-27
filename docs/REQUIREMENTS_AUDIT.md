@@ -2,6 +2,8 @@
 
 **Audit date:** 2026-11-19. **Status is evidence-based for this workspace.** `VERIFIED` requires an executed check or directly inspected behavior; files or UI alone do not count. An implementation can be real while its native behavior remains unverified.
 
+> **Historical audit notice (2026-11-27):** this requirement-by-requirement table is a snapshot from 2026-11-19 and has not been fully re-audited. Later work integrated local ILT3 content, added features/tests, created and closed historical bug Issues #16/#17, and added current P11/P12 reports. The current local result is 316/316 tests; latest Actions run #45860247144 passed tests/type/lint but skipped APK build because ILT3 was absent. Current authoritative status: `README.md`, `docs/DEVELOPMENT_PROGRESS.md`, `docs/TESTING.md`, `docs/P11_AUDIT_REPORT.md`, and `docs/P12_SECURITY_RISK_REPORT.md`. The dated rows below remain the 2026-11-19 assessment, not present-day status.
+
 | ID | Requirement | Status | Evidence | Missing work | Priority |
 |---|---|---|---|---|---|
 | M1-01 | README describes the real problem | VERIFIED | `README.md` describes reading habit friction | Keep current | P2 |

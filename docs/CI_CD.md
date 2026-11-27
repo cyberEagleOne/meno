@@ -1,17 +1,36 @@
 # CI/CD
 
-## Current status
+## Current workflow status (verified 2026-11-27)
 
-`.github/workflows/android-ci.yml` was added and ran on GitHub. An early workflow run stopped at the native APK step (exit 127) because `/android` is ignored and absent from a clean checkout. The corrected workflow generates the native project before Gradle; corrected run results are summarized below.
+The workflow is `.github/workflows/android-ci.yml`. The latest GitHub Actions run checked for this review is [45860247144](https://github.com/cyberEagleOne/meno/actions/runs/45860247144), on `master` at commit `6a174c56445dbdf1117fd5aeb3748a84b8526b37`. The job concluded **success**.
 
-The workflow generates Android with `expo prebuild --platform android --no-install`. Runs [44513648948](https://github.com/cyberEagleOne/meno/actions/runs/44513648948) and [44517378110](https://github.com/cyberEagleOne/meno/actions/runs/44517378110) successfully built and uploaded APKs. The latter passed 252 tests and all static/bundle/build steps. Installing its APK on API 37 x86_64 exposed missing Expo SQLite JNI for x86_64. The workflow now targets ARM64 only; run [44529697756](https://github.com/cyberEagleOne/meno/actions/runs/44529697756) for commit `54619fd` succeeded, including all checks and APK upload. The downloaded APK advertises only `arm64-v8a` and contains `lib/arm64-v8a/libexpo-sqlite.so`. Its SHA-256 is `CD388C88CD1119782B802CC1F03D8BD6765FA88AD12DD3B1DCC4486435C0C128`; physical-device runtime remains unverified. The current local suite passes 253 tests.
+| Stage | Latest run result |
+|---|---|
+| Install dependencies | Success |
+| Unit Tests | Success |
+| TypeScript check | Success |
+| ESLint | Success |
+| Android JavaScript export | Skipped |
+| Native Android project generation | Skipped |
+| Android release APK build | Skipped |
+| APK artifact upload | Skipped |
+| Deployment / publication | Not configured |
 
-No deployment host or credentials are configured. Meno has no backend to deploy.
+The workflow checks for `assets/database/ilt3.sqlite`. That local-use database is not tracked in the public repository, so the GitHub runner does not have it; all Android export/build/artifact steps are conditional on its presence and were skipped. A green run therefore confirms the executed test and static-check steps, not an APK build or deployment. The workflow does not publish the app.
 
-## Workflow
+The Actions run detail metadata verified the three required check steps as successful, but the exact latest-run Jest case count was not independently captured in this evidence set. Do not report the local **316/316** count as the CI count. A local 316-case output is available at `docs/evidence/P11/unit-tests-restored.txt`.
 
-On selected branch pushes and pull requests: checkout → Node 22/npm ci → Jest → TypeScript → ESLint → Android JS export → native Android prebuild → JDK 17/Gradle release APK build → upload APK artifact. Sequential steps ensure test/lint/type failure stops the build and artifact upload. It does not publish a public release.
+## Workflow behavior
 
-## Verification boundary
+For pushes to `master`, `feat/assignment-completion`, or `v1.0_dev`, and pull requests targeting `master` or `feat/assignment-completion`, the workflow performs:
 
-The previous runs remain failed and are not reported as successful APK builds. The corrected run completed its Gradle and artifact steps successfully; the next commit will trigger regression CI for the notification fix. Android native builds require hosted runner SDK setup and can be slow; the local native build attempt also failed before compilation because this host uses Java 8. No deployment step exists because there is no configured deployment target.
+1. Checkout, Node 22 setup, and `npm ci`.
+2. Check whether the local ILT3 database is present.
+3. Run Jest, TypeScript, and ESLint.
+4. Only if the database exists: export the Android bundle, generate the native Android project, set up JDK 17, build an ARM64 release APK, and upload it as an Actions artifact (14-day retention).
+
+There is no deployment host, signing-secret setup, store publishing, or GitHub Release step in this workflow. The app has no Meno backend to deploy.
+
+## Historical CI evidence
+
+Earlier runs in November 2026 built ARM64 APKs, including run [44529697756](https://github.com/cyberEagleOne/meno/actions/runs/44529697756). That historical APK was inspected and startup was later observed on an ARM64 physical test phone. It does not establish an APK build for the latest run or the current documentation checkout. Historical run failures and artifacts are retained in their original records.

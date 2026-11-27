@@ -1,8 +1,8 @@
 # P11 Audit Report
 
-**Audit date:** 2026-11-26
+**Audit date:** 2026-11-27 (documentation state refresh)
 
-**Repository state inspected:** local checkout, branch `master`, HEAD `df0f6d9100332eb0fa02c95cfceac2639bcf5708
+**Repository state inspected:** local checkout, branch `master`, HEAD `6a174c56445dbdf1117fd5aeb3748a84b8526b37`
 
 **Scope:** local project, repository metadata, GitHub Issues and workflow. During the requested finalization, two historical bug Issues (#16, #17) were created, labeled `bug`, and closed as completed. No existing Issue or PR, branch, tag, commit, push, or release was changed.
 
@@ -16,7 +16,7 @@ During the finalization pass on 2026-11-26, `gh auth status`, `gh issue list`, `
 |---|---|
 | Working tree before audit | Clean |
 | Active branch | `master` |
-| HEAD | `df0f6d9`, merge of PR #15 according to local commit metadata |
+| HEAD | `6a174c5`, P11/P12 evidence documentation update |
 | Local/remote-tracking branches | `master`, `feat/assignment-completion`, `origin/master`, `origin/feat/assignment-completion`; `origin/HEAD` points at `origin/master` |
 | Branch relation | `feat/assignment-completion` is 4 commits behind `master`, 0 commits ahead |
 | Local tags | None found |
@@ -27,20 +27,20 @@ The local workflow mentions `v1.0_dev` in its push trigger, but no such local or
 
 ## Issue inventory
 
-The following inventory transcribes and classifies `docs/ISSUE_TRACKER.md`, then checks it against the live GitHub Issues list. Issues #3–#13, #16 and #17 all exist; titles, labels, and states below match the read-only live query performed on 2026-11-26.
+The following inventory transcribes and classifies `docs/ISSUE_TRACKER.md`, then checks it against the live GitHub Issues list. Issues #3–#13, #16 and #17 all exist; titles, labels, and states below match the read-only live query performed on 2026-11-27. The fresh query is retained at `docs/evidence/P11/github-issues-final-2026-11-27.json`.
 
 | No | Issue (as recorded locally) | Type / classification | Status in tracker | Evidence / action |
 |---:|---|---|---|---|
 | 3 | Notification denial keeps the pre-prompt `canAskAgain` value | Bug; fixed | Closed | Live issue #3; resolution and regression tests described in issue body |
 | 4 | Goal form load effect triggers lint-blocking synchronous state update | Build/lint defect; fixed | Closed | Live issue #4; resolution and test evidence described in issue body |
-| 5 | Decide Bible translation license and replace synthetic reader text | Feature/content decision | Open | Live labels: documentation, enhancement |
+| 5 | Decide Bible translation license and replace synthetic reader text | Content/license decision; title partly superseded | Open | Live labels: documentation, enhancement. Synthetic placeholder has been replaced by local ILT3 content; confirming rights to distribute the content remains relevant. The GitHub title was not changed. |
 | 6 | Verify SQLite CRUD persistence across Android process restart | Needs Verification / acceptance test | Open | Live enhancement label; not a confirmed bug |
 | 7 | Exercise Android notification permission grant, denial and scheduling | Needs Verification / acceptance test | Open | Live enhancement label; not a confirmed bug |
 | 8 | Verify shake navigation sensor lifecycle and cooldown | Needs Verification / acceptance test | Open | Live enhancement label; not a confirmed bug |
 | 9 | Verify biometric and PIN lock success, cancellation and fallback | Needs Verification / acceptance test | Open | Live enhancement label; not a confirmed bug |
 | 10 | Capture Android UI, keyboard and accessibility review evidence | Improvement / Needs Verification | Open | Live labels: accessibility, documentation |
 | 11 | Upgrade `upload-artifact` action to remove Node 20 runtime deprecation | CI improvement | Open | Live enhancement label |
-| 12 | Plan compatible remediation for remaining npm audit advisories | Security improvement | Open | Live enhancement label |
+| 12 | Plan compatible remediation for remaining npm audit advisories | Security improvement | Open | Live enhancement label; advisory count in `SECURITY_AUDIT.md` is a 2026-11-19 snapshot and must be rescanned before release. |
 | 13 | Android launch falls into local SQLite bootstrap error | Bug; x86_64 runtime/package defect | Open | Live issue includes APK ABI mismatch, Logcat and screenshot evidence |
 | 14* | GitHub #14 is a merged Pull Request: `Feat/assignment completion` | Not an Issue | Closed / merged | Verified through GitHub API; do not use this number for a draft issue |
 | 15* | GitHub #15 is a merged Pull Request: `Complete Meno app improvements` | Not an Issue | Closed / merged | Verified through GitHub API; do not use this number for a draft issue |
@@ -133,7 +133,7 @@ Verified from `.github/workflows/android-ci.yml`:
 5. Android export, native prebuild, Gradle ARM64 release APK build, and artifact upload run only when that database is present.
 6. No deployment/publication step is configured.
 
-The current local checkout has the ILT3 database. The latest live run inspected, [45840998030](https://github.com/cyberEagleOne/meno/actions/runs/45840998030), completed successfully on `master` at HEAD `df0f6d9`. Unit tests, TypeScript, and lint passed. The database check succeeded as a workflow step, but the runner did not have the local database; Android export, prebuild, APK build, and artifact upload were skipped. This is a successful validation run, not a successful APK build. Branch protection settings were not inspected.
+The current local checkout has the ILT3 database. The latest live run checked on 2026-11-27, [45860247144](https://github.com/cyberEagleOne/meno/actions/runs/45860247144), completed successfully on `master` at `6a174c56445dbdf1117fd5aeb3748a84b8526b37`. Unit tests, TypeScript, and lint passed. Android export, prebuild, APK build, and artifact upload were skipped because the GitHub runner did not have the local database. This is a successful validation run, not a successful APK build. The run metadata verified step conclusions but did not provide an exact Jest case count in the retained evidence. A fresh structured run response is retained at `docs/evidence/P11/actions-run-45860247144-final.json`. Branch protection settings were not inspected. The checked-in `actions-run-45840998030-*` files are retained as evidence of the prior run only.
 
 ## Screenshot and evidence inventory
 
@@ -166,7 +166,7 @@ See `docs/P11_P12_EVIDENCE_GUIDE.md` for manual capture instructions. No screens
 | Development/testing | PARTIAL | Local checks pass; current GitHub/physical-device acceptance not re-run here |
 | 200+ tests and all required pass | DONE locally | 316/316, no skipped cases in current local Jest run |
 | Failed-test demonstration and recovery | DONE locally | Isolated exit code 1 captured; fixture removed; full suite restored and passed |
-| CI/CD status verification | DONE for latest run | Run `45840998030` on `master` succeeded; CI skipped Android APK build/export because ILT3 was unavailable on runner |
+| CI/CD status verification | DONE for latest run | Run `45860247144` on `master` succeeded; tests/type/lint passed and APK export/build/upload were skipped because ILT3 was unavailable on runner |
 | Progress and requested screenshot set | PARTIAL | Existing app evidence; several GitHub/test/P12 screenshots remain manual |
 | P11 documentation | DONE | This report and evidence guide created; external evidence gaps remain explicit |
 

@@ -2,11 +2,11 @@
 
 Existing images and logs are listed in `docs/P11_AUDIT_REPORT.md`. Do not edit, crop to alter results, or replace historical evidence. Save new screenshots as genuine captures in the paths below; avoid showing tokens, personal device identifiers, or private account data.
 
-## Final audit snapshot (2026-11-26)
+## Final audit snapshot (2026-11-27)
 
-- GitHub Issues: **13 total**, **5 labeled `bug`**. #16 and #17 are closed historical fixes.
+- GitHub Issues: **13 total**, **5 labeled `bug`**. A fresh live query on 2026-11-27 confirmed all 13; #16 and #17 are closed historical fixes.
 - GitHub branches: `master` and `feat/assignment-completion`; no `v1.0_dev` branch or tags were returned by the live API.
-- Latest Actions run: [45840998030](https://github.com/cyberEagleOne/meno/actions/runs/45840998030), conclusion **success**. Unit tests, TypeScript and lint passed. **Build release APK and Upload APK artifact were skipped** because the ILT3 database was unavailable in that runner. Do not use this screenshot as proof of an APK build.
+- Latest Actions run checked 2026-11-27: [45860247144](https://github.com/cyberEagleOne/meno/actions/runs/45860247144), conclusion **success** on master at `6a174c5`. Unit tests, TypeScript and lint passed. **Android export, native prebuild, Build release APK, and Upload APK artifact were skipped** because the ILT3 database was unavailable in that runner. This is not an APK build.
 - Local image inventory: **16 existing PNG screenshots**, listed below. No screenshot for the live GitHub Issues, latest Actions run, isolated test failure/recovery, or P12 logger audit is present.
 - Device check: an Android phone was connected. Its initial foreground app was not Meno. Opening Meno showed a saved-progress screen, so no new image was retained. No screenshot of another app was saved.
 
@@ -16,10 +16,12 @@ These are actual command/API outputs, not screenshots or reconstructed results:
 
 | File | Contents / provenance |
 |---|---|
-| `docs/evidence/P11/github-issues-final-2026-11-26.json` | GitHub CLI list with all 13 Issues, states, labels, URLs, and computed total/bug count |
+| `docs/evidence/P11/github-issues-final-2026-11-27.json` | Fresh GitHub CLI list with all 13 Issues, states, labels, and URLs |
+| `docs/evidence/P11/github-issues-final-2026-11-26.json` | Prior GitHub CLI list; retained as historical evidence |
 | `docs/evidence/P11/github-issue-16-17-final-2026-11-26.txt` | GitHub API detail and closing comments for #16 and #17, including labels and `completed` close reason |
 | `docs/evidence/P11/git-branches-tags-final-2026-11-26.txt` | Default branch, local/tracking refs, remote branch head SHAs, and local/remote tags (none) |
-| `docs/evidence/P11/actions-run-45840998030-final.json` | GitHub Actions run/job/step status and conclusion |
+| `docs/evidence/P11/actions-run-45840998030-final.json` | Historical GitHub Actions run/job/step status and conclusion; it is not the latest run |
+| `docs/evidence/P11/actions-run-45860247144-final.json` | Fresh structured GitHub Actions status for the latest run checked on 2026-11-27 |
 | `docs/evidence/P11/actions-run-45840998030-logs.txt` | Records that `gh run view --log` exited 0 but returned no log text; no APK log exists because build was skipped |
 | `docs/evidence/P11/unit-tests-restored.txt` | Previously captured full local Jest output: 26 suites / 316 passed / 0 failed / 0 skipped; inspected, not rerun in this pass |
 | `docs/evidence/P11/controlled-failure-output.txt` | Previously captured isolated Jest failure and exit code 1; inspected, not rerun in this pass |
@@ -55,7 +57,7 @@ Screenshot berikut tidak ada di repository. Data GitHub, Git, dan test untuk ite
 - [ ] `p11-issue-16-closed-fixed.png` — detail #16, label `bug`, closed, fix `db4063f` dan test, bila bukti visual Issue diwajibkan.
 - [ ] `p11-issue-17-closed-fixed.png` — detail #17 dengan informasi yang sama, bila bukti visual Issue diwajibkan.
 - [ ] `p11-github-development-branch.png` — branch page, bila screenshot GitHub diwajibkan (data branch sudah tersimpan otomatis).
-- [ ] `p11-github-actions-latest.png` — run #45840998030; tunjukkan tests/type/lint PASS dan APK build/upload **skipped**, bila screenshot Actions diwajibkan.
+- [ ] `p11-github-actions-latest.png` — run #45860247144; show tests/type/lint PASS and Android export/APK build/upload **skipped**, if an Actions screenshot is required.
 - [ ] `p11-unit-tests-pass.png`, `p11-unit-test-failure.png`, `p11-unit-tests-restored.png` — hanya bila screenshot terminal diwajibkan; hasil terminal tekstual yang asli sudah tersedia.
 - [ ] `p12-logger-source.png`, `p12-security-finding.png`, `p12-verification-tests.png` — hanya bila bukti P12 harus berupa screenshot; source, laporan, dan hasil test tekstual sudah tersedia.
 

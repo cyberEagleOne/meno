@@ -2,6 +2,8 @@
 
 **Evidence date:** 2026-11-19. These are genuine screenshots from the Meno JavaScript bundle running in Expo Go on the API 37 `sdk_gphone64_x86_64` Android Virtual Device (1080 × 2400). They are emulator preview evidence, not screenshots from the standalone ARM64 APK or a physical phone. The Expo development overlay is visible in the captures.
 
+> These captures predate the local ILT3 integration. The home screenshot's online Daily Verse and the reader screenshot's labeled sample text show the app state on 2026-11-19; they do not describe the current Daily Verse or reader content. Preserve them as historical evidence.
+
 | Screenshot | Screen/state | Review notes |
 |---|---|---|
 | `evidence/ui-review/01-home-expo-go-avd.png` | Home and online daily verse | Main action and bottom navigation are visible; page scrolls vertically. Daily verse loaded in this session. |

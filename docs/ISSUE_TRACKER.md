@@ -1,6 +1,6 @@
 # GitHub Issue Tracker
 
-Repository: [cyberEagleOne/meno](https://github.com/cyberEagleOne/meno/issues). The initial review found no existing issues or duplicates. Eleven task issues were created during the initial tracking pass; two verified, fixed historical bug records were added later as #16 and #17. Final live count: 13 Issues, 5 labeled `bug`.
+Repository: [cyberEagleOne/meno](https://github.com/cyberEagleOne/meno/issues). The initial review found no existing issues or duplicates. Eleven task issues were created during the initial tracking pass; two verified, fixed historical bug records were added later as #16 and #17. Final live count: 13 Issues, 5 labeled `bug` (read-only live check on 2026-11-27; raw query: `docs/evidence/P11/github-issues-final-2026-11-27.json`).
 
 | # | Issue | Type | Priority | Status |
 |---:|---|---|---|---|
@@ -20,7 +20,9 @@ Repository: [cyberEagleOne/meno](https://github.com/cyberEagleOne/meno/issues). 
 | 16 | [Daily Verse did not normalize external Bible book IDs before navigation (fixed)](https://github.com/cyberEagleOne/meno/issues/16) | Historical bug | Closed; fixed in `db4063f`, regression-tested |
 | 17 | [Reading Goal accepted fractional targets and overlong notes (fixed)](https://github.com/cyberEagleOne/meno/issues/17) | Historical bug | Closed; fixed in `db4063f`, regression-tested |
 
-Rows #14 and #15 are local Milestone 2 regression findings recorded in this document; they are now filed as GitHub Issues #16 and #17. A read-only GitHub check on 2026-11-26 confirmed GitHub numbers #14 and #15 are merged Pull Requests, so those local finding numbers must not be used as GitHub Issue numbers. GitHub Issues #16 and #17 are closed retrospective records of fixed bugs, not active defects.
+Rows #14 and #15 are local Milestone 2 regression findings recorded in this document; they are now filed as GitHub Issues #16 and #17. A read-only GitHub check on 2026-11-27 confirmed GitHub numbers #14 and #15 are merged Pull Requests, so those local finding numbers must not be used as GitHub Issue numbers. GitHub Issues #16 and #17 are closed retrospective records of fixed bugs, not active defects.
+
+Issue #5's GitHub title still refers to replacing synthetic reader text. The app now uses local ILT3 SQLite; the unresolved content question is permission to distribute the translation/database in a release. This local tracker note does not change the GitHub Issue.
 
 ### Honest Defect and Bug Count Classification
 
@@ -79,4 +81,4 @@ Reviewing defect classifications against the assignment's five-bug requirement:
 
 The issue was updated with the successful ARM64 CI result and the remaining physical-device verification step in [comment 7010440584](https://github.com/cyberEagleOne/meno/issues/13#issuecomment-7010440584).
 
-Failure evidence: `docs/evidence/android/02-x86_64-storage-error.png`, `02-x86_64-logcat.txt`, and `02-install-verification.txt`. This records a failed x86_64 run, not successful phone acceptance. The four passing UI screenshots and accessibility review remain outstanding.
+Failure evidence: `docs/evidence/android/02-x86_64-storage-error.png`, `02-x86_64-logcat.txt`, and `02-install-verification.txt`. This records a failed x86_64 run, not successful phone acceptance. Historical UI screenshots now exist under `docs/evidence/ui-review/` and `docs/evidence/physical-android/`; accessibility review and full current-build acceptance remain outstanding. This tracker preserves the historical defect evidence; see `docs/P11_AUDIT_REPORT.md` for current Issue counts and statuses.

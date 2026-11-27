@@ -4,11 +4,11 @@
 |---|---|
 | Document status | Draft — awaiting student review and approval |
 | Version | 0.5.0 (verification sync) |
-| Last updated | 2026-10-22 |
+| Last updated | 2026-11-27 |
 | Author | AI-assisted draft (opencode); not yet reviewed by the student |
 | Companion docs | `docs/ARCHITECTURE.md`, `docs/DESIGN_SYSTEM.md`, `docs/TESTING.md`, `docs/ASSIGNMENT_TRACEABILITY.md`, `docs/12_MEETING_PLAN.md` |
 
-> Evidence policy: This document records the agreed MVP scope and current evidence. As of 2026-10-22 the repository contains four historical commits and the current MVP implementation remains uncommitted. **Seven test suites / 73 tests pass**; TypeScript, lint, and Expo Android bundle export pass (results in `docs/TESTING.md`). An Android Expo Go smoke test observed Home, chapter open, completion/undo, Progress, and completion/progress persistence after force-stop/relaunch. This does not establish native APK behavior, SQLite rollback, or recovery from real storage failures. The demo video is stored outside this repository; submission is unconfirmed. Items are labelled **[Confirmed]**, **[Assumption]**, **[Open Question]**, or **[Deferred]** throughout.
+> **Current implementation snapshot (2026-11-27):** this PRD began as a scope/planning document and includes historical notes from October. The current app has a local ILT3 SQLite reader and Daily Verse, local progress, and additional implemented features described in `README.md` and `docs/DEVELOPMENT_PROGRESS.md`. The latest captured local test result is 26 suites / 316 passed / 0 failed / 0 skipped (`docs/evidence/P11/unit-tests-restored.txt`). Current GitHub CI run #45860247144 passed tests/typecheck/lint but skipped Android export/APK build/upload because the ILT3 database is not included in the public checkout. No deployment is configured. Screenshots and device verification are historical artifacts with scope limits; see `checklist_mvp.md` and `docs/P11_P12_EVIDENCE_GUIDE.md`. Older “current/uncommitted,” 73-test, and synthetic-content statements below describe their original dates, not the current implementation.
 
 ---
 
@@ -60,7 +60,7 @@ Derived only from the problem above, the personas in §4, and the MVP features i
 
 ### 5.1 Confirmed facts
 - **[Confirmed]** This is a university assignment delivered over 12 meetings, per the `meno-workflow` skill.
-- **[Confirmed 2026-10-22]** Two MVP features are implemented in the working tree: the Bible Reader and Persistent Reading Progress (Expo SQLite integration behind an injectable `SqlDriver` seam; idempotent completion; Kemajuan screen). Seven suites / 73 tests pass, with the emulator smoke-test scope and limitations recorded in `docs/TESTING.md`. The current implementation is uncommitted.
+- **[Historical confirmed note, 2026-10-22]** At that checkpoint, two MVP features were implemented and 73 tests passed; work was then uncommitted. This statement is superseded by the current implementation snapshot above.
 - **[Confirmed]** Required process is `Brief → Plan → Build → Verify → Commit`, per `meno-workflow`.
 - **[Confirmed]** The stack is React Native + Expo + TypeScript + Expo Router + Expo SQLite; validated 2026-10-10 — see `docs/ARCHITECTURE.md` §2.
 - **[Confirmed]** Environment: system Node v20.19.2 is too old for the Expo scaffolder, so **Node 22 LTS via fnm** (`v22.23.3`) is used; Python 3.13.5, Git 2.47.3. User-local Android SDK Platform 36 + emulator (`meno_api36`) and Temurin JDK 17 are set up. See `docs/ARCHITECTURE.md` §2.5.
@@ -77,7 +77,7 @@ Derived only from the problem above, the personas in §4, and the MVP features i
 
 ### 5.4 Bible translation licensing — research notes
 
-> **Placeholder content (2026-10-11):** until licensing is resolved the app uses **only a synthetic placeholder dataset**, rendered with an explicit on-screen label (e.g. `TEKS CONTOH — BUKAN KITAB SUCI` / `PLACEHOLDER_NOTICE`) so it can never be mistaken for Scripture. **No real Bible text is added, bundled, or downloaded.** The intended embedded translation is **ILT3**, whose **redistribution/embedding permission is unresolved** and must not be assumed granted. Public-domain options below are **fallbacks only, and only after verifying the exact translation, source, and reuse terms**. No Bible text is bundled until the licence is confirmed and recorded.
+> **Historical content note (2026-10-11; superseded):** the app used a synthetic placeholder dataset at this point. Current source instead reads the local ILT3 SQLite asset through `src/data/bibleRepository.ts`. The database is excluded from Git and is not available in a fresh public clone or CI. Its use in this local project does not establish redistribution rights; do not bundle or redistribute it without confirming permission. The older licensing research below is context, not proof of a current licence.
 
 Researched on 2026-10-10. **Public-domain / freely licensable options (US):**
 - King James Version (KJV) — public domain in the USA (Crown copyright/letters patent applies in the UK).
@@ -88,7 +88,7 @@ Researched on 2026-10-10. **Public-domain / freely licensable options (US):**
 
 **Copyrighted (require permission/licence):** NIV, ESV, NLT, NASB, NET, and most modern translations.
 
-> **[Open Question — blocking]** Translation choice must be made by the student and recorded here with its licence/attribution text before any content is bundled. Meno will **not** fabricate or paraphrase Bible text.
+> **[Open Question — distribution blocker]** The current local ILT3 source is integrated and its metadata attribution is displayed when available. The project still needs documented confirmation that the database/content may be distributed in an app bundle before publishing one. Meno will **not** fabricate or paraphrase Bible text.
 
 ## 6. MVP feature scope
 
@@ -96,7 +96,7 @@ The two MVP features are **Bible Reader** and **Reading Progress**, expressed as
 
 > **Navigation scope (2026-10-11):** the MVP exposes exactly **two tabs — Baca (Reader) and Kemajuan (Progress)**. There is no dashboard or Settings tab. The Reader is pushed **above** the tab bar; previous/next chapter **replaces** the current reader route (no stack growth); Android Back returns to the **originating screen**.
 
-> **Content scope (2026-10-11):** the MVP renders a **clearly labelled synthetic placeholder dataset only**. No real Bible text is bundled until its exact source and reuse rights are resolved (see §5.4).
+> **Historical content scope (2026-10-11; superseded):** placeholder text was used at that time. Current implementation uses local ILT3 content; see §5.4 and the current implementation snapshot above.
 
 ### 6.1 Feature 1 — Bible Reader (Milestone 1)
 
@@ -107,7 +107,7 @@ The two MVP features are **Bible Reader** and **Reading Progress**, expressed as
 - **FR-1** Browse the list of books available in the bundled translation.
 - **FR-2** Open a selected book and chapter and render its verses.
 - **FR-3** Move to the previous/next chapter from within the reader. At the first chapter of the Bible the **previous** control is disabled; at the last chapter of the Bible the **next** control is disabled (no wrap-around). Crossing a book boundary steps to the adjacent book. Moving prev/next **replaces** the current reader route (no back-stack growth), and Android Back returns to the screen that launched the reader (book list or Kemajuan).
-- **FR-4** Keep `translationId` in the data model. The MVP uses a single placeholder translation; user-facing translation switching is deferred.
+- **FR-4** Keep `translationId` in the data model. Current implementation uses the local ILT3 translation; user-facing translation switching is deferred.
 - **FR-5** Restore the reader to the last-read location on reopen (shared with Feature 2). Last-read updates when a chapter is **opened** (BR-5); opening does not complete it.
 
 **Acceptance criteria (Given/When/Then, measurable)**
@@ -166,12 +166,12 @@ This story covers in-reader state display, the explicit completion action, and u
 
 **Functional requirements**
 - **FR-12** In the reader, show the current chapter's completion state and offer an explicit "Tandai selesai" action; when a chapter is already complete, offer "Batalkan penandaan" to undo it.
-- **FR-13** Keep the on-screen notice that the bundled text is synthetic placeholder content, never to be mistaken for Scripture (§5.4).
+- **FR-13** Show the translation/copyright attribution supplied by the local Bible metadata when available; do not imply that repository presence establishes redistribution rights (§5.4).
 
 **Acceptance criteria (Given/When/Then)**
 - **AC-4.1** Given an incomplete chapter is open, when "Tandai selesai" is tapped, then the chapter is recorded as complete and the control changes to offer "Batalkan penandaan".
 - **AC-4.2** Given a completed chapter is open, when "Batalkan penandaan" is tapped, then the chapter is removed from the completed set and the control reverts to "Tandai selesai".
-- **AC-4.3** Given any chapter is rendered, when the reader is shown, then the placeholder notice is visible so the synthetic text is not mistaken for Scripture.
+- **AC-4.3** Given any chapter is rendered, when the reader is shown, then available translation/copyright attribution from the database metadata is visible. Current UI implementation exists; device acceptance is recorded in `checklist_mvp.md`.
 
 ### 6.5 Feature 2 (continued) — Seeing progress and continuing where I left off
 
@@ -202,7 +202,7 @@ ReadingCompletion(id, translationId, bookId, chapterNumber, completedOn /* local
 ReadingProgressState(key, lastTranslationId, lastBookId, lastChapterNumber, updatedAt)
 ```
 
-> **Record identity:** an activity record is identified by `(translationId, bookId, chapterNumber, completedOn)`, where `completedOn` is the **device's local calendar date**. `translationId` is retained even though the MVP ships a single placeholder translation.
+> **Record identity:** an activity record is identified by `(translationId, bookId, chapterNumber, completedOn)`, where `completedOn` is the **device's local calendar date**. Current app content uses the single local ILT3 translation; user-facing translation switching remains out of scope.
 >
 > **Progress semantics:** **completed chapters** = distinct chapters with ≥1 completion record; **distinct local reading days** = distinct `completedOn` dates with ≥1 completion record. **Last-read** (`ReadingProgressState`) updates when a chapter is **opened** and does not by itself count as a completion.
 >
@@ -221,16 +221,16 @@ ReadingProgressState(key, lastTranslationId, lastBookId, lastChapterNumber, upda
 
 ## 9. Testing requirements
 
-Meaningful unit tests on the **domain and data layers** (no UI, no device required). As of 2026-10-22, **73 tests across 7 suites pass**; inventory and captured output are in `docs/TESTING.md`:
-- Reader navigation edge cases: first/last chapter, book boundaries, empty chapters (FR-3) — `src/domain/__tests__/bibleNavigation.test.ts` (22 cases, committed in `c2bb19d`).
-- Progress-domain rules: idempotent completion toggle, counts, milestones, corrupt-payload validation, scroll-restoration decisions (`restoreScrollOffset`) — `src/domain/__tests__/progress.test.ts` (21 cases).
+Meaningful unit tests cover the **domain and data layers** (no UI, no device required). The latest captured local result is **316 tests across 26 suites**; inventory and captured output are in `docs/TESTING.md` and `docs/evidence/P11/unit-tests-restored.txt`. This host result does not imply identical CI coverage where the private/local ILT3 file is unavailable:
+- Reader navigation edge cases: first/last chapter, book boundaries, empty chapters (FR-3) — `src/domain/__tests__/bibleNavigation.test.ts`.
+- Progress-domain rules: idempotent completion toggle, counts, milestones, corrupt-payload validation, scroll-restoration decisions (`restoreScrollOffset`) — `src/domain/__tests__/progress.test.ts`.
 - Progress persistence round-trip through the repository boundary (FR-8, BR-5) — `src/data/__tests__/db.test.ts` (7 cases), via an in-memory `SqlDriver` fake, including a simulated app restart.
 - Duplicate completion is a no-op through the persistence API (BR-1, FR-7) — `src/data/__tests__/dbCompletion.test.ts` (11 cases; injected in-memory driver, not native SQLite rollback verification).
 - Canon metadata and route-parameter validation (supports FR-1..FR-3) — `src/data/__tests__/canon.test.ts` (7 cases; 66 books / 1189 chapters guarded).
 - **[Deferred]** Streak boundaries: first day, consecutive days, missed day, longest-streak tracking (BR-3, BR-4).
 - **[Deferred]** Reading-plan validation (when plans are introduced).
 
-> Tests are executed during Build/Verify and the **actual command and result** are recorded in **`docs/TESTING.md`**. The Android Expo Go smoke test observed completion/progress after force-stop and relaunch; native APK behavior, native SQLite rollback, real storage-failure recovery, reader virtualization performance, and last-read restoration after relaunch remain unverified. Screenshots are not in this repository. Streak-boundary and reading-plan tests remain **[Deferred]** per §10.
+> Tests are executed during Build/Verify and actual command/result evidence is recorded in `docs/TESTING.md`. Historical Expo Go evidence shows completion/progress after force-stop and relaunch. Historical physical startup is also captured. Current-build native feature behavior, native SQLite failure recovery, reader performance, and last-read restoration after relaunch remain unverified. Screenshots exist in `docs/evidence/` but do not constitute a full acceptance walkthrough. Streak-boundary and reading-plan tests remain **[Deferred]** per §10.
 
 ## 10. Success metrics (measurable for the assignment)
 
@@ -247,7 +247,7 @@ Meaningful unit tests on the **domain and data layers** (no UI, no device requir
 
 ## 11. Dependencies and constraints
 
-- UI depends on the bundled Bible dataset (blocked by translation licensing decision); until then only a labelled synthetic placeholder is shown (§5.4).
+- Bible reader and Daily Verse require the local ILT3 SQLite asset; it is excluded from Git and is not provided in the public checkout. Confirm content redistribution rights before distributing a build (§5.4).
 - Progress feature depends on the SQLite persistence layer.
 - No backend, auth, or paid service without prior approval per `meno-workflow`.
 

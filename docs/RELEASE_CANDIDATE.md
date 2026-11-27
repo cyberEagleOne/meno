@@ -1,10 +1,10 @@
 # Android Release Candidate
 
-## Current status — 2026-11-19
+## Current status — 2026-11-27
 
-**Not a verified release candidate.** The app identity is `com.meno.app`. A fresh ARM64 APK from CI run 44529697756 is saved at `artifacts/android/meno-release.apk` and described below. A pre-existing ignored APK/AAB remains under `android/app/build/outputs`; it is not the fresh artifact described here.
+**Not a verified release candidate.** The app identity is `com.meno.app` and package/app version is `1.0.0`, but no release tag or GitHub release exists. The last documented CI APK is a historical artifact from run 44529697756; the latest Actions run [45860247144](https://github.com/cyberEagleOne/meno/actions/runs/45860247144) skipped Android export, APK build, and artifact upload because the local ILT3 database was absent. The older APK and device observations below are historical and are not a fresh build of current HEAD.
 
-The current `npx expo export --platform android` succeeded after SDK patch updates. Local Windows Gradle failed in Reanimated CMake/Ninja. The corrected CI workflow generates Android with Expo prebuild, builds APKs, and uploads artifacts. The fresh ARM64 APK from run 44529697756 was downloaded and inspected. Its multi-ABI predecessor was installed on the x86_64 emulator and exposed the SQLite ABI mismatch. The ARM64 APK has not been run on a physical phone.
+CI builds an APK only when the ILT3 asset is available to the runner. This run did not build one. Historical artifact/device details are retained below for traceability.
 
 ## Release configuration observations
 
@@ -28,7 +28,7 @@ The CI APK from run 44517378110 was downloaded and installed on the API 37 x86_6
 
 ## v1.0 readiness
 
-Not ready: current Bible content is synthetic placeholder text; native build/install, advanced features, physical persistence, device screenshots, failed-test demonstration, and release signing are incomplete/unverified. No `v1.0` branch or release tag should be created yet.
+Not ready as a public release. The app uses local ILT3 content, but the database is excluded from Git and redistribution rights are not established here. The latest CI run did not build an APK. A historical ARM64 APK did start on a physical phone, but current feature acceptance, physical persistence, OS-feature behavior, distribution rights, and production signing remain incomplete or unverified. There is no `v1.0` branch or release tag.
 
 ## Continuation check — 2026-11-19
 

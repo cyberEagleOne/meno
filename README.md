@@ -1,282 +1,89 @@
 # Meno
 
-Meno adalah aplikasi mobile pembaca Alkitab (**Android-first Bible reader**) dengan pendekatan pembiasaan membaca yang tenang (*gentle, habit-building mechanics*), dikembangkan sebagai tugas mata kuliah pengembangan aplikasi. Meno berfokus pada pengalaman membaca firman yang khidmat (*Scripture-first*), bebas dari distraksi, kompetisi berlebihan, maupun rasa bersalah.
+Meno is an Android-first, offline-first Bible reading and reading-progress app built with Expo, React Native, TypeScript, Expo Router, and Expo SQLite. It has no Meno backend, account system, or cloud sync. Reading progress and the Bible content used by the app are local.
 
----
+Meno is designed for readers who want to resume a reading habit with a calm interface and low-pressure progress feedback. Its core MVP is the Bible reader plus persistent reading progress. Daily Verse, random-chapter navigation, reminders, haptics, app lock, and badges/progress polish are additional implemented features.
 
-## Ringkasan Proyek (Checkpoint Pertemuan 1)
+The primary audience is a returning reader who wants to pick up after a break; a secondary audience is a new reader who benefits from a clear book/chapter structure. The product keeps reading actions explicit and stores progress on-device.
 
-### 1. Deskripsi Masalah
-Banyak orang memiliki keinginan untuk membaca Alkitab secara teratur, namun kesulitan membangun dan mempertahankan kebiasaan membaca harian. Aplikasi Alkitab yang ada di pasaran saat ini umumnya terbagi menjadi dua ekstrem:
-- **Terlalu utilitarian / kaku**: hanya berupa teks digital tanpa motivasi atau pelacakan progres yang jelas.
-- **Terlalu banyak gamifikasi bising**: notifikasi agresif, sistem poin, dan *streak guilt* (tekanan berantai) yang justru terasa kurang khidmat dan membuat pengguna menyerah ketika melewatkan satu hari.
+## Current project facts
 
-Meno hadir mengisi celah tersebut: memberikan pengalaman membaca yang tenang, terstruktur, menghormati teks Kitab Suci, serta didukung pencatatan progres lokal yang terpercaya.
+- App/package version: `1.0.0` (`package.json` / `app.json`). This is not a declared Git release: there is no `v1.0` release tag, `v1.0_dev` branch, or published release.
+- Default branch: `master`. Latest verified checkout at the documentation review: `6a174c5` (`docs: finalize P11 and P12 evidence`).
+- Local test evidence: 26 Jest suites, 316 passed, 0 failed, 0 skipped. See [Testing](docs/TESTING.md) for the captured output and its scope.
+- GitHub Actions run [45860247144](https://github.com/cyberEagleOne/meno/actions/runs/45860247144) passed tests, TypeScript, and lint. Android export, native project generation, APK build, and artifact upload were skipped because the private/local ILT3 database is absent from the GitHub checkout. CI did not build an APK and does not deploy the app.
+- GitHub Issue tracker: 13 Issues, including five labeled `bug`; #16 and #17 are closed records of historical bugs fixed in commit `db4063f`. See [P11 audit](docs/P11_AUDIT_REPORT.md).
 
-### 2. Profil Target Pengguna
-- **Pengguna Utama ("The Returning Reader")**: Orang muda / dewasa yang ingin kembali membiasakan membaca Alkitab setiap hari setelah sempat terhenti. Membutuhkan kemudahan untuk melanjutkan bacaan terakhir dalam satu ketukan tanpa harus mencari ulang pasal, dan menghargai dorongan positif tanpa tekanan.
-- **Pengguna Sekunder ("The New Reader")**: Orang yang baru mulai membaca Alkitab dan membutuhkan struktur bacaan yang jelas (pembagian Perjanjian Lama & Baru, ringkasan pasal) dengan beban kognitif yang rendah.
+## Features implemented
 
-### 3. Manfaat Aplikasi
-1. **Kontinuitas Instan (One-tap Resume)**: Aplikasi mengingat kitab, pasal, dan posisi scroll terakhir sehingga pengguna dapat langsung melanjutkan membaca dalam 1 ketukan.
-2. **Pencatatan Progres Terpercaya (Idempotent)**: Menandai pasal yang sama berulang kali tidak akan menggandakan statistik bacaan. Angka progres yang dilihat pengguna selalu akurat.
-3. **Penyimpanan Lokal & Privasi Penuh**: Semua data progres tersimpan di perangkat melalui SQLite lokal—tidak membutuhkan akun, koneksi internet, maupun backend eksternal.
-4. **Kendali Penuh di Tangan Pembaca**: Menandai selesai adalah tindakan sadar pembaca (tombol "Tandai selesai"), bukan otomatis hanya karena membuka pasal.
-5. **Dorongan Positif Tanpa Tekanan**: Tonggak pencapaian bertahap (*milestones*) dan visual tenang tanpa papan peringkat (*leaderboard*) atau poin yang menimbulkan stres.
+- Browse the 66 Bible books and 1,189 chapters and read chapter text from a local ILT3 SQLite asset.
+- Resume the last read location and track completed chapters and distinct reading days in local SQLite.
+- Show a date-keyed Daily Verse from the local ILT3 database; this does not require a REST API or internet connection.
+- Open a random chapter from the Home card or supported shake gesture.
+- Configure a local daily reminder, haptic feedback, and optional device-authentication app lock.
+- Review progress, habit milestones, and collectible badges.
 
-### 4. Daftar Fitur Inti (MVP)
-1. **Bible Reader (Pembaca Alkitab)**:
-   - Navigasi daftar kitab (Perjanjian Lama & Perjanjian Baru) dan grid nomor pasal.
-   - Tampilan pembaca teks per pasal dengan virtualisasi daftar ayat yang responsif.
-   - Navigasi lintas kitab (tombol Pasal Selanjutnya / Sebelumnya menyeberang batas kitab secara mulus).
-   - Memori bacaan terakhir (*last-read position & scroll*).
-2. **Persistent Reading Progress (Pelacakan Progres Lokal)**:
-   - Penyimpanan berbasis SQLite (`expo-sqlite`) yang bertahan meskipun aplikasi ditutup/dimatikan.
-   - Tombol toggle status selesai (*"Tandai selesai"* / *"Batalkan penandaan"*).
-   - Layar Kemajuan: total pasal selesai, persentase Alkitab, jumlah hari membaca (*"X hari membaca"*), dan progress bar per-perjanjian.
-3. **Ayat Harian & Devosional (Integrasi API)**:
-   - Pemuatan ayat inspirasi harian secara dinamis dari REST API Alkitab online.
-4. **Fitur Lanjutan (Hardware & OS Features)**:
-   - Notifikasi pengingat membaca harian lokal (*Local Notification*).
-   - Sensor gerak (*Shake to Read Random Chapter*).
-   - Autentikasi biometrik (*Fingerprint / Face ID App Lock*).
-
-### 5. Fitur yang Tidak Dikerjakan (Out of Scope)
-- Akun pengguna di cloud, sinkronisasi multi-device, atau backend server mandiri (fokus pada *offline-first* dan privasi).
-- Fitur sosial, komentar publik, obrolan, atau *leaderboard*.
-- Audio Alkitab dan kamus konkordansi mendalam.
-- Monetisasi, iklan komersial, atau konten berbayar.
-
-### 6. Kriteria Aplikasi Dinyatakan Berhasil
-1. **Fungsionalitas Pembaca**: Seluruh 66 kitab dan 1.189 pasal dapat diakses, dibaca, dan dinavigasi maju/mundur dengan benar tanpa crash.
-2. **Persistensi Data**: Menandai pasal selesai bertahan saat aplikasi ditutup paksa (*force close*) dan dibuka kembali.
-3. **Kualitas Pengujian**: Minimal 70+ pengujian unit (*automated tests*) berjalan bersih (pass 100%) mencakup logika navigasi, idempotensi progres, dan aturan database.
-4. **Antarmuka Responsif & Rapi**: Tampilan memenuhi standar desain Meno (Indonesia, tipografi Plus Jakarta Sans, kontras warna yang nyaman, serta penanganan *safe area* Android).
-5. **Kesiapan Demo**: Aplikasi dapat dijalankan dan didemonstrasikan langsung di hadapan dosen/evaluator melalui Android Emulator atau perangkat fisik via Expo Go.
-
----
+Implementation does not by itself mean every feature has passed full device acceptance. The [MVP checklist](checklist_mvp.md), [Android demo guide](docs/ANDROID_DEMO_GUIDE.md), and [evidence guide](docs/P11_P12_EVIDENCE_GUIDE.md) distinguish automated coverage, emulator preview, and physical-device verification.
 
 ## Stack
 
-| Layer | Choice |
+| Layer | Implementation |
 |---|---|
-| Framework | Expo (managed) — **SDK 57** |
-| Runtime | React Native 0.86, React 19.2 |
-| Language | TypeScript (strict) |
-| Navigation | Expo Router (file-based; routes in `src/app/`) |
-| Local database | `expo-sqlite` (schema + injectable driver seam implemented; tables created on first launch) |
+| Framework | Expo SDK 57 / React Native 0.86 |
+| Language | TypeScript |
+| Navigation | Expo Router |
+| Local persistence | Expo SQLite; web driver uses browser local storage |
+| Tests | Jest with `jest-expo` |
 
-Verified package patches (2026-11-19): `expo 57.0.33`, `expo-router 57.0.31`,
-`expo-sqlite 57.0.5`; SDK-compatible package alignment passed Expo Doctor (21/21).
-See `package.json` and `package-lock.json` for resolved versions.
+Cloud accounts/sync, a Meno backend, social features, audio, monetization, and user-facing translation switching are outside the current MVP scope.
 
-## Prerequisites and environment
+## ILT3 database prerequisite
 
-- **fnm** with **Node 22** (verified with `v22.23.3`) — the Expo scaffolder
-  requires `^22.13.0`. The system Node (v20) is **not** sufficient.
-- **Temurin JDK 17** — at `~/.local/share/jdks/temurin-17`.
-- **Android SDK Platform 36** (Android 16 "Baklava") with build-tools,
-  platform-tools, and an emulator — at `~/.local/share/android-sdk`.
-- An **Android emulator (AVD)** named `meno_api36`.
+The app expects an authorized local copy of `assets/database/ilt3.sqlite`. The tracked `.gitignore` excludes `assets/database/*.sqlite`; the file is not present in a fresh public clone or the GitHub Actions runner. The app's Bible reader and local Daily Verse need that asset to initialize. Do not create a substitute database or commit/upload the ILT3 file. Obtain and place it locally only where you have permission to use it. The repository does not establish redistribution rights; confirm those rights before distributing an app bundle containing the database.
 
-## Panduan Fresh Clone & Instalasi Ulang
+After placing the database, verify it is ignored with `git check-ignore assets/database/ilt3.sqlite` before staging any files.
 
-### 1. Fresh Clone Repository
+## Run locally
 
-Untuk menyalin (*clone*) proyek ini dari repositori GitHub ke komputer lokal Anda:
+Prerequisites: Node.js 22, npm, and an authorized local ILT3 database at the path above. Install dependencies and start Expo:
 
 ```bash
-git clone https://github.com/cyberEagleOne/meno.git
-cd meno
+npm ci
+npx expo start
 ```
 
-### 2. Instalasi Dependensi (Standar)
+Use Expo Go on a compatible device, or start an Android emulator and press `a` in the Expo terminal. Native Android builds additionally require Android SDK tooling and JDK 17:
 
-Pastikan Anda menggunakan **Node.js 22** (atau `>= 22.13.0`):
-
-```bash
-npm install
-```
-
-### 3. Prosedur Instalasi Ulang Bersih (Clean Reinstall)
-
-Jika Anda ingin melakukan instalasi ulang bersih (*fresh re-install*) atau membersihkan cache dependensi lama:
-
-- **Windows (PowerShell)**:
-  ```powershell
-  Remove-Item -Recurse -Force node_modules, package-lock.json
-  npm cache clean --force
-  npm install
-  ```
-
-- **macOS / Linux**:
-  ```bash
-  rm -rf node_modules package-lock.json
-  npm cache clean --force
-  npm install
-  ```
-
----
-
-## Cara Menjalankan & Mengakses Paket Demo Aplikasi
-
-Pilih salah satu cara akses aplikasi sesuai kebutuhan pengujian atau demonstrasi:
-
-### Opsi A: Akses Cepat via Web Preview (Paling Mudah untuk Demo)
-Aplikasi Meno mendukung web preview responsif yang dapat langsung dicoba melalui peramban:
-```bash
-npm run web
-# atau
-npx expo start --web
-```
-Aplikasi akan otomatis terbuka pada `http://localhost:8081` (tampilan ramah navigasi mobile).
-
-### Opsi B: Akses via Perangkat Fisik (Expo Go di Android / iOS)
-1. Pasang aplikasi **Expo Go** dari Google Play Store atau Apple App Store pada smartphone.
-2. Pastikan komputer dan smartphone terhubung pada jaringan Wi-Fi yang sama.
-3. Jalankan server Metro:
-   ```bash
-   npx expo start
-   ```
-4. Buka Expo Go dan pindai (*scan*) QR Code yang tampil di layar terminal.
-
-### Opsi C: Akses via Android Emulator
-Jika Anda telah mengonfigurasi Android SDK dan AVD:
 ```bash
 npm run android
 ```
-*(Lihat rincian konfigurasi AVD di [HowToRun.md](HowToRun.md) jika emulator belum berjalan).*
 
-### Opsi D: Akses Paket Demo Lokal Hasil Build
-Jalankan bundle statis yang telah diekspor:
-```bash
-npx serve dist
-```
+Detailed setup, database prerequisite, and verification commands are in [HowToRun.md](HowToRun.md). The web script is available (`npm run web`), but a complete web feature/runtime acceptance pass is not recorded.
 
----
-
-## Prosedur Build & Deployment
-
-### 1. Build Bundle Aplikasi
-
-Meno dapat diekspor menjadi bundle produksi siap pakai tanpa memerlukan Android Studio secara lokal:
-
-- **Build Bundle Android (Hermes + JS Bundle)**:
-  ```bash
-  npx expo export --platform android
-  ```
-  *Output:* Direktori `dist/` berisi file `entry-*.hbc` (Hermes bytecode teroptimasi) dan aset grafis.
-
-- **Build Bundle Web Statis**:
-  ```bash
-  npx expo export --platform web
-  ```
-  *Output:* Direktori `dist/` berisi seluruh file HTML statis per rute (`/index`, `/settings`, `/library`, dll.) dan bundle JS web.
-
-- **Build Standalone APK Android (via EAS Build)**:
-  Jika ingin menghasilkan file installer `.apk` standalone:
-  ```bash
-  npx eas-cli build --platform android --profile preview
-  ```
-
-### 2. Prosedur Deployment
-
-- **Deploy Web Demo ke Vercel**:
-  ```bash
-  npx vercel deploy --prebuilt
-  ```
-- **Deploy Web Demo ke GitHub Pages**:
-  Unggah seluruh isi direktori `dist/` ke branch `gh-pages` pada repositori GitHub.
-
----
-
-## Verifikasi Kualitas & Test Suite (Unit Test All Passed)
-
-Sebelum melakukan demonstrasi atau commit, jalankan pengujian untuk memastikan seluruh fungsionalitas berjalan normal:
+## Verify
 
 ```bash
-# 1. Jalankan seluruh unit test
-npm test
-
-# 2. Periksa static typing TypeScript
+npm test -- --runInBand
 npx tsc --noEmit
-
-# 3. Periksa aturan kode (ESLint)
 npm run lint
+git diff --check
 ```
 
-**Verifikasi lokal (2026-11-24)**:
-- ✅ **Unit Tests**: 22 test suites / 327 tests lulus (`npm test -- --runInBand`).
-- ✅ **TypeScript**: `npx tsc --noEmit` lulus tanpa error.
-- ✅ **Linter**: `EXPO_NO_TELEMETRY=1 npm run lint` lulus tanpa warning/error.
-- ✅ **Real Bible Database**: Database lokal ILT3 SQLite (31.167 ayat, 1.189 pasal, 66 kitab) terintegrasi dengan pemetaan ID kanonikal eksplisit dan status loading/empty/error.
-- ✅ **App Lock**: Keamanan opt-in dengan autentikasi biometrik/kunci layar perangkat, 10-minute background grace period, auto-prompt terproteksi dari re-render, dan safe recovery flow.
-- ✅ **Pasal Acak**: Kartu & tombol di Beranda tersinkronisasi dengan sensor accelerometer (debounce 1,5 detik).
-- ✅ **Indonesian UI & Branding**: Terminologi baku "Kitab Suci" pada seluruh antarmuka pengguna, pembersihan anotasi tugas (P4/P7), launcher icon & splash screen bertema indigo Meno (`#272A55`).
+The 316-test captured local run used Node 22. On a clone without ILT3, database-dependent cases may be skipped by the test configuration and Android APK CI steps are skipped; check the actual command output rather than assuming the local result applies to CI.
 
-Rincian inventaris dan batas verifikasi tercatat di [`docs/TESTING.md`](docs/TESTING.md) dan [`docs/DEVELOPMENT_PROGRESS.md`](docs/DEVELOPMENT_PROGRESS.md).
+## MVP scope
 
----
+The current implemented MVP centers on Bible reading, local reading progress, and gentle reading support (Daily Verse, random chapter, reminders, app lock, haptics, badges/progress). It intentionally excludes accounts, cloud sync, a Meno backend, social features, audio, and monetization. See [PRD](docs/PRD.md) for planned scope and [current evidence](docs/TESTING.md) for what has actually been verified.
 
-## MVP status (implemented)
+## Project documentation
 
-Per [`docs/PRD.md`](docs/PRD.md), MVP mencakup fitur utama yang telah diimplementasikan penuh:
-
-1. **Bible Reader** — navigasi kitab (PL & PB), grid nomor pasal, tampilan teks ayat nyata dari database ILT3 SQLite lokal, navigasi lintas kitab (*cross-book boundaries*), pemulihan posisi bacaan terakhir (*last-read restore*), dan atribusi terjemahan resmi.
-2. **Persistent Reading Progress** — pencatatan progres per pasal idempotent berbasis SQLite (bertahan saat restart), pelacakan posisi scroll, kalkulasi persentase dan hari membaca (*reading days*), layar Kemajuan.
-3. **Daily Verse Integration** — integrasi REST API online untuk ayat inspirasi harian dengan normalisasi ID kitab ke 66 kanonikal Meno, label terjemahan akurat, penanganan loading, error, retry, dan validasi model data.
-4. **Hardware & Advanced OS Features** — notifikasi harian lokal (`expo-notifications`), sensor goyang ganti pasal acak (`expo-sensors`) terintegrasi dengan tombol Beranda, dan proteksi privasi biometrik/PIN (`expo-local-authentication`).
-5. **Gentle Gamification & Usability** — Pohon Pertumbuhan Kebiasaan (*The Habit Tree* 6 tahap interaktif), sistem Lencana Prestasi Koleksi (*Collectible Badges*), Maskot Meno Interaktif (*Tap-to-Talk Companion*), serta pengatur ukuran huruf pembaca dinamis (`A±`).
-
-### Explicitly out of scope (for now)
-
-- User accounts, cloud sync, or any backend.
-- Social features, leaderboards, or sharing.
-- Audio Bible, commentary, or devotionals.
-- Multiple translations at launch.
-- Monetisation, ads, or paid content.
-
-## Bible content and licensing caveat
-
-Proyek Meno mengintegrasikan database **Indonesian Literal Translation 3 (ILT3)** SQLite lokal untuk menampilkan seluruh 66 kitab dan 1.189 pasal Kitab Suci. Sesuai hak cipta Yayasan Lentera Bangsa, database ILT3 ini **hanya disimpan secara lokal** untuk pengujian aplikasi dan pembelajaran, serta **tidak didistribusikan secara publik tanpa izin tertulis**. Di dalam aplikasi, atribusi hak cipta ditampilkan secara jujur pada layar pembaca pasal.
-
----
-
-## Dokumentasi Lengkap Proyek
-
-| Dokumen | Deskripsi |
-|---|---|
-| [`docs/SECURITY_AUDIT.md`](docs/SECURITY_AUDIT.md) | **Hasil Uji Security**, audit dependensi (`npm audit`), dan catatan perubahan relevan |
-| [`docs/CI_CD.md`](docs/CI_CD.md) | Status pipeline Android dan batas verifikasinya |
-| [`docs/LOGGING_AND_ERROR_HANDLING.md`](docs/LOGGING_AND_ERROR_HANDLING.md) | **Contoh Log Aman**, mitigasi data PII, penyebab error, dan tindakan perbaikannya |
-| [`docs/CHECKPOINT_EVALUATION.md`](docs/CHECKPOINT_EVALUATION.md) | Panduan pemenuhan & pembuktian Checkpoint Dosen (P1–P7) |
-| [`docs/TESTING.md`](docs/TESTING.md) | Catatan eksekusi terbaru unit test, TypeScript, lint, dan bundler |
-| [`docs/REQUIREMENTS_AUDIT.md`](docs/REQUIREMENTS_AUDIT.md) | Audit requirement satu per satu beserta status dan bukti |
-| [`docs/ANDROID_DEMO_GUIDE.md`](docs/ANDROID_DEMO_GUIDE.md) | Urutan demo Android dan troubleshooting |
-| [`docs/DEVELOPMENT_PROGRESS.md`](docs/DEVELOPMENT_PROGRESS.md) | Checkpoint pengembangan dan status Git |
-| [`docs/V1_1_ROADMAP.md`](docs/V1_1_ROADMAP.md) | Rencana milestone V1.1; belum dirilis |
-| [`HowToRun.md`](HowToRun.md) | Panduan setup teknis lingkungan Android SDK & AVD |
-| [`checklist_mvp.md`](checklist_mvp.md) | Matriks pemenuhan acceptance criteria MVP |
-| [`docs/PRD.md`](docs/PRD.md) | Product Requirement Document (PRD) & User Stories |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Dokumentasi arsitektur 4-layer, skema database SQLite, dan data model |
-| [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) | Token desain, tipografi, palet warna, dan aset Meno |
-| [`docs/ASSIGNMENT_TRACEABILITY.md`](docs/ASSIGNMENT_TRACEABILITY.md) | Matriks penelusuran requirement ke kode pengujian |
-| [`docs/12_MEETING_PLAN.md`](docs/12_MEETING_PLAN.md) | Rencana pertemuan dan catatan kontribusi |
-
----
-
-## Struktur Direktori Repositori
-
-```
-src/app/            Expo Router routes (tabs, library, chapters, reader, settings)
-src/data/           SQLite persistence (expo-sqlite driver seam), REST API repository, placeholder dataset
-src/domain/         Pure, unit-tested domain logic (navigation, progress rules, form validation, daily verse)
-src/services/       Advanced OS features (notifikasi, sensor accelerometer, biometrik)
-src/theme/          Design tokens (colors, fonts, spacing)
-src/components/ui/  Shared UI components (buttons, rings, icons, cards, mascots)
-assets/             Icons, splash, and Meno mascot artwork
-docs/               Dokumentasi teknis, audit keamanan, panduan error, dan bukti evaluasi
-dist/               Hasil build bundle produksi (Android Hermes & Web static)
-app.json  package.json  tsconfig.json  metro.config.js  eslint.config.js
-```
-
+- [How to run](HowToRun.md)
+- [MVP acceptance checklist](checklist_mvp.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Testing evidence](docs/TESTING.md)
+- [P11 audit and Issue inventory](docs/P11_AUDIT_REPORT.md)
+- [P12 security risk report](docs/P12_SECURITY_RISK_REPORT.md)
+- [P11/P12 evidence guide](docs/P11_P12_EVIDENCE_GUIDE.md)
+- [CI/CD](docs/CI_CD.md)
+- [Development progress](docs/DEVELOPMENT_PROGRESS.md)
+- [V1.1 roadmap](docs/V1_1_ROADMAP.md) (planning document, not a release)

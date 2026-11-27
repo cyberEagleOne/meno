@@ -4,10 +4,10 @@
 |---|---|
 | Document status | Draft — awaiting student review and approval |
 | Version | 0.3.3 (implementation and verification sync) |
-| Last updated | 2026-10-22 |
+| Last updated | 2026-11-27 |
 | Author | AI-assisted draft (opencode); not yet reviewed by the student |
 
-> Evidence policy: §2 records historical 2026-10-10/11 toolchain validation and scaffold logs. Current audit verification on 2026-11-19 is **15 suites / 253 tests**, TypeScript clean, lint clean after the form, notification, and bootstrap-logging fixes, Expo Doctor 21/21, and Android Expo JS/Hermes bundle export successful. CI APK run 44517378110 was installed on an API 37 x86_64 AVD and failed SQLite bootstrap because its APK omitted the x86_64 native library. ARM64-only CI run 44529697756 built a package with only the supported ARM64 ABI; physical-phone behavior remains unverified.
+> **Current implementation snapshot (2026-11-27):** the app reads Bible chapters and Daily Verse from a local ILT3 SQLite asset using `src/data/bibleRepository.ts`; progress and goals use local SQLite through the driver seam. The ILT3 database is ignored by Git and absent from public GitHub checkouts. The latest captured local suite is 26 suites / 316 tests passed (`docs/evidence/P11/unit-tests-restored.txt`). Current CI run #45860247144 passed test/type/lint steps but skipped Android export, APK build and upload because the database was absent. Historical SDK/toolchain setup details and old runs below retain their original dates. See `docs/TESTING.md` for verification limits.
 
 ---
 
@@ -19,7 +19,7 @@
 | Framework | React Native via Expo | **Verified** — Expo SDK 57 (`expo 57.0.33`, `react-native 0.86.3`, `react 19.2.3`) |
 | Navigation | Expo Router (file-based) | **Verified** — `expo-router 57.0.31` |
 | Local database | Expo SQLite (`expo-sqlite`) | **Verified compatible / installed** — `expo-sqlite 57.0.5`; schema + driver seam implemented (see §3.1) |
-| Unit testing | Jest + `jest-expo` | **Verified** — 15 suites / 253 tests passing (2026-11-19, `docs/TESTING.md`) |
+| Unit testing | Jest + `jest-expo` | **Verified** — 26 suites / 316 tests in the latest captured local run (`docs/evidence/P11/unit-tests-restored.txt`) |
 
 ## 2. Compatibility validation (2026-10-10)
 
@@ -166,7 +166,7 @@
 | Git | `CI=1` made create-expo skip its own `git init`; repository still has **no commits** |
 | Placement note | create-expo refuses non-empty dirs (`.opencode/` is not on its tolerable list), so the app was scaffolded into a temporary subdir and moved to the repo root |
 
-**Stage 6–7 — MVP implementation (working tree, uncommitted).** The Bible Reader vertical slice committed earlier (`c2bb19d`) was extended with the two-tab shell, design system, and persistent-progress feature (Expo SQLite behind a driver seam), plus tests. Current verification is recorded in `docs/TESTING.md`; emulator observations are Expo Go only. Optional later: persistent env wiring (rc edit — not approved).
+**Historical Stage 6–7 note (2026-10-15).** The Bible Reader vertical slice committed earlier (`c2bb19d`) was extended with the two-tab shell, design system, and persistent-progress feature (Expo SQLite behind a driver seam), plus tests. Current verification is recorded in `docs/TESTING.md`; emulator observations are Expo Go only. Optional later: persistent env wiring (rc edit — not approved).
 
 ## 3. Logical architecture (as implemented)
 
@@ -194,7 +194,7 @@
 ┌───────────────┴──────────────────────────────────────────┐
 │ Data layer — src/data/db.ts                                │
 │ initProgressDb / loadProgress / saveLastRead /             │
-│ markCompleted / unmarkCompleted; placeholderBible dataset  │
+│ markCompleted / unmarkCompleted; BibleRepository → ILT3   │
 └───────────────▲──────────────────────────────────────────┘
                 │ SqlDriver interface (src/data/sqlDriver.ts)
 ┌───────────────┴──────────────────────────────────────────┐
@@ -205,7 +205,7 @@
 ```
 
 **Rules (as implemented):**
-- Domain modules import neither React, Expo, nor the database — unit-tested with no device (ADR-004; seven Jest suites currently pass on the host).
+- Domain modules import neither React, Expo, nor the database — unit-tested with no device (ADR-004; the latest captured host run has 26 suites).
 - All SQL is issued through the injected `SqlDriver`; `db.ts` never imports `expo-sqlite` directly, and tests never touch the native module (ADR-010).
 - Streak calculation is **not** part of the domain: streaks are deferred per PRD §8 (BR-3/BR-4) and §10. No `streak.ts` exists.
 - There is **no repository layer**; earlier drafts that named `BibleRepository`/`ProgressRepository` were plans that were not implemented and have been removed from this document.
@@ -226,7 +226,7 @@
 
 ```
 src/app/
-  _layout.tsx                 # root Stack; font loading; mounts ProgressProvider
+  _layout.tsx                 # root Stack; font loading; mounts app providers
   (tabs)/
     _layout.tsx               # Tabs with custom MenoTabBar; library + chapters hidden (href: null)
     index.tsx                 # Baca home: last-read resume, milestone nudge, continue CTA
@@ -239,7 +239,8 @@ src/data/
   sqlDriver.ts                # SqlDriver interface + registry
   sqliteDriver.ts             # expo-sqlite driver
   progressContext.tsx         # ProgressProvider / useProgress
-  placeholderBible.ts         # synthetic labelled dataset (66 books, 1189 chapters)
+  bibleRepository.ts          # ILT3 metadata, chapter text and Daily Verse queries
+  canonicalBible.ts           # metadata-only canon for navigation and progress
   canon.ts                    # testament helpers, totals, isValidChapter, chapterKey
   __tests__/                  # db, dbCompletion, canon tests + support/memoryDriver.ts
 src/domain/
@@ -248,32 +249,31 @@ src/domain/
   types.ts                    # Bible/Book/Chapter/Verse types
 src/theme/colors.ts           # palette, fonts, radius, space tokens
 src/components/ui/            # Button, Card, ChapterCell, Chip, Icons (react-native-svg),
-                              # Mascot, PlaceholderBanner, ProgressBar, ProgressRing,
+                              # Mascot, HabitTree, BadgeCard, ProgressBar, ProgressRing,
                               # ScreenHeader, StateMessage, VerseRow
 assets/meno/                  # 8 mascot PNGs (Calm, Celebrating, Curious, Encouraging,
                               # Happy, Proud, ReadyToRead, Welcome)
 metro.config.js               # adds "wasm" to assetExts (expo-sqlite on web)
 ```
 
-> Note: this layout exists as **uncommitted working-tree changes** as of 2026-10-15; the committed tree (`c2bb19d`) still contains the earlier single-route reader slice.
+> The note above records the repository layout during the 2026-10-15 implementation stage. The current tracked implementation is on `master`; see `docs/DEVELOPMENT_PROGRESS.md` for the present Git snapshot.
 
 ## 5. Data flow (as implemented)
 
-1. **Open a chapter (Baca → library → chapters → reader):** Expo Router passes `(book, chapter)` params → reader validates with `isValidChapter` (`src/data/canon.ts`) and reads verses from the bundled `placeholderBible` dataset → renders a virtualized `FlatList` of `VerseRow`s. `useProgress().openChapter(bookId, chapter)` updates **last-read only** (BR-5) via `saveLastRead` → single-row SQL upsert. Opening never completes a chapter.
+1. **Open a chapter (Baca → library → chapters → reader):** Expo Router passes `(book, chapter)` params → reader validates with `isValidChapter` (`src/data/canon.ts`) and loads the chapter and verse rows from the local ILT3 SQLite database via `bibleRepository.ts` → renders a virtualized `FlatList` of `VerseRow`s. `useProgress().openChapter(bookId, chapter)` updates **last-read only** (BR-5) via `saveLastRead` → single-row SQL upsert. Opening never completes a chapter.
 2. **Scroll persistence:** the reader debounces scroll callbacks (500 ms) and calls `saveScroll`, which updates `last_read.scroll_y` for the current chapter only (ignored if last-read has since changed).
 3. **Mark a chapter complete:** footer action → `setCompleted(bookId, chapter, true)` → domain `withCompletion` (idempotent map update) + `withReadingDay` (day added once to the in-memory list) + `markCompleted(bookId, chapter, completedAt, day)` → `INSERT … ON CONFLICT(book_id, chapter) DO UPDATE` (one row per chapter, BR-1) followed by `INSERT OR IGNORE INTO reading_day` (one row per local day, AC-2.6). The `day` argument is computed by domain `localDayKey(now)` — device-local calendar date, BR-2 — and passed in explicitly so tests never depend on the real clock or timezone. Explicit unmark deletes the chapter row but leaves the reading day (historical).
 4. **Restart / first launch:** `ProgressProvider` effect → `createExpoSqliteDriver()` → `setSqlDriver` → `initProgressDb()` (WAL + `CREATE TABLE IF NOT EXISTS`) → `loadProgress()` → row mapping + `sanitizeProgress` → context state (`status: loading → ready|error`). Expo Go smoke testing observed completion/progress persistence after force-stop/relaunch; last-read restoration was not separately verified in that walkthrough.
 5. **Kemajuan stats:** computed on each render from the context state — `completedCount` (total), `nextMilestone`, per-testament `doneInBook` vs `TESTAMENT_TOTALS`, started-books list, and **distinct reading days** (`readingDays.length`, PRD FR-9 / AC-2.6), shown in both the filled state ("X hari membaca" pill under the cheer row) and the empty state (explicit "0 hari membaca" line). PRD §10 still defers the daily-goal model; the day count is a pure historical total, not a goal or streak.
 
-## 6. Bible content pipeline (planned, blocked by licensing)
+## 6. Bible content pipeline (current implementation)
 
-1. Decide translation (**[Open Question — blocking]**).
-2. Obtain a licence-compatible source (public-domain text, or a licenced API/download).
-3. Convert to a normalised JSON shape matching the data model.
-4. Store under `assets/bible/<translation>.json`; record provenance and attribution.
-5. Seed into SQLite on first launch, or read directly from the bundled asset.
+1. The app imports `assets/database/ilt3.sqlite` locally through `expo-sqlite` (`bibleRepository.ts`).
+2. `bibleContext.tsx` loads and validates book/translation metadata, then serves chapter text and date-keyed Daily Verse queries.
+3. The database is not tracked by Git and is absent from fresh public clones and GitHub Actions. A local authorized copy is required to run the reader.
+4. Current code reads copyright attribution from translation metadata when available. This does not establish permission to redistribute the database or a built app containing it; confirm rights before distribution.
 
-> Meno will **not** fabricate, paraphrase, or scrape ambiguous sources. Attribution and licence text are stored with the dataset.
+> The 2026-10 content pipeline proposal below is superseded. Do not fabricate, paraphrase, or substitute Bible content.
 
 ## 7. Architecture Decision Records (ADR log)
 
@@ -283,25 +283,25 @@ metro.config.js               # adds "wasm" to assetExts (expo-sqlite on web)
 | ADR-002 | Use Expo Router for navigation | **Accepted** | Verified compatible with SDK 57 (`expo-router 57.0.25`). |
 | ADR-003 | Use `expo-sqlite` for persistence | **Accepted** | Installed `expo-sqlite 57.0.4` via `npx expo install`. |
 | ADR-004 | Keep domain logic framework-free | Accepted (principle) | Enables unit tests per `meno-workflow`. |
-| ADR-005 | Bundle offline public-domain translation | Proposed | Blocked by translation/licence decision. |
+| ADR-005 | Use a locally available Bible content source | Implemented with local ILT3 asset | Asset is excluded from Git; redistribution permission must be separately confirmed. |
 | ADR-006 | No backend/auth for MVP | Accepted (non-goal) | Per PRD §3.2. |
 | ADR-007 | Resolve Node engine mismatch before scaffolding | **Done** | Node 22.23.3 installed via fnm (Stage 1). See §2.5. |
 | ADR-008 | Target Expo SDK 57 | **Accepted** | Non-breaking upgrade from 56; fixes Hermes V1 regressions. See §2.4. |
 | ADR-009 | Local Android build (Android SDK Platform 36 + JDK 17) | **Accepted** | Enables on-device/emulator evidence; `/dev/kvm` available. EAS remains a fallback. |
 | ADR-010 | Persistence goes through an injectable `SqlDriver` seam | **Accepted (implemented, working tree 2026-10-14/15)** | `db.ts` never imports `expo-sqlite`; production driver in `sqliteDriver.ts`, tests inject `memoryDriver.ts`. Recorded here because the implementation exists and is host-verified (66 tests); not a retroactive claim about earlier stages. |
-| ADR-011 | Ship only a clearly-labelled synthetic placeholder dataset until licensing is resolved | **Accepted (implemented, working tree 2026-10-14/15)** | 66 books / 1189 chapters of canon metadata with synthetic verses; every verse text carries a "not Scripture" marker, guarded by `bibleNavigation.test.ts`. Real translation still blocked by ADR-005. |
+| ADR-011 | Keep canon metadata separate from Bible text storage | Implemented | Navigation/progress use canonical metadata; actual chapter text and Daily Verse are queried from local ILT3 SQLite. The older placeholder-text policy is superseded. |
 | ADR-012 | Two-tab shell (Baca, Kemajuan); reader pushed outside the tab navigator | **Accepted (implemented, working tree 2026-10-14/15)** | Matches PRD §6 navigation scope; library/chapters routes hidden from the tab bar (`href: null`). |
 | ADR-013 | Adopt the design-handoff token set and mascot artwork as the visual identity | **Accepted (implemented, working tree 2026-10-14/15)** | Tokens in `src/theme/colors.ts`; Plus Jakarta Sans via `@expo-google-fonts`; 8 mascot PNGs in `assets/meno/`. Provenance and superseded earlier proposals recorded in `docs/DESIGN_SYSTEM.md`. |
 
-> ADR-010…ADR-013 document decisions **as they exist in the implemented working tree** (dates 2026-10-14/15). They were not separate historical decision meetings; they are recorded now so the documentation matches the code. All remain **uncommitted** pending student review.
+> ADR-010…ADR-013 record implementation decisions from 2026-10-14/15. ADR-011 has since been superseded as described above. This document is tracked in the repository; no claim that its content is an uncommitted working-tree change is current.
 
 ## 8. Risk register
 
 | ID | Risk | Impact | Mitigation |
 |---|---|---|---|
 | R-1 | Node 20 incompatible with Expo tooling | Cannot scaffold | **Mitigated (ADR-007):** upgrade to Node ≥ 22.13.0. |
-| R-2 | Bible translation licence unclear | Cannot ship content | Choose public-domain translation; record attribution. |
-| R-3 | Copyrighted translation used without permission | Legal/academic integrity | Restrict to public-domain set until licence obtained. |
+| R-2 | Permission to redistribute locally integrated ILT3 content is not established by this repository | Cannot publish a database-bearing build until rights are confirmed | Keep the database out of GitHub and distribution artifacts; document rights and attribution before release. |
+| R-3 | Bible content distributed without permission | Legal/academic integrity | Do not distribute a bundle containing ILT3 until the applicable rights are confirmed. |
 | R-4 | Long chapters cause list jank | Poor UX | Virtualized list + memoized rows (`ui-ux-pro-max` guidance). |
 | R-5 | Streak timezone bugs | Wrong stats | **[Deferred]** streaks are out of MVP scope (PRD §8 BR-3/BR-4, §10); no streak code exists. Revisit only if the lecturer requires streaks (unresolved RQ-6 conflict — `docs/ASSIGNMENT_TRACEABILITY.md`). |
 | R-6 | Scope creep across 12 meetings | Unfinished MVP | Follow `12_MEETING_PLAN.md`; approve new deps first. |

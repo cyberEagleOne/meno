@@ -1,8 +1,8 @@
 # State Management
 
-## Latest verification update (2026-11-19)
+## Current verification snapshot (2026-11-27)
 
-The local state suite now has 253 passing tests after adding SQLite bootstrap failure logging coverage; TypeScript and lint passed. The x86_64 AVD's storage bootstrap failure was diagnosed as missing x86_64 Expo SQLite JNI in the older APK. ARM64-only CI run 44529697756 succeeded, but no physical ARM64 phone was available to verify native state transitions or persistence.
+The latest captured local test run is 26 suites / 316 passed / 0 failed / 0 skipped (`docs/evidence/P11/unit-tests-restored.txt`). GitHub Actions run [45860247144](https://github.com/cyberEagleOne/meno/actions/runs/45860247144) passed tests, TypeScript, and lint but skipped Android export/APK steps because the local ILT3 database was unavailable in the runner. Historical physical-device evidence confirms app startup and SQLite initialization on an RMX2103 using an earlier ARM64 APK; the physical feature/persistence workflows are not verified.
 
 ## Feature 1: reading progress
 
@@ -10,7 +10,7 @@ The local state suite now has 253 passing tests after adding SQLite bootstrap fa
 - **State:** `src/data/progressContext.tsx` provides loading, current completion/read data, and mutation functions. Screens consume context rather than issuing SQL.
 - **Persistence boundary:** context calls `src/data/db.ts`; production uses `src/data/sqliteDriver.ts`, while tests inject a deterministic `SqlDriver`.
 - **Transitions:** provider starts loading → initializes the driver/loads records → ready with zero or populated progress; rejected load/write → error feedback; successful completion/undo updates state after persistence succeeds. Double completion is idempotent at database/domain level.
-- **Tests:** `progressContext.test.tsx`, `db.test.ts`, `dbCompletion.test.ts`, `progress.test.ts`, plus reader interaction tests. The 2026-11-19 pre-change run passed 118 total tests. Native UI states were not retested in this audit.
+- **Tests:** `progressContext.test.tsx`, `db.test.ts`, `dbCompletion.test.ts`, `progress.test.ts`, plus reader interaction tests. The latest captured local run passed 316 tests across 26 suites; see `docs/TESTING.md`. This does not verify native UI states.
 - **Demonstration:** open a chapter, mark it complete, open Kemajuan, then relaunch and confirm progress. The relaunch sequence still needs current APK/device evidence.
 
 ## Feature 2: reading goal form
@@ -23,4 +23,4 @@ The local state suite now has 253 passing tests after adding SQLite bootstrap fa
 
 ## Verification boundary
 
-Test evidence proves application behavior against test doubles. It does not prove device UI rendering, native SQLite failure recovery, OS permission outcomes, or physical persistence. Current post-dependency-update/source-fix run: 15 suites / 253 tests passed; TypeScript and lint passed.
+Test evidence proves application behavior against test doubles. It does not prove device UI rendering, native SQLite failure recovery, OS permission outcomes, or physical persistence. Latest captured local result: 26 suites / 316 tests passed. Latest hosted CI run passed tests/type/lint and skipped APK build steps. Physical startup was verified historically; complete device UI states, OS permission outcomes, and physical persistence are still unverified.

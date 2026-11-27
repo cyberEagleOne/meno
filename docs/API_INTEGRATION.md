@@ -1,8 +1,10 @@
 # API Integration
 
+> **Historical integration note (2026-11-27):** this document describes an earlier REST-based Daily Verse implementation and its regression tests. The current app reads the Daily Verse locally from ILT3 through `src/data/bibleRepository.ts`; it does not call this endpoint in the current UI. The API repository remains a tested legacy module, not the current app data path.
+
 ## Selected slice
 
-The product has no Meno backend by design (see `docs/PRD.md`). The vertical slice is a read-only daily verse: Home UI → daily verse domain model/validation → `fetchDailyVerseFromApi` repository → HTTPS public API → parsed/validated verse → card/loading/error/retry UI. There is no API write or server database in this architecture.
+There is no Meno backend. The REST integration described below is historical; the current Daily Verse data flow is Home UI → `BibleProvider` → `loadDailyVerse` in `src/data/bibleRepository.ts` → local ILT3 SQLite database. It works offline when the required local database asset is present.
 
 ## Endpoint and code
 
